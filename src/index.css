@@ -8,17 +8,13 @@
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  @apply w-screen h-screen;
 }
 
 body {
-  margin: 0;
-  background-color: #faaca8;
-  background-image: linear-gradient(19deg, #faaca8 0%, #ddd6f3 100%);
+  @apply min-h-screen bg-gradient-to-b from-white to-yellow-300;
 }
 
 body.greenScreen {
-  background-color: #00ff00;
-  background-image: none;
+  @apply bg-[#00ff00] bg-none;
 }
