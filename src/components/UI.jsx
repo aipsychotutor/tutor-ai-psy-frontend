@@ -1,17 +1,43 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 
 export const UI = ({ hidden, ...props }) => {
   const input = useRef();
-  const { chat, loading, cameraZoomed, setCameraZoomed, message } = useChat();
+  const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } = useChat();
+
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
+
+  useEffect(() => {
+    if (transcript) {
+      setMessage(transcript);
+    }
+  }, [transcript, setMessage]);
 
   const sendMessage = () => {
-    const text = input.current.value;
-    if (!loading && !message) {
-      chat(text);
-      input.current.value = "";
+    if (!loading && message) {
+      chat(message);
+      resetTranscript();
+      setMessage("");
     }
   };
+
+  const handleToggleListening = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: true, language: "id" });
+    }
+  };
+
   if (hidden) {
     return null;
   }
@@ -89,8 +115,10 @@ export const UI = ({ hidden, ...props }) => {
         <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
           <input
             className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-md bg-opacity-50 bg-white backdrop-blur-md"
-            placeholder="Type a message..."
+            placeholder="Ketik pesan atau mulai bicara..."
             ref={input}
+            value={message || ""}
+            onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 sendMessage();
@@ -98,13 +126,32 @@ export const UI = ({ hidden, ...props }) => {
             }}
           />
           <button
-            disabled={loading || message}
+            disabled={loading || !message}
             onClick={sendMessage}
             className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-md ${
-              loading || message ? "cursor-not-allowed opacity-30" : ""
+              loading || !message ? "cursor-not-allowed opacity-30" : ""
             }`}
           >
             Send
+          </button>
+          <button
+            disabled={loading}
+            onClick={handleToggleListening}
+            className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-md ${
+              loading ? "cursor-not-allowed opacity-30" : ""
+            }`}
+          >
+            {listening ? "Berhenti" : "Mulai"}
+          </button>
+
+          <button
+            disabled={loading || !message}
+            onClick={resetTranscript}
+            className={`bg-gray-500 hover:bg-gray-600 text-white p-4 font-semibold uppercase rounded-md ${
+              loading || !message ? "cursor-not-allowed opacity-30" : ""
+            }`}
+          >
+            Reset
           </button>
         </div>
       </div>
