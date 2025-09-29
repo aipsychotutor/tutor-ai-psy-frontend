@@ -5,8 +5,10 @@ import SpeechRecognition, {
 } from "react-speech-recognition";
 
 export const UI = ({ hidden, ...props }) => {
+  const { subtitle } = useChat();
   const input = useRef();
-  const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } = useChat();
+  const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } =
+    useChat();
 
   const {
     transcript,
@@ -112,47 +114,58 @@ export const UI = ({ hidden, ...props }) => {
             </svg>
           </button>
         </div>
-        <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
-          <input
-            className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-md bg-opacity-50 bg-white backdrop-blur-md"
-            placeholder="Ketik pesan atau mulai bicara..."
-            ref={input}
-            value={message || ""}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMessage();
-              }
-            }}
-          />
-          <button
-            disabled={loading || !message}
-            onClick={sendMessage}
-            className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-md ${
-              loading || !message ? "cursor-not-allowed opacity-30" : ""
-            }`}
-          >
-            Send
-          </button>
-          <button
-            disabled={loading}
-            onClick={handleToggleListening}
-            className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-md ${
-              loading ? "cursor-not-allowed opacity-30" : ""
-            }`}
-          >
-            {listening ? "Berhenti" : "Mulai"}
-          </button>
+        <div className="absolute bottom-8 left-0 w-full flex flex-col items-center">
+          {/* Subtitle */}
+          {subtitle && (
+            <div className="mb-2 px-4 py-2 bg-black bg-opacity-70 text-white rounded text-center max-w-xl">
+              {subtitle}
+            </div>
+          )}
+          <div className="flex w-full max-w-2xl gap-2">
+            {/* ...input dan tombol kamu... */}
+            <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
+              <input
+                className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-md bg-opacity-50 bg-white backdrop-blur-md"
+                placeholder="Ketik pesan atau mulai bicara..."
+                ref={input}
+                value={typeof message === "string" ? message : ""}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    sendMessage();
+                  }
+                }}
+              />
+              <button
+                disabled={loading || !message}
+                onClick={sendMessage}
+                className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-md ${
+                  loading || !message ? "cursor-not-allowed opacity-30" : ""
+                }`}
+              >
+                Send
+              </button>
+              <button
+                disabled={loading}
+                onClick={handleToggleListening}
+                className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-md ${
+                  loading ? "cursor-not-allowed opacity-30" : ""
+                }`}
+              >
+                {listening ? "Berhenti" : "Mulai"}
+              </button>
 
-          <button
-            disabled={loading || !message}
-            onClick={resetTranscript}
-            className={`bg-gray-500 hover:bg-gray-600 text-white p-4 font-semibold uppercase rounded-md ${
-              loading || !message ? "cursor-not-allowed opacity-30" : ""
-            }`}
-          >
-            Reset
-          </button>
+              <button
+                disabled={loading || !message}
+                onClick={resetTranscript}
+                className={`bg-gray-500 hover:bg-gray-600 text-white p-4 font-semibold uppercase rounded-md ${
+                  loading || !message ? "cursor-not-allowed opacity-30" : ""
+                }`}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>
