@@ -4,10 +4,13 @@ import { Leva } from "leva";
 import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
 import { ChatHistory } from "./components/ChatHistory";
+import { ChatProvider } from "./hooks/useChat";
+import Dashboard from "./page/Dashboard";
 
 function App() {
   return (
     <>
+    {/* <ChatProvider>   
       <Loader />
       <Leva hidden />
       <UI />
@@ -15,6 +18,8 @@ function App() {
       <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
         <Experience />
       </Canvas>
+      </ChatProvider> */}
+      <Dashboard />
     </>
   );
 }
