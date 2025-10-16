@@ -35,7 +35,7 @@ export const ChatHistory = () => {
   }, [history, open]);
 
   return (
-    <div className="fixed top-24 left-4 max-w-xs z-50">
+    <div className="my-5 mx-4 fixed top-24 left-4 max-w-xs z-50">
       <button
         className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-1 px-3 rounded-t-lg shadow w-full flex justify-between items-center"
         onClick={() => setOpen((prev) => !prev)}

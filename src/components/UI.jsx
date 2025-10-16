@@ -1,5 +1,9 @@
 import { useRef, useEffect } from "react";
 import { useChat } from "../hooks/useChat";
+import {useNavigate} from "react-router-dom";
+import {useState} from "react";
+import ConfirmModal from "./ConfirmDialog";
+
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
@@ -16,6 +20,10 @@ export const UI = ({ hidden, ...props }) => {
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
+
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [targetPath, setTargetPath] = useState(null);
 
   useEffect(() => {
     if (transcript) {
@@ -44,13 +52,58 @@ export const UI = ({ hidden, ...props }) => {
     return null;
   }
 
+  const handleNavigate = (path) => {
+    setTargetPath(path);
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = () => {
+    setShowConfirm(false);
+    if (targetPath) navigate(targetPath);
+  };
+
+  const handleCancel = () => {
+    setShowConfirm(false);
+  };
+  
+
   return (
     <>
       <div className="fixed top-0 left-0 right-0 bottom-0 z-10 flex justify-between p-4 flex-col pointer-events-none">
-        <div className="self-start backdrop-blur-md bg-white bg-opacity-50 p-4 rounded-lg">
-          <h1 className="font-black text-xl">Tutor AI Psikologi</h1>
-          <p>PIPP Unpad</p>
-        </div>
+        <nav className="flex justify-between items-center px-6 py-4 pointer-events-auto">
+          {/* Kiri: Logo & teks */}
+          <div className="flex flex-col">
+            <h1 className="text-white text-4xl font-bold">CommuLab</h1>
+            <p className="font-poppins text-white text-lg">
+              Belajar komunikasi, siap hadapi pasien
+            </p>
+          </div>
+
+          <div className="flex gap-6">
+            <button
+              onClick={() => handleNavigate("/")}
+              className="text-white hover:text-yellow-400 transition"
+            >
+              Home
+            </button>
+
+            <button
+              onClick={() => handleNavigate("/dashboard")}
+              className="text-white hover:text-yellow-400 transition"
+            >
+              Dashboard
+            </button>
+          </div>
+
+          <ConfirmModal
+            show={showConfirm}
+            title="Yakin mengakhiri sesi?"
+            message="Apakah kamu ingin berpindah halaman?"
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        </nav>
+
         <div className="w-full flex flex-col items-end justify-center gap-4">
           <button
             onClick={() => setCameraZoomed(!cameraZoomed)}
@@ -125,7 +178,7 @@ export const UI = ({ hidden, ...props }) => {
             {/* ...input dan tombol kamu... */}
             <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
               <input
-                className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-md bg-opacity-50 bg-white backdrop-blur-md"
+                className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-full bg-opacity-50 bg-white backdrop-blur-md"
                 placeholder="Ketik pesan atau mulai bicara..."
                 ref={input}
                 value={typeof message === "string" ? message : ""}
@@ -139,7 +192,7 @@ export const UI = ({ hidden, ...props }) => {
               <button
                 disabled={loading || !message}
                 onClick={sendMessage}
-                className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-md ${
+                className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-full ${
                   loading || !message ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >
@@ -148,7 +201,7 @@ export const UI = ({ hidden, ...props }) => {
               <button
                 disabled={loading}
                 onClick={handleToggleListening}
-                className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-md ${
+                className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-full${
                   loading ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >
@@ -158,7 +211,7 @@ export const UI = ({ hidden, ...props }) => {
               <button
                 disabled={loading || !message}
                 onClick={resetTranscript}
-                className={`bg-gray-500 hover:bg-gray-600 text-white p-4 font-semibold uppercase rounded-md ${
+                className={`bg-gray-500 hover:bg-gray-600 text-white p-4 font-semibold uppercase rounded-full ${
                   loading || !message ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >

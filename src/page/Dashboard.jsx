@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 // Card Container Component
@@ -375,11 +376,14 @@ export default function Dashboard() {
     console.log('Start new session');
   };
 
+  const location = useLocation();
+  const {nama} = location.state || {};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-700 to-pink-600 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-screen-2xl space-y-6">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-          Selamat Datang, Putri!
+          Selamat Datang, {nama}!
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
