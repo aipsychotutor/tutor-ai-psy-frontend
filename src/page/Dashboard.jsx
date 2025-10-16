@@ -5,7 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 function Card({ children, className = '', span = 1 }) {
   const spanClass = span === 2 ? 'lg:col-span-2' : span === 3 ? 'lg:col-span-3' : '';
   return (
-    <div className={`rounded-3xl bg-white/95 dark:bg-gray-900/95 backdrop-blur p-6 shadow-lg ${spanClass} ${className}`}>
+    <div className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}>
       {children}
     </div>
   );
@@ -14,8 +14,8 @@ function Card({ children, className = '', span = 1 }) {
 // Card Header Component
 function CardHeader({ title, action }) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+    <div className="flex items-center justify-between mb-2">
+      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">
         {title}
       </h2>
       {action}
@@ -191,14 +191,14 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
 
   return (
     <>
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={140}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={90}
+            innerRadius={30}
+            outerRadius="100%"  
             paddingAngle={2}
             dataKey="value"
             onClick={onPieClick}
@@ -241,14 +241,14 @@ function PatientListItem({ patient, onDetailClick, onReportClick }) {
     <div className="flex items-center justify-between bg-white dark:bg-gray-950 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
       <div className="flex items-center gap-3">
         <Avatar src={patient.image} alt="" />
-        <span className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
           {patient.name}
         </span>
       </div>
       <div className="flex items-center gap-2">
         <Button
           variant="ghost"
-          size="sm"
+          size="xs"
           onClick={() => onDetailClick(patient)}
           aria-label={`Lihat detail ${patient.name}`}
         >
@@ -256,7 +256,7 @@ function PatientListItem({ patient, onDetailClick, onReportClick }) {
         </Button>
         <Button
           variant="ghost"
-          size="sm"
+          size="xs"
           onClick={() => onReportClick(patient)}
           aria-label={`Lihat laporan ${patient.name}`}
         >
@@ -270,7 +270,7 @@ function PatientListItem({ patient, onDetailClick, onReportClick }) {
 // Patient List Component
 function PatientList({ patients, onDetailClick, onReportClick }) {
   return (
-    <div className="space-y-px overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+    <div className="space-y-px overflow-y-auto max-h-[300px] rounded-lg">
       {patients.map((patient) => (
         <PatientListItem
           key={patient.id}
@@ -278,6 +278,33 @@ function PatientList({ patients, onDetailClick, onReportClick }) {
           onDetailClick={onDetailClick}
           onReportClick={onReportClick}
         />
+      ))}
+    </div>
+  );
+}
+
+function SessionPatientList({ patients, onStartSession }) {
+  return (
+    <div className="grid [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))] gap-2 py-2 max-h-[250px] overflow-y-auto pr-1 text-sm">
+      {patients.map((pasien) => (
+        <div
+          key={pasien.id}
+          className="flex flex-col items-center bg-white dark:bg-gray-950 rounded-2xl p-2 shadow-md"
+        >
+          <Avatar src={pasien.image} alt={pasien.name} size="sm" className="h-8 w-8"/>
+          <p className="mt-1 font-medium text-gray-900 dark:text-gray-100 text-center text-xs">
+            {pasien.name}
+          </p>
+
+          <Button
+            variant="primary"
+            size="xs"
+            onClick={() => onStartSession?.(pasien)}
+            className="mt-3 w-full text-xs py-1"
+          >
+            Mulai Sesi
+          </Button>
+        </div>
       ))}
     </div>
   );
@@ -325,22 +352,21 @@ function DiagramCard({ chartData, setChartData }) {
           </Button>
         }
       />
-
-      {isEditing ? (
-        <ChartEditForm
-          data={editData}
-          onChange={handleInputChange}
-          onSave={handleSaveData}
-          onCancel={handleCancelEdit}
-        />
-      ) : (
-        <InteractivePieChart
-          data={chartData}
-          activeIndex={activeIndex}
-          onPieClick={handlePieClick}
-          totalValue={totalValue}
-        />
-      )}
+        {isEditing ? (
+          <ChartEditForm
+            data={editData}
+            onChange={handleInputChange}
+            onSave={handleSaveData}
+            onCancel={handleCancelEdit}
+          />
+        ) : (
+          <InteractivePieChart
+            data={chartData}
+            activeIndex={activeIndex}
+            onPieClick={handlePieClick}
+            totalValue={totalValue}
+          />
+        )}
     </Card>
   );
 }
@@ -353,7 +379,11 @@ export default function Dashboard() {
     { id: 3, name: 'Pasien C', image: null },
     { id: 4, name: 'Pasien C', image: null },
     { id: 5, name: 'Pasien D', image: null },
-    { id: 6, name: 'Pasien H', image: null }
+    { id: 6, name: 'Pasien H', image: null },
+    { id: 7, name: 'Pasien I', image: null },
+    { id: 8, name: 'Pasien J', image: null },
+    { id: 9, name: 'Pasien K', image: null },
+    { id: 10, name: 'Pasien L', image: null }
   ]);
 
   const [chartData, setChartData] = useState([
@@ -376,36 +406,29 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-700 to-pink-600 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl space-y-6">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+        <h1 className="font-poppins text-2xl sm:text-3xl lg:text-4xl font-semibold text-white mt-4">
           Selamat Datang, Putri!
         </h1>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
           <DiagramCard chartData={chartData} setChartData={setChartData} />
 
-          <Card span={2}>
+          <Card span={2} className="sm:p-4 lg:p-5 min-h-[80px] flex flex-col">
+            <CardHeader title="Mulai Sesi" />
+            <SessionPatientList
+              patients={patients}
+              onStartSession={(p) => console.log('Mulai sesi dengan:', p.name)}
+            />
+          </Card>
+
+          <Card span={3} className="sm:p-4 lg:p-5">
             <CardHeader title="Riwayat Sesi" />
             <PatientList
               patients={patients}
               onDetailClick={handleDetailClick}
               onReportClick={handleReportClick}
             />
-          </Card>
-
-          <Card span={3} className="sm:p-8 min-h-[200px] flex flex-col">
-            <CardHeader title="Mulai Sesi" />
-            <div className="flex-1 flex items-center justify-center">
-              <Button 
-                variant="primary" 
-                size="lg" 
-                onClick={handleStartSession}
-                className="focus-visible:ring-offset-2"
-              >
-                Mulai Sesi Baru
-              </Button>
-            </div>
           </Card>
         </div>
       </div>
