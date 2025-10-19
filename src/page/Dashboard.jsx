@@ -417,8 +417,9 @@ export default function Dashboard() {
 
   const handleStartSession = (patient) => {
     console.log('Mulai sesi dengan:', patient.name);
-    navigate('/chat', {
+    navigate('/profile', {
       state: {
+        patientId: patient.id,
         patient: patient,
         user_id: user_id,
         session_id: session_id,

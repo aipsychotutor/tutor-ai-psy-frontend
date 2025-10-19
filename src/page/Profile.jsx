@@ -120,6 +120,8 @@ export default function ProfilePage() {
     console.log('mulai sesi...');
     navigate("/chat", {
       state: {
+        patientId: patient?.id,
+        avatarPath: patient?.avatar_path,
         patient: patient,
         user_id: user_id,
         session_id: session_id,

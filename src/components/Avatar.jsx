@@ -106,11 +106,11 @@ const corresponding = {
 
 let setupMode = false;
 
-export function Avatar(props) {
-  const { nodes, materials, scene } = useGLTF(
-    "/models/default.glb"
-  );
-
+export function Avatar({ avatarPath = "", props}) {
+  // const { nodes, materials, scene } = useGLTF(
+  //   "/models/default.glb"
+  // );
+  const { nodes, materials, scene } = useGLTF(avatarPath);
   const { message, onMessagePlayed, chat } = useChat();
 
   const [lipsync, setLipsync] = useState();

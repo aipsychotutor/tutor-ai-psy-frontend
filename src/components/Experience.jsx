@@ -7,6 +7,7 @@ import {
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { Avatar } from "./Avatar";
+import React from "react";
 
 const Dots = (props) => {
   const { loading } = useChat();
@@ -37,7 +38,7 @@ const Dots = (props) => {
   );
 };
 
-export const Experience = () => {
+export const Experience = ({ avatarPath = "/models/default.glb" }) => {
   const cameraControls = useRef();
   const { cameraZoomed } = useChat();
 
@@ -60,7 +61,7 @@ export const Experience = () => {
       <Suspense>
         <Dots position-y={1.75} position-x={-0.02} />
       </Suspense>
-      <Avatar />
+      <Avatar avatarPath={avatarPath}  />
       <ContactShadows opacity={0.7} />
     </>
   );
