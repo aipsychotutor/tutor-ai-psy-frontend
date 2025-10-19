@@ -279,7 +279,7 @@ export default function ProfilePage() {
                 onClick={handleBack}
                 className="w-full sm:w-auto"
               >
-                Kembali
+                
               </Button>
               <Button 
                 variant="success" 

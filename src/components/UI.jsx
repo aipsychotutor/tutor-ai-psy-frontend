@@ -59,6 +59,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
   };
 
   const handleConfirm = async () => {
+    console.log("🧩 session_id:", session_id, "targetPath:", targetPath);
     setShowConfirm(false);
 
     // End session untuk semua navigasi (Home atau Dashboard)
