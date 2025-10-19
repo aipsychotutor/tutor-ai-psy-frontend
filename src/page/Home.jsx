@@ -25,7 +25,6 @@ function Home() {
             state: {
                 nama: data.user.username,
                 user_id: data.user.user_id,
-                session_id: data.session.session_id,
             },
             });
         } else {
