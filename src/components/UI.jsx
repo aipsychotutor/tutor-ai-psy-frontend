@@ -1,14 +1,12 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useChat } from "../hooks/useChat";
-import {useNavigate} from "react-router-dom";
-import {useState} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import ConfirmModal from "./ConfirmDialog";
-
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 
-export const UI = ({ hidden, ...props }) => {
+export const UI = ({ hidden, onExitChat, ...props }) => {
   const { subtitle } = useChat();
   const input = useRef();
   const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } =
@@ -22,6 +20,9 @@ export const UI = ({ hidden, ...props }) => {
   } = useSpeechRecognition();
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { session_id, user_id, userName } = location.state || {};
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [targetPath, setTargetPath] = useState(null);
 
@@ -57,15 +58,40 @@ export const UI = ({ hidden, ...props }) => {
     setShowConfirm(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowConfirm(false);
-    if (targetPath) navigate(targetPath);
+
+    // End session dulu sebelum navigate
+    if (session_id && (targetPath === "/dashboard" || targetPath === "/")) {
+      try {
+        await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            status: 'completed', 
+            end_time: new Date().toISOString() 
+          })
+        });
+        console.log('✅ Session berhasil diakhiri:', session_id);
+      } catch (err) {
+        console.error('❌ Error mengakhiri sesi:', err);
+      }
+    }
+
+    // Navigate setelah session di-end
+    if (targetPath === "/dashboard") {
+      navigate(targetPath, { 
+        state: { nama: userName, user_id, session_id } 
+      });
+    } else {
+      navigate(targetPath);
+    }
   };
 
   const handleCancel = () => {
     setShowConfirm(false);
+    setTargetPath(null);
   };
-  
 
   return (
     <>
@@ -175,7 +201,6 @@ export const UI = ({ hidden, ...props }) => {
             </div>
           )}
           <div className="flex w-full max-w-2xl gap-2">
-            {/* ...input dan tombol kamu... */}
             <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
               <input
                 className="w-full placeholder:text-gray-800 placeholder:italic p-4 rounded-full bg-opacity-50 bg-white backdrop-blur-md"
@@ -201,7 +226,7 @@ export const UI = ({ hidden, ...props }) => {
               <button
                 disabled={loading}
                 onClick={handleToggleListening}
-                className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-full${
+                className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-full ${
                   loading ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >

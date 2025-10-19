@@ -347,7 +347,8 @@ export default function Dashboard() {
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-
+  const [sessionPatients, setSessionPatients] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(true);
   // const [patients] = useState([
   //   { id: '75ce3b71-cce4-4233-acbd-3441daab2ddb', name: 'Pasien A', image: null },
   //   { id: 2, name: 'Pasien B', image: null },
@@ -367,6 +368,46 @@ export default function Dashboard() {
     { name: 'Dijadwalkan', value: 20, color: '#14B8A6' },
     { name: 'Dibatalkan', value: 10, color: '#EF4444' }
   ]);
+
+  const fetchSessionHistory = async () => {
+    if (!user_id) {
+      console.log('❌ user_id undefined, skip fetch');
+      setLoadingSessions(false);
+      return;
+    }
+
+    try {
+      console.log('🔍 Fetching sessions for user_id:', user_id);
+      const res = await fetch(`http://localhost:3000/api/sessions?user_id=${user_id}`);
+      if (!res.ok) throw new Error('Gagal mengambil riwayat sesi');
+      const data = await res.json();
+
+      console.log('📋 Session History:', data);
+
+      // mapping ke pasien unik untuk ditampilkan di riwayat
+      const uniquePatients = Array.from(new Map(
+        data.map(s => [s.patient_id, {
+          id: s.patient_id,
+          name: s.patient_name,
+          image: s.patient_image,
+          lastSession: s.session_date,
+          status: s.status
+        }])
+      ).values());
+
+      console.log('👥 Unique Patients:', uniquePatients);
+      setSessionPatients(uniquePatients);
+    } catch (err) {
+      console.error('❌ Error fetching sessions:', err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+// Panggil fetch session history pas component mount atau user_id berubah
+  useEffect(() => {
+    fetchSessionHistory();
+  }, [user_id]);
 
   const fetchPatients = async () => {
       try {
@@ -485,11 +526,15 @@ export default function Dashboard() {
 
           <Card span={3} className="sm:p-4 lg:p-5">
             <CardHeader title="Riwayat Sesi" />
-            <PatientList
-              patients={patients}
-              onDetailClick={handleDetailClick}
-              onReportClick={handleReportClick}
-            />
+            {loadingSessions ? (
+              <div className="text-white text-center py-4">Loading...</div>
+            ) : (
+              <PatientList
+                patients={sessionPatients}
+                onDetailClick={handleDetailClick}
+                onReportClick={handleReportClick}
+              />
+            )}
           </Card>
         </div>
       </div>

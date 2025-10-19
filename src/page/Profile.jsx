@@ -52,11 +52,82 @@ function InfoRow({ label, value }) {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { patient, user_id, session_id, userName } = location.state || {};
+
+  const { patient, user_id, session_id, userName, avatarPath } = location.state || {};
+  const patientId = patient?.id;
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSessionStarted, setIsSessionStarted] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    if (!patientId || !user_id) return;
+
+    const checkOngoingSession = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:3000/api/sessions?user_id=${user_id}&patient_id=${patientId}&status=ongoing`
+        );
+        const sessions = await res.json();
+        
+        if (sessions && sessions.length > 0) {
+          // Ada ongoing session
+          setIsSessionStarted(true);
+          setCurrentSessionId(sessions[0].session_id);
+        }
+      } catch (err) {
+        console.error('Error checking ongoing session:', err);
+      }
+    };
+    checkOngoingSession();
+  }, [patientId, user_id]);
+
+  const handleStartSession = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user_id,
+          patient_id: patientId,
+          scenario_id: null // Opsional, bisa diisi kalau ada scenario
+        })
+      });
+      console.log('🔍 Creating session with:', { user_id, patient_id: patientId }); // debug log
+      const newSession = await response.json();
+
+      if (response.ok) {
+        setIsSessionStarted(true);
+        setCurrentSessionId(newSession.session_id);
+        console.log('Session started:', newSession);
+
+        // Navigate ke Chat page dengan session info
+        navigate('/chat', {
+          state: {
+            patientId: patientId,
+            patient: patient,
+            user_id: user_id,
+            session_id: newSession.session_id, // Session ID yang baru dibuat
+            userName: userName,
+            avatarPath: avatarPath
+          }
+        });
+      } else {
+        alert('Gagal memulai sesi: ' + newSession.message);
+      }
+    } catch (error) {
+      console.error('Error starting session:', error);
+      alert('Gagal memulai sesi');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Redirect jika tidak ada data pasien
@@ -113,20 +184,6 @@ export default function ProfilePage() {
     console.log('kembali ke dashboard...');
     navigate("/dashboard", {
       state: { nama: userName, user_id, session_id }
-    });
-  };
-
-  const handleAccept = () => {
-    console.log('mulai sesi...');
-    navigate("/chat", {
-      state: {
-        patientId: patient?.id,
-        avatarPath: patient?.avatar_path,
-        patient: patient,
-        user_id: user_id,
-        session_id: session_id,
-        userName: userName
-      }
     });
   };
 
@@ -226,7 +283,7 @@ export default function ProfilePage() {
               </Button>
               <Button 
                 variant="success" 
-                onClick={handleAccept}
+                onClick={handleStartSession}
                 className="w-full sm:w-auto"
               >
                 Mulai
