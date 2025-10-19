@@ -5,10 +5,35 @@ function Home() {
     const [nama, setNama] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = (e) =>{
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if(nama.trim() !== ""){
-            navigate("/dashboard", {state: {nama}});
+        console.log("Mulai diklik");
+        if (nama.trim() === "") return;
+
+        try {
+        const res = await fetch("http://localhost:3000/api/auth/guest", { // sesuaikan port backend kamu
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nama }),
+        });
+
+        const data = await res.json();
+        console.log(data);
+        if (data.status === "ok") {
+            // Kirim data ke Dashboard
+            navigate("/dashboard", {
+            state: {
+                nama: data.user.username,
+                user_id: data.user.user_id,
+                session_id: data.session.session_id,
+            },
+            });
+        } else {
+            alert(data.message || "Terjadi kesalahan saat membuat guest user");
+        }
+        } catch (err) {
+        console.error("Error:", err);
+        alert("Gagal terhubung ke server");
         }
     }
 
@@ -36,6 +61,7 @@ function Home() {
             
                             <button 
                                 type="submit"
+                                onClick={() => console.log("Tombol Mulai diklik")}
                                 className="bg-yellow-500 text-white font-semibold rounded-3xl hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition duration-300"
                             >
                                 Mulai
@@ -45,13 +71,13 @@ function Home() {
                 </div>
             </div>
             
-            <div className='hidden md:flex justify-end items-end overflow-hidden relative'>
+            {/* <div className='hidden md:flex justify-end items-end overflow-hidden relative'>
                 <img 
                     src="/images/icon.png" 
                     alt="Ilustrasi medis dekoratif"
                     className="absolute right-0 bottom-0 w-3/4 h-3/4 object-contain"
                 />
-            </div>
+            </div> */}
         </main>
     );
 }

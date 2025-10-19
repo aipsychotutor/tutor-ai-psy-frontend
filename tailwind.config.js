@@ -4,10 +4,19 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
-        poppins : ["Poppins", "sans-serif"],
+        poppins: ['Poppins', 'sans-serif'],
+      },
+      fontSize: {
+      '2.5xl': '1.7rem', // antara 2xl dan 3xl
+      },
+      colors: {
+        dashboardStart: '#150412',
+        dashboardMid: '#7e1e75',
+        dashboardEnd: '#a61e8f',
+        cardBackgroundColor: '#fefdfe', // 🌤 mode terang
+        cardBackgroundColorDark: '#1a1a1a', // 🌙 mode gelap
       },
     },
   },
-  plugins: [],
+  plugins: [],
 };

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import {useNavigate, useLocation} from "react-router-dom";
 
 function Button({ 
   children, 
@@ -49,35 +50,106 @@ function InfoRow({ label, value }) {
 }
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { patient, user_id, session_id, userName } = location.state || {};
 
-  // dummy data
-  const [profileData] = useState({
-    biodata: {
-      nama: 'Josephine Elisja Basudara',
-      usia: '25 tahun',
-      jenisKelamin: 'Perempuan',
-      pekerjaan: 'Pemilik Bisnis Boneka Labubu',
-      status: 'Lajang'
-    },
-    latarBelakang: {
-      cerita: 'Maya merinta usaha boneka Ambalabuu sejak 5 tahun lalu. Awalnya bisnis berjalan lancar karena unik dan diminati wisatawan, tapi belakangan ia merasa kewalahan. Permintaan pasar menurun, kompetitor bertambah, dan ia harus mengurus produksi, pemasaran, serta keuangan sendirian.',
-      emosi: 'Maya mulai merasa usahanya stagnan, padahal ia sudah menginvestasikan banyak tenaga dan emosi. Ia takut kehilangan bisnis yang ia anggap "anak sendiri".'
-    },
-    kepribadian: [
-      'Kreatif dan detail-oriented',
-      'Perfeksionis, sulit mendelegasikan tugas',
-      'Emosional, sangat terikat dengan hasil karyanya',
-      'Ramah ke pelanggan, tapi tertutup pada orang terdekat soal masalah pribadi'
-    ]
-  });
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    // Redirect jika tidak ada data pasien
+    if (!patient || !patient.id) {
+      console.error('No patient data found, redirecting...');
+      navigate('/dashboard', {
+        state: { nama: userName, user_id, session_id }
+      });
+      return;
+    }
+
+    // Fetch patient details dari API
+    const fetchPatientData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`http://localhost:3000/api/patients/${patient.id}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch patient data');
+        }
+
+        const data = await response.json();
+
+        // Transform data dari database ke format yang dibutuhkan UI
+        setProfileData({
+          biodata: {
+            nama: data.patient_name,
+            usia: data.age ? `${data.age} tahun` : '-',
+            jenisKelamin: data.gender || '-',
+            pekerjaan: data.occupation || '-',
+            status: data.marital_status || '-'
+          },
+          latarBelakang: {
+            cerita: data.background_story || 'Tidak ada informasi latar belakang'
+          },
+          kepribadian: Array.isArray(data.personality_traits) 
+            ? data.personality_traits 
+            : [],
+          profileImage: data.profile_image
+        });
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching patient data:', err);
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [patient, navigate, userName, user_id, session_id]);
 
   const handleBack = () => {
     console.log('kembali ke dashboard...');
+    navigate("/dashboard", {
+      state: { nama: userName, user_id, session_id }
+    });
   };
 
   const handleAccept = () => {
     console.log('mulai sesi...');
+    navigate("/chat", {
+      state: {
+        patient: patient,
+        user_id: user_id,
+        session_id: session_id,
+        userName: userName
+      }
+    });
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !profileData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
+        <div className="text-white text-center">
+          <p className="text-xl mb-4">Gagal memuat data pasien</p>
+          <Button variant="danger" onClick={handleBack}>
+            Kembali ke Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 sm:px-6 lg:px-8">

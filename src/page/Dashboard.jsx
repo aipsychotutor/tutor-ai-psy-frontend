@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 // Card Container Component
@@ -374,18 +374,24 @@ function DiagramCard({ chartData, setChartData }) {
 
 // Main Dashboard Component
 export default function Dashboard() {
-  const [patients] = useState([
-    { id: 1, name: 'Pasien A', image: null },
-    { id: 2, name: 'Pasien B', image: null },
-    { id: 3, name: 'Pasien C', image: null },
-    { id: 4, name: 'Pasien C', image: null },
-    { id: 5, name: 'Pasien D', image: null },
-    { id: 6, name: 'Pasien H', image: null },
-    { id: 7, name: 'Pasien I', image: null },
-    { id: 8, name: 'Pasien J', image: null },
-    { id: 9, name: 'Pasien K', image: null },
-    { id: 10, name: 'Pasien L', image: null }
-  ]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { nama, session_id, user_id,  } = location.state || {};
+  const [patients, setPatients] = useState([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
+
+  // const [patients] = useState([
+  //   { id: '75ce3b71-cce4-4233-acbd-3441daab2ddb', name: 'Pasien A', image: null },
+  //   { id: 2, name: 'Pasien B', image: null },
+  //   { id: 3, name: 'Pasien C', image: null },
+  //   { id: 4, name: 'Pasien C', image: null },
+  //   { id: 5, name: 'Pasien D', image: null },
+  //   { id: 6, name: 'Pasien H', image: null },
+  //   { id: 7, name: 'Pasien I', image: null },
+  //   { id: 8, name: 'Pasien J', image: null },
+  //   { id: 9, name: 'Pasien K', image: null },
+  //   { id: 10, name: 'Pasien L', image: null }
+  // ]);
 
   const [chartData, setChartData] = useState([
     { name: 'Selesai', value: 45, color: '#3B82F6' },
@@ -394,21 +400,67 @@ export default function Dashboard() {
     { name: 'Dibatalkan', value: 10, color: '#EF4444' }
   ]);
 
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/api/patients'); // endpoint backend
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+
+        const mappedPatients = data.map(p => ({
+          id: p.patient_id,   // sesuaikan dengan nama kolom di backend
+          name: p.patient_name,       // sesuaikan dengan nama kolom di backend
+          image: p.profile_image || null
+        }));
+        setPatients(mappedPatients);
+      } catch (err) {
+        console.error('Error fetching patients:', err);
+      } finally {
+        setLoadingPatients(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
   const handleDetailClick = (patient) => {
     console.log('Detail clicked:', patient);
+    navigate('/profile', {
+      state: {
+        patient: patient,
+        user_id: user_id,
+        session_id: session_id,
+        userName: nama
+      }
+    });
   };
 
   const handleReportClick = (patient) => {
     console.log('Report clicked:', patient);
+    navigate('/report', {
+      state: {
+        patient: patient,
+        user_id: user_id,
+        session_id: session_id,
+        userName: nama
+      }
+    });
   };
 
-  const handleStartSession = () => {
-    console.log('Start new session');
+  const handleStartSession = (patient) => {
+    console.log('Mulai sesi dengan:', patient.name);
+    navigate('/chat', {
+      state: {
+        patient: patient,
+        user_id: user_id,
+        session_id: session_id,
+        userName: nama
+      }
+    });
   };
 
-  const location = useLocation();
-  const {nama} = location.state || {};
-
+  console.log("Session ID:", session_id);
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl space-y-6">
@@ -422,7 +474,7 @@ export default function Dashboard() {
             <CardHeader title="Mulai Sesi" />
             <SessionPatientList
               patients={patients}
-              onStartSession={(p) => console.log('Mulai sesi dengan:', p.name)}
+              onStartSession={handleStartSession}
             />
           </Card>
 

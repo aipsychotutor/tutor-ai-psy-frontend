@@ -5,24 +5,21 @@ import { Experience } from "./components/Experience";
 import { UI } from "./components/UI";
 import { ChatHistory } from "./components/ChatHistory";
 import { ChatProvider } from "./hooks/useChat";
+import Chat from "./page/Chat";
 import Dashboard from "./page/Dashboard";
 import Home from "./page/Home";
+import Profile from "./page/Profile";
 import { Routes, Route } from "react-router-dom";
 
 
 function App() {
   return (
-    <>
-      <ChatProvider>
-        <Loader />
-        <Leva hidden />
-        <UI />
-        <ChatHistory />
-        <Canvas shadows camera={{ position: [0, 0, 1], fov: 30 }}>
-          <Experience />
-        </Canvas>
-      </ChatProvider>
-    </>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/profile" element={<Profile />}  />
+      <Route path="/chat" element={<Chat />} />
+    </Routes>
   );
 }
 
