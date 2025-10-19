@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import AddScenarioModal from "../components/AddScenarioModal";
+import Button from '../components/Button';
 
 // Card Container Component
 function Card({ children, className = '', span = 1 }) {
@@ -21,41 +23,6 @@ function CardHeader({ title, action }) {
       </h2>
       {action}
     </div>
-  );
-}
-
-// Button Component
-function Button({ 
-  children, 
-  onClick, 
-  variant = 'primary', 
-  size = 'md',
-  className = '',
-  ...props 
-}) {
-  const baseClass = 'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2';
-  
-  const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus-visible:ring-indigo-500',
-    secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 focus-visible:ring-gray-500',
-    ghost: 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 focus-visible:ring-indigo-500',
-    link: 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 focus-visible:ring-indigo-500'
-  };
-  
-  const sizes = {
-    sm: 'px-2 py-1 text-xs sm:text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseClass} ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
   );
 }
 
@@ -379,6 +346,7 @@ export default function Dashboard() {
   const { nama, session_id, user_id,  } = location.state || {};
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // const [patients] = useState([
   //   { id: '75ce3b71-cce4-4233-acbd-3441daab2ddb', name: 'Pasien A', image: null },
@@ -400,8 +368,7 @@ export default function Dashboard() {
     { name: 'Dibatalkan', value: 10, color: '#EF4444' }
   ]);
 
-  useEffect(() => {
-    const fetchPatients = async () => {
+  const fetchPatients = async () => {
       try {
         const res = await fetch('http://localhost:3000/api/patients'); // endpoint backend
         if (!res.ok) throw new Error('Network response was not ok');
@@ -420,6 +387,7 @@ export default function Dashboard() {
       }
     };
 
+  useEffect(() => {
     fetchPatients();
   }, []);
 
@@ -459,6 +427,31 @@ export default function Dashboard() {
     });
   };
 
+  const handleSaveScenario = async (patientData) => {
+  try {
+    const response = await fetch('http://localhost:3000/api/patients', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(patientData)
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      alert('Pasien berhasil ditambahkan!');
+      fetchPatients();
+    } else {
+      alert(`Error: ${result.message}`);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Gagal menambahkan pasien');
+  }
+};
+  
+
   console.log("Session ID:", session_id);
   
   return (
@@ -471,7 +464,18 @@ export default function Dashboard() {
           <DiagramCard chartData={chartData} setChartData={setChartData} />
 
           <Card span={2} className="sm:p-4 lg:p-5 min-h-[80px] flex flex-col">
-            <CardHeader title="Mulai Sesi" />
+            <CardHeader 
+              title="Mulai Sesi" 
+              action={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowAddModal(true)}
+                >
+                  + Tambah Skenario
+                </Button>
+              }
+            />
             <SessionPatientList
               patients={patients}
               onStartSession={handleStartSession}
@@ -488,6 +492,11 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+      <AddScenarioModal
+        show={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleSaveScenario}
+      />
     </div>
   );
 }
