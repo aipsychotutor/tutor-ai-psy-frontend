@@ -61,8 +61,8 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
   const handleConfirm = async () => {
     setShowConfirm(false);
 
-    // End session dulu sebelum navigate
-    if (session_id && (targetPath === "/dashboard" || targetPath === "/")) {
+    // End session untuk semua navigasi (Home atau Dashboard)
+    if (session_id) {
       try {
         await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
           method: 'PATCH',
