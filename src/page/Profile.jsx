@@ -88,6 +88,26 @@ export default function ProfilePage() {
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
+      // 🆕 LANGKAH 1: Set persona berdasarkan patient yang dipilih
+      console.log('🎭 Setting persona for patient:', patientId);
+      const personaResponse = await fetch('http://localhost:3000/set-persona-from-patient', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          patient_id: patientId
+        })
+      });
+
+      const personaResult = await personaResponse.json();
+
+      if (!personaResponse.ok) {
+        throw new Error(personaResult.message || 'Gagal set persona');
+      }
+
+      console.log('✅ Persona set successfully:', personaResult.activePersona.nama_pasien);
+
       const response = await fetch('http://localhost:3000/api/sessions', {
         method: 'POST',
         headers: {
@@ -279,7 +299,7 @@ export default function ProfilePage() {
                 onClick={handleBack}
                 className="w-full sm:w-auto"
               >
-                
+                Kembali
               </Button>
               <Button 
                 variant="success" 

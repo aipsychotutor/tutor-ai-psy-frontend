@@ -9,6 +9,7 @@ import Chat from "./page/Chat";
 import Dashboard from "./page/Dashboard";
 import Home from "./page/Home";
 import Profile from "./page/Profile";
+import Report from "./page/Report";
 import { Routes, Route } from "react-router-dom";
 
 
@@ -19,6 +20,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />}  />
       <Route path="/chat" element={<Chat />} />
+      <Route path="/report" element={<Report />} />
     </Routes>
   );
 }
