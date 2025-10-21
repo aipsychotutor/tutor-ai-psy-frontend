@@ -10,9 +10,9 @@ function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'bg-teal-500 text-white hover:bg-teal-600',
+    primary: 'bg-teal-500 text-gray-900 hover:bg-gray-100 hover:bg-teal-600',
     secondary: 'bg-white text-gray-900 hover:bg-gray-100',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
+    danger: 'bg-red-500 text-gray-900 hover:bg-gray-100 hover:bg-red-600',
   };
 
   return (
@@ -77,8 +77,8 @@ function ChatBubble({ message, isUser }) {
       <div
         className={`max-w-[70%] rounded-2xl px-4 py-3 ${
           isUser
-            ? 'bg-teal-500 text-white rounded-br-none'
-            : 'bg-white/20 text-white backdrop-blur rounded-bl-none'
+            ? 'bg-teal-500 text-gray-900 hover:bg-gray-100 rounded-br-none'
+            : 'bg-white/20 text-gray-900 hover:bg-gray-100 backdrop-blur rounded-bl-none'
         }`}
       >
         <p className="text-sm leading-relaxed">{message.text}</p>
@@ -100,18 +100,18 @@ function SessionCard({ session, onClick }) {
       className="bg-white/10 backdrop-blur rounded-2xl p-4 cursor-pointer hover:bg-white/20 transition-all"
     >
       <div className="flex items-center justify-between mb-2">
-        <h4 className="text-white font-medium">
+        <h4 className="text-gray-900 hover:bg-gray-100  font-medium">
           Sesi {new Date(session.start_time).toLocaleDateString('id-ID')}
         </h4>
         <span className={`text-xs px-3 py-1 rounded-full ${
           session.status === 'finished' 
-            ? 'bg-green-500/30 text-green-200' 
-            : 'bg-yellow-500/30 text-yellow-200'
+            ? 'bg-green-500/30 text-gray-900 hover:bg-gray-100' 
+            : 'bg-yellow-500/30 text-gray-900 hover:bg-gray-100'
         }`}>
           {session.status === 'finished' ? 'Selesai' : 'Berlangsung'}
         </span>
       </div>
-      <p className="text-white/70 text-sm">
+      <p className="text-gray-900 hover:bg-gray-100 /70 text-sm">
         {session.start_time && new Date(session.start_time).toLocaleTimeString('id-ID', {
           hour: '2-digit',
           minute: '2-digit'
@@ -122,7 +122,7 @@ function SessionCard({ session, onClick }) {
         })}`}
       </p>
       {session.messageCount && (
-        <p className="text-white/60 text-xs mt-2">
+        <p className="text-gray-900 hover:bg-gray-100 /60 text-xs mt-2">
           {session.messageCount} pesan
         </p>
       )}
