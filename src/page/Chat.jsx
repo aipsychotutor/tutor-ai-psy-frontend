@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 function Chat() {
   const location = useLocation();
   const { patientId, user_id, session_id, userName, avatarPath: preloadedAvatarPath } = location.state || {};
+  console.log("user_id di chat:", user_id);
   console.log("📦 Chat loaded, patientId:", patientId);
   
   const [avatarPath, setAvatarPath] = useState(preloadedAvatarPath || null);
@@ -32,8 +33,12 @@ function Chat() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.avatar_path) {
-          setAvatarPath(data.avatar_path);
-          console.log("Loaded avatar path:", data.avatar_path);
+          // Ensure path starts with / for absolute path
+          const normalizedPath = data.avatar_path.startsWith('/') 
+            ? data.avatar_path 
+            : `/${data.avatar_path}`;
+          setAvatarPath(normalizedPath);
+          console.log("Loaded avatar path:", normalizedPath);
         } else {
           setAvatarPath("/models/default.glb");
         }

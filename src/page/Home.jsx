@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {useNavigate} from "react-router-dom";
 
 function Home() {
@@ -11,7 +11,7 @@ function Home() {
         if (nama.trim() === "") return;
 
         try {
-        const res = await fetch("http://localhost:3000/api/auth/guest", { // sesuaikan port backend kamu
+        const res = await fetch("http://localhost:3000/api/auth/guest", { 
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nama }),
@@ -21,7 +21,7 @@ function Home() {
         console.log(data);
         if (data.status === "ok") {
             // Kirim data ke Dashboard
-            navigate("/dashboard", {
+            navigate(`/dashboard/${data.user.user_id}`, {
             state: {
                 nama: data.user.username,
                 user_id: data.user.user_id,

@@ -128,7 +128,7 @@ export default function ProfilePage() {
         console.log('Session started:', newSession);
 
         // Navigate ke Chat page dengan session info
-        navigate('/chat', {
+        navigate(`/chat/${user_id}/${patientId}`, {
           state: {
             patientId: patientId,
             patient: patient,
@@ -153,7 +153,7 @@ export default function ProfilePage() {
     // Redirect jika tidak ada data pasien
     if (!patient || !patient.id) {
       console.error('No patient data found, redirecting...');
-      navigate('/dashboard', {
+      navigate(`/dashboard/${user_id}`, {
         state: { nama: userName, user_id, session_id }
       });
       return;
@@ -202,7 +202,7 @@ export default function ProfilePage() {
 
   const handleBack = () => {
     console.log('kembali ke dashboard...');
-    navigate("/dashboard", {
+    navigate(`/dashboard/${user_id}`, {
       state: { nama: userName, user_id, session_id }
     });
   };

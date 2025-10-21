@@ -17,10 +17,10 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/profile" element={<Profile />}  />
-      <Route path="/chat" element={<Chat />} />
-      <Route path="/report" element={<Report />} />
+      <Route path="/dashboard/:userid" element={<Dashboard />} />
+      <Route path="/profile/:userId/:patientId" element={<Profile />}  />
+      <Route path="/chat/:userId/:patientId" element={<Chat />} />
+      <Route path="/report/:userId/:patientId" element={<Report />} />
     </Routes>
   );
 }

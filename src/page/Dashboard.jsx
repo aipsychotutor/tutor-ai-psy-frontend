@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import AddScenarioModal from "../components/AddScenarioModal";
 import Button from '../components/Button';
@@ -343,7 +343,8 @@ function DiagramCard({ chartData, setChartData }) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { nama, session_id, user_id,  } = location.state || {};
+  const { nama, session_id, user_id  } = location.state || {};
+  console.log("user_id di Home:", user_id);
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -434,7 +435,7 @@ export default function Dashboard() {
 
   const handleDetailClick = (patient) => {
     console.log('Detail clicked:', patient);
-    navigate('/profile', {
+    navigate(`/profile/${user_id}/${patient.id}`, {
       state: {
         patient: patient,
         user_id: user_id,
@@ -446,7 +447,7 @@ export default function Dashboard() {
 
   const handleReportClick = (patient) => {
     console.log('Report clicked:', patient);
-    navigate('/report', {
+    navigate(`/report/${user_id}/${patient.id}`, {
       state: {
         patient: patient,
         user_id: user_id,
@@ -458,7 +459,7 @@ export default function Dashboard() {
 
   const handleStartSession = (patient) => {
     console.log('Mulai sesi dengan:', patient.name);
-    navigate('/profile', {
+    navigate(`/profile/${user_id}/${patient.id}`, {
       state: {
         patientId: patient.id,
         patient: patient,
@@ -492,8 +493,6 @@ export default function Dashboard() {
     alert('Gagal menambahkan pasien');
   }
 };
-  
-
   console.log("Session ID:", session_id);
   
   return (

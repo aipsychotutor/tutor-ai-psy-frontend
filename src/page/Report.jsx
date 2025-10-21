@@ -152,7 +152,7 @@ export default function ReportPage() {
 
   useEffect(() => {
     if (!patient || !patient.id) {
-      navigate('/dashboard', {
+      navigate(`/dashboard/${user_id}`, {
         state: { nama: userName, user_id }
       });
       return;
@@ -220,7 +220,7 @@ export default function ReportPage() {
   };
 
   const handleBack = () => {
-    navigate("/dashboard", {
+    navigate(`/dashboard/${user_id}`, {
       state: { nama: userName, user_id }
     });
   };

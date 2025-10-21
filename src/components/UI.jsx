@@ -80,7 +80,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
     }
 
     // Navigate setelah session di-end
-    if (targetPath === "/dashboard") {
+    if (targetPath === `/dashboard/${user_id}`) {
       navigate(targetPath, { 
         state: { nama: userName, user_id, session_id } 
       });
@@ -115,7 +115,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
             </button>
 
             <button
-              onClick={() => handleNavigate("/dashboard")}
+              onClick={() => handleNavigate(`/dashboard/${user_id}`)}
               className="text-white hover:text-yellow-400 transition"
             >
               Dashboard
