@@ -1,3 +1,5 @@
+// ./src/components/ConfirmDialog.jsx
+
 export default function ConfirmModal({ 
   show, 
   title = "Konfirmasi", 

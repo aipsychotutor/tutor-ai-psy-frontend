@@ -1,3 +1,5 @@
+// ./src/page/Dashboard.jsx
+
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -387,7 +389,7 @@ export default function Dashboard() {
 
       // mapping ke pasien unik untuk ditampilkan di riwayat
       const uniquePatients = Array.from(new Map(
-        data.map(s => [s.patient_id, {
+        (data?.data || []).map(s => [s.patient_id, {
           id: s.patient_id,
           name: s.patient_name,
           image: s.patient_image,

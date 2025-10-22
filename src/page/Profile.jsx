@@ -1,21 +1,24 @@
+// ./src/page/Profile.jsx
 import React, { useState, useEffect } from "react";
-import {useNavigate, useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function Button({ 
   children, 
   onClick, 
   variant = 'primary', 
   className = '',
+  disabled = false,
   ...props 
 }) {
   const variants = {
-    danger: 'bg-white text-red-500 hover:bg-red-50 border-2 border-white',
-    success: 'bg-teal-500 text-white hover:bg-teal-600 border-2 border-teal-500'
+    danger: 'bg-white text-red-500 hover:bg-red-50 border-2 border-white disabled:opacity-50 disabled:cursor-not-allowed',
+    success: 'bg-teal-500 text-white hover:bg-teal-600 border-2 border-teal-500 disabled:opacity-50 disabled:cursor-not-allowed'
   };
 
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`px-8 py-2 rounded-full font-medium transition-all ${variants[variant]} ${className}`}
       {...props}
     >
@@ -74,7 +77,6 @@ export default function ProfilePage() {
         const sessions = await res.json();
         
         if (sessions && sessions.length > 0) {
-          // Ada ongoing session
           setIsSessionStarted(true);
           setCurrentSessionId(sessions[0].session_id);
         }
@@ -88,7 +90,7 @@ export default function ProfilePage() {
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
-      // 🆕 LANGKAH 1: Set persona berdasarkan patient yang dipilih
+      // Set persona berdasarkan patient yang dipilih
       console.log('🎭 Setting persona for patient:', patientId);
       const personaResponse = await fetch('http://localhost:3000/set-persona-from-patient', {
         method: 'POST',
@@ -116,15 +118,14 @@ export default function ProfilePage() {
         body: JSON.stringify({
           user_id: user_id,
           patient_id: patientId,
-          scenario_id: null // Opsional, bisa diisi kalau ada scenario
         })
       });
-      console.log('🔍 Creating session with:', { user_id, patient_id: patientId }); // debug log
+      
       const newSession = await response.json();
 
       if (response.ok) {
         setIsSessionStarted(true);
-        setCurrentSessionId(newSession.session_id);
+        setCurrentSessionId(newSession.data.session_id);
         console.log('Session started:', newSession);
 
         // Navigate ke Chat page dengan session info
@@ -133,7 +134,7 @@ export default function ProfilePage() {
             patientId: patientId,
             patient: patient,
             user_id: user_id,
-            session_id: newSession.session_id, // Session ID yang baru dibuat
+            session_id: newSession.data.session_id,
             userName: userName,
             avatarPath: avatarPath
           }
@@ -150,7 +151,6 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    // Redirect jika tidak ada data pasien
     if (!patient || !patient.id) {
       console.error('No patient data found, redirecting...');
       navigate(`/dashboard/${user_id}`, {
@@ -159,7 +159,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // Fetch patient details dari API
     const fetchPatientData = async () => {
       try {
         setLoading(true);
@@ -171,7 +170,6 @@ export default function ProfilePage() {
 
         const data = await response.json();
 
-        // Transform data dari database ke format yang dibutuhkan UI
         setProfileData({
           biodata: {
             nama: data.patient_name,
@@ -207,7 +205,6 @@ export default function ProfilePage() {
     });
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
@@ -216,7 +213,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Error state
   if (error || !profileData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
@@ -239,7 +235,7 @@ export default function ProfilePage() {
         <div className="relative">
           <div className="absolute -top-16 right-4 sm:right-8 z-10">
             <Avatar 
-              src={null} 
+              src={profileData.profileImage} 
               alt={profileData.biodata.nama}
             />
           </div>
@@ -268,9 +264,6 @@ export default function ProfilePage() {
                 <p className="text-white/90 text-sm leading-relaxed">
                   {profileData.latarBelakang.cerita}
                 </p>
-                <p className="text-white/90 text-sm leading-relaxed">
-                  {profileData.latarBelakang.emosi}
-                </p>
               </div>
             </section>
 
@@ -280,17 +273,23 @@ export default function ProfilePage() {
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
                 Kepribadian
               </h2>
-              <ul className="space-y-2">
-                {profileData.kepribadian.map((trait, index) => (
-                  <li 
-                    key={index}
-                    className="flex items-start gap-2 text-white/90 text-sm"
-                  >
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/90 flex-shrink-0" />
-                    <span>{trait}</span>
-                  </li>
-                ))}
-              </ul>
+              {profileData.kepribadian.length > 0 ? (
+                <ul className="space-y-2">
+                  {profileData.kepribadian.map((trait, index) => (
+                    <li 
+                      key={index}
+                      className="flex items-start gap-2 text-white/90 text-sm"
+                    >
+                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/90 flex-shrink-0" />
+                      <span>{trait}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-white/70 text-sm italic">
+                  Tidak ada informasi kepribadian
+                </p>
+              )}
             </section>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8 pt-4">
@@ -298,6 +297,7 @@ export default function ProfilePage() {
                 variant="danger" 
                 onClick={handleBack}
                 className="w-full sm:w-auto"
+                disabled={isLoading}
               >
                 Kembali
               </Button>
@@ -305,8 +305,16 @@ export default function ProfilePage() {
                 variant="success" 
                 onClick={handleStartSession}
                 className="w-full sm:w-auto"
+                disabled={isLoading}
               >
-                Mulai
+                {isLoading ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Memulai...
+                  </span>
+                ) : (
+                  'Mulai'
+                )}
               </Button>
             </div>
           </div>

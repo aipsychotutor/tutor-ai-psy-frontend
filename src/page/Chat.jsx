@@ -1,3 +1,5 @@
+// ./src/page/Chat.jsx
+
 import { Loader } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Leva } from "leva";
@@ -11,8 +13,6 @@ import { useState, useEffect } from "react";
 function Chat() {
   const location = useLocation();
   const { patientId, user_id, session_id, userName, avatarPath: preloadedAvatarPath } = location.state || {};
-  console.log("user_id di chat:", user_id);
-  console.log("📦 Chat loaded, patientId:", patientId);
   
   const [avatarPath, setAvatarPath] = useState(preloadedAvatarPath || null);
   const [isLoadingAvatar, setIsLoadingAvatar] = useState(!preloadedAvatarPath);
@@ -33,7 +33,6 @@ function Chat() {
       .then((res) => res.json())
       .then((data) => {
         if (data?.avatar_path) {
-          // Ensure path starts with / for absolute path
           const normalizedPath = data.avatar_path.startsWith('/') 
             ? data.avatar_path 
             : `/${data.avatar_path}`;

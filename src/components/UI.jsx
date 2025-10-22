@@ -1,3 +1,4 @@
+// ./src/components/UI.jsx
 import { useRef, useEffect, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -59,7 +60,6 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
   };
 
   const handleConfirm = async () => {
-    console.log("🧩 session_id:", session_id, "targetPath:", targetPath);
     setShowConfirm(false);
 
     // End session untuk semua navigasi (Home atau Dashboard)
@@ -98,7 +98,6 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
     <>
       <div className="fixed top-0 left-0 right-0 bottom-0 z-10 flex justify-between p-4 flex-col pointer-events-none">
         <nav className="flex justify-between items-center px-6 py-4 pointer-events-auto">
-          {/* Kiri: Logo & teks */}
           <div className="flex flex-col">
             <h1 className="text-white text-4xl font-bold">CommuLab</h1>
             <p className="font-poppins text-white text-lg">
@@ -195,7 +194,6 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
           </button>
         </div>
         <div className="absolute bottom-8 left-0 w-full flex flex-col items-center">
-          {/* Subtitle */}
           {subtitle && (
             <div className="mb-2 px-4 py-2 bg-black bg-opacity-70 text-white rounded text-center max-w-xl">
               {subtitle}
@@ -216,7 +214,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
                 }}
               />
               <button
-                disabled={loading || !message}
+disabled={loading || !message}
                 onClick={sendMessage}
                 className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-full ${
                   loading || !message ? "cursor-not-allowed opacity-30" : ""
