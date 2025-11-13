@@ -1,7 +1,18 @@
+import { use } from 'react';
 import { useState } from 'react';
+import {useNavigate} from "react-router-dom";
 
 export default function Auth() {
   const [isSignIn, setIsSignIn] = useState(true);
+  const navigate = use
+
+  const handleSignIn = () => {
+    navigate("/dashboard");
+  };
+
+  const handleSignUp = () => {
+    setIsSignIn(true);
+  }
 
   return (
     <div className="flex h-screen">
@@ -37,7 +48,7 @@ export default function Auth() {
                   />
                 </div>
                 
-                <button className="w-full py-3 bg-yellowCustom hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
+                <button className="w-full py-3 bg-yellowCustom hover:bg-yellow-400 text-black font-medium rounded-full transition-colors" onClick={handleSignIn}>
                   Sign In
                 </button>
                 
@@ -92,7 +103,7 @@ export default function Auth() {
                   />
                 </div>
                 
-                <button className="w-full py-3 bg-yellow-400 hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
+                <button className="w-full py-3 bg-yellow-400 hover:bg-yellow-400 text-black font-medium rounded-full transition-colors" onClick={handleSignUp}>
                   Sign up
                 </button>
                 

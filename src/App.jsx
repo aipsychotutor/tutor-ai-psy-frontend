@@ -19,12 +19,11 @@ import { Routes, Route } from "react-router-dom";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Auth />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile/:patientId" element={<Profile />}  />
       <Route path="/chat/:session_id" element={<Chat />} />
       <Route path="/report/:patientId" element={<Report />} />
-      <Route path="/login" element={<Auth />} />
     </Routes>
   );
 }

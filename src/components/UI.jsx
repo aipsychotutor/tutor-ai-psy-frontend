@@ -113,12 +113,12 @@ export const UI = ({ hidden, session_id, ...props }) => {
           </div>
 
           <div className="flex gap-6">
-            <button
+            {/* <button
               onClick={() => handleNavigate("/")}
               className="text-white hover:text-yellow-400 transition"
             >
               Home
-            </button>
+            </button> */}
 
             <button
               onClick={() => handleNavigate(`/dashboard`)}
