@@ -7,11 +7,19 @@ function Home() {
     const [nama, setNama] = useState("");
     const navigate = useNavigate();
 
+    useEffect(() => {
+        console.log("Membersihkan sisa sesi di halaman Home...");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         console.log("Mulai diklik");
-        if (nama.trim() === "") return;
-
+        if (nama.trim() === "") {
+            alert("Masukkan nama terlebih dahulu");
+            return;
+        }
         try {
         const res = await fetch("http://localhost:3000/api/auth/guest", { 
             method: "POST",
@@ -21,9 +29,12 @@ function Home() {
 
         const data = await res.json();
         console.log(data);
-        if (data.status === "ok") {
+        if (data.status === "ok" && data.token) {
             // Kirim data ke Dashboard
-            navigate(`/dashboard/${data.user.user_id}`, {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            navigate(`/dashboard`, {
             state: {
                 nama: data.user.username,
                 user_id: data.user.user_id,

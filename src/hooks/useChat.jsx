@@ -1,16 +1,12 @@
 // ./src/hooks/useChat.jsx
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 
 const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const ChatContext = createContext();
 
-export const ChatProvider = ({ children }) => {
-  const location = useLocation();
-  const { session_id } = location.state || {};
-
+export const ChatProvider = ({ children, session_id }) => {
   const [history, setHistory] = useState([]);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");

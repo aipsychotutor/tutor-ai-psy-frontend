@@ -1,7 +1,7 @@
 // ./src/page/Dashboard.jsx
 
 import { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import AddScenarioModal from "../components/AddScenarioModal";
 import Button from '../components/Button';
@@ -344,10 +344,11 @@ function DiagramCard({ chartData, setChartData }) {
 // Main Dashboard Component
 export default function Dashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { nama, session_id, user_id  } = location.state || {};
-  console.log("user_id di Home:", user_id);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  
   const [patients, setPatients] = useState([]);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [sessionPatients, setSessionPatients] = useState([]);
@@ -364,6 +365,39 @@ export default function Dashboard() {
   //   { id: 9, name: 'Pasien K', image: null },
   //   { id: 10, name: 'Pasien L', image: null }
   // ]);
+  useEffect(() => {
+    let verificationTimer = null;
+    const checkAuth = (event) => {
+      // 'event.persisted' akan bernilai true jika halaman dimuat dari bfcache
+      if (event && event.persisted) {
+        console.log("Halaman dimuat dari bfcache, cek ulang otentikasi...");
+      }
+
+      const storedToken = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+
+      if (!storedToken || !storedUser) {
+        console.log("Otentikasi gagal, redirect ke login...");
+        navigate("/", { replace: true });
+      } else {
+        // Hanya set token jika valid, untuk memicu fetch data
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+
+        verificationTimer = setTimeout(() => {
+          setIsVerifying(false); // <-- Baru set 'false' setelah 2 detik
+        }, 500);
+      }
+    };
+
+    checkAuth();
+    window.addEventListener('pageshow', checkAuth);
+
+    return () => {
+      window.removeEventListener('pageshow', checkAuth);
+    };
+
+  }, [navigate]);
 
   const [chartData, setChartData] = useState([
     { name: 'Selesai', value: 45, color: '#3B82F6' },
@@ -372,16 +406,29 @@ export default function Dashboard() {
     { name: 'Dibatalkan', value: 10, color: '#EF4444' }
   ]);
 
+  const handleAuthError = () => {
+    console.log("Token tidak valid atau expired. Logout...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/", { replace: true }); // Redirect ke login
+  };
+
   const fetchSessionHistory = async () => {
-    if (!user_id) {
-      console.log('❌ user_id undefined, skip fetch');
-      setLoadingSessions(false);
+   if (!token) { // <-- 1. Cek 'token', bukan 'user_id'
+      console.log('❌ Belum ada token, skip fetch');
       return;
     }
 
     try {
-      console.log('🔍 Fetching sessions for user_id:', user_id);
-      const res = await fetch(`http://localhost:3000/api/sessions?user_id=${user_id}`);
+      console.log('🔍 Fetching sessions...');
+      const res = await fetch(`http://localhost:3000/api/sessions`, {
+        headers: {
+          'Authorization': `Bearer ${token}` // <-- 2. Sertakan token di header
+        }
+      });
+      if (res.status === 401 || res.status === 403) {
+        return handleAuthError();
+      }
       if (!res.ok) throw new Error('Gagal mengambil riwayat sesi');
       const data = await res.json();
 
@@ -408,13 +455,16 @@ export default function Dashboard() {
   };
 
 // Panggil fetch session history pas component mount atau user_id berubah
-  useEffect(() => {
-    fetchSessionHistory();
-  }, [user_id]);
 
   const fetchPatients = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/patients'); // endpoint backend
+        const res = await fetch('http://localhost:3000/api/patients', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.status === 401 || res.status === 403) return handleAuthError();
+
         if (!res.ok) throw new Error('Network response was not ok');
         const data = await res.json();
 
@@ -432,42 +482,36 @@ export default function Dashboard() {
     };
 
   useEffect(() => {
-    fetchPatients();
-  }, []);
+    if (token) {
+      fetchSessionHistory();
+      fetchPatients();
+    }
+  }, [token]);
 
   const handleDetailClick = (patient) => {
     console.log('Detail clicked:', patient);
-    navigate(`/profile/${user_id}/${patient.id}`, {
+    navigate(`/profile/${patient.id}`, {
       state: {
         patient: patient,
-        user_id: user_id,
-        session_id: session_id,
-        userName: nama
       }
     });
   };
 
   const handleReportClick = (patient) => {
     console.log('Report clicked:', patient);
-    navigate(`/report/${user_id}/${patient.id}`, {
+    navigate(`/report/${patient.id}`, {
       state: {
         patient: patient,
-        user_id: user_id,
-        session_id: session_id,
-        userName: nama
       }
     });
   };
 
   const handleStartSession = (patient) => {
     console.log('Mulai sesi dengan:', patient.name);
-    navigate(`/profile/${user_id}/${patient.id}`, {
+    navigate(`/profile/${patient.id}`, {
       state: {
         patientId: patient.id,
         patient: patient,
-        user_id: user_id,
-        session_id: session_id,
-        userName: nama
       }
     });
   };
@@ -477,12 +521,14 @@ export default function Dashboard() {
     const response = await fetch('http://localhost:3000/api/patients', {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(patientData)
     });
 
     const result = await response.json();
+    if (response.status === 401 || response.status === 403) return handleAuthError();
 
     if (response.ok) {
       alert('Pasien berhasil ditambahkan!');
@@ -495,13 +541,16 @@ export default function Dashboard() {
     alert('Gagal menambahkan pasien');
   }
 };
-  console.log("Session ID:", session_id);
+
+  if (isVerifying) {
+    return;
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl space-y-6">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-          Selamat Datang, {nama}!
+          Selamat Datang, {user?.username}!
         </h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
           <DiagramCard chartData={chartData} setChartData={setChartData} />

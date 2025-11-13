@@ -1,7 +1,7 @@
 // ./src/page/Report.jsx
 
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // ==================== BUTTON COMPONENT ====================
 function Button({ 
@@ -174,10 +174,11 @@ function Loading({ message = "Loading..." }) {
 // ==================== MAIN REPORT PAGE COMPONENT ====================
 export default function ReportPage() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { patient, user_id, userName } = location.state || {};
+  const { patientId } = useParams();
 
   // State management
+  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -188,12 +189,28 @@ export default function ReportPage() {
   const [analyzingSession, setAnalyzingSession] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
+    if (!storedToken || !storedUser) {
+      navigate("/"); 
+    } else {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+  }, [navigate]);
+
+  const handleAuthError = () => {
+    console.log("Token tidak valid atau expired. Logout...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/"); // Redirect ke login
+  };
+
   // ==================== FETCH SESSIONS ====================
   const fetchSessions = async () => {
-    if (!patient || !patient.id) {
-      setError("Data pasien tidak valid");
-      setLoading(false);
-      return;
+    if (!patientId || !token) { 
+      return; // Tunggu sampai token dan patientId siap
     }
 
     try {
@@ -201,9 +218,15 @@ export default function ReportPage() {
       setError(null);
 
       const res = await fetch(
-        `http://localhost:3000/api/sessions?user_id=${user_id}&patient_id=${patient.id}`
+       `http://localhost:3000/api/sessions?patient_id=${patientId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       if (!res.ok) {
         throw new Error('Gagal mengambil data sesi');
       }
@@ -245,15 +268,21 @@ export default function ReportPage() {
     
     try {
       const res = await fetch(
-        `http://localhost:3000/api/sessions/${session_id}/transcripts`
+        `http://localhost:3000/api/reports/transcripts/${session_id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
       
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       if (!res.ok) {
         throw new Error('Gagal mengambil transkrip');
       }
       
       const data = await res.json();
-      const transcriptsData = data.data || data;
+      const transcriptsData = Array.isArray(data) ? data : [];
       
       // Transform data untuk chat bubbles
       const formattedTranscripts = transcriptsData.map(t => ({
@@ -277,17 +306,23 @@ export default function ReportPage() {
     
     try {
       const res = await fetch(
-        `http://localhost:3000/api/sessions/${session_id}/evaluation`
+       `http://localhost:3000/api/reports/evaluation/${session_id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
       );
-      
+
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       if (!res.ok) {
         throw new Error('Gagal mengambil evaluasi');
       }
       
       const data = await res.json();
       
-      if (data.success && data.evaluated) {
-        setEvaluation(data.evaluation);
+      if (data.evaluated) { 
+        setEvaluation(data); // Simpan seluruh objek
       } else {
         setEvaluation(null);
       }
@@ -323,10 +358,13 @@ export default function ReportPage() {
         { 
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         }
       );
+      
+      if (response.status === 401 || response.status === 403) return handleAuthError();
 
       const data = await response.json();
 
@@ -346,24 +384,22 @@ export default function ReportPage() {
 
   // ==================== HANDLE BACK ====================
   const handleBack = () => {
-    navigate(`/dashboard/${user_id}`, {
-      state: { nama: userName, user_id }
-    });
+    navigate(`/dashboard`);
   };
 
   // ==================== INITIAL LOAD ====================
   useEffect(() => {
     // Redirect if no patient data
-    if (!patient || !patient.id || !user_id) {
-      console.error('Missing patient or user data');
-      navigate(`/dashboard/${user_id || ''}`, {
-        state: { nama: userName, user_id }
-      });
-      return;
+    if (patientId && token) {
+      fetchSessions();
+    } else if (!token) {
+      // Biarkan useEffect auth yang me-redirect
+      setLoading(false);
+    } else if (!patientId) {
+      setError("Patient ID tidak ditemukan di URL.");
+      setLoading(false);
     }
-
-    fetchSessions();
-  }, [patient, user_id]);
+  }, [patientId, token, navigate]);
 
   // ==================== LOADING STATE ====================
   if (loading) {
@@ -441,7 +477,7 @@ export default function ReportPage() {
               Laporan Sesi
             </h1>
             <p className="text-white/80 text-lg">
-              Pasien: {patient?.name || 'Unknown'}
+              Pasien: {sessions.length > 0 ? sessions[0].patient_name : 'Memuat...'}
             </p>
             <p className="text-white/60 text-sm">
               Total {sessions.length} sesi

@@ -1,6 +1,6 @@
 // ./src/page/Profile.jsx
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 function Button({ 
   children, 
@@ -54,10 +54,13 @@ function InfoRow({ label, value }) {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const { patient, user_id, session_id, userName, avatarPath } = location.state || {};
-  const patientId = patient?.id;
+  // const { patient, user_id, session_id, userName, avatarPath } = location.state || {};
+  // const patientId = patient?.id;
+  const { patientId } = useParams();
+
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
 
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,25 +70,24 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    if (!patientId || !user_id) return;
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-    const checkOngoingSession = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:3000/api/sessions?user_id=${user_id}&patient_id=${patientId}&status=ongoing`
-        );
-        const sessions = await res.json();
-        
-        if (sessions && sessions.length > 0) {
-          setIsSessionStarted(true);
-          setCurrentSessionId(sessions[0].session_id);
-        }
-      } catch (err) {
-        console.error('Error checking ongoing session:', err);
-      }
-    };
-    checkOngoingSession();
-  }, [patientId, user_id]);
+    if (!storedToken || !storedUser) {
+      console.log("Tidak ada token/user, redirect ke halaman utama...");
+      navigate("/", { replace: true }); // <-- Tendang kembali ke halaman Home
+    } else {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+  }, [navigate]);
+
+  const handleAuthError = () => {
+    console.log("Token tidak valid atau expired. Logout...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/", { replace: true }); // Redirect ke login
+  };
 
   const handleStartSession = async () => {
     setIsLoading(true);
@@ -95,7 +97,8 @@ export default function ProfilePage() {
       const personaResponse = await fetch('http://localhost:3000/set-persona-from-patient', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           patient_id: patientId
@@ -113,34 +116,30 @@ export default function ProfilePage() {
       const response = await fetch('http://localhost:3000/api/sessions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          user_id: user_id,
           patient_id: patientId,
         })
       });
       
       const newSession = await response.json();
 
-      if (response.ok) {
+      if (response.ok && newSession.data) {
         setIsSessionStarted(true);
         setCurrentSessionId(newSession.data.session_id);
         console.log('Session started:', newSession);
 
         // Navigate ke Chat page dengan session info
-        navigate(`/chat/${user_id}/${patientId}`, {
+        navigate(`/chat/${newSession.data.session_id}`, {
           state: {
-            patientId: patientId,
-            patient: patient,
-            user_id: user_id,
-            session_id: newSession.data.session_id,
-            userName: userName,
-            avatarPath: avatarPath
+            patient: profileData,
+            avatarPath: profileData.avatarPath
           }
         });
       } else {
-        alert('Gagal memulai sesi: ' + newSession.message);
+        alert('Gagal memulai sesi: ' + (newSession.message || 'Respons tidak valid'));
       }
     } catch (error) {
       console.error('Error starting session:', error);
@@ -151,19 +150,16 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
-    if (!patient || !patient.id) {
-      console.error('No patient data found, redirecting...');
-      navigate(`/dashboard/${user_id}`, {
-        state: { nama: userName, user_id, session_id }
-      });
-      return;
-    }
-
+    if (!token || !patientId) return;
     const fetchPatientData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/patients/${patient.id}`);
-        
+        const response = await fetch(`http://localhost:3000/api/patients/${patientId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.status === 401 || response.status === 403) return handleAuthError();
         if (!response.ok) {
           throw new Error('Failed to fetch patient data');
         }
@@ -184,7 +180,8 @@ export default function ProfilePage() {
           kepribadian: Array.isArray(data.personality_traits) 
             ? data.personality_traits 
             : [],
-          profileImage: data.profile_image
+          profileImage: data.profile_image,
+          avatarPath: data.avatar_path
         });
         
         setLoading(false);
@@ -196,13 +193,11 @@ export default function ProfilePage() {
     };
 
     fetchPatientData();
-  }, [patient, navigate, userName, user_id, session_id]);
+  }, [patientId, token, navigate]);
 
   const handleBack = () => {
     console.log('kembali ke dashboard...');
-    navigate(`/dashboard/${user_id}`, {
-      state: { nama: userName, user_id, session_id }
-    });
+    navigate(`/dashboard`);
   };
 
   if (loading) {

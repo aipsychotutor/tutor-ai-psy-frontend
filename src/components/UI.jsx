@@ -1,13 +1,13 @@
 // ./src/components/UI.jsx
 import { useRef, useEffect, useState } from "react";
 import { useChat } from "../hooks/useChat";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ConfirmModal from "./ConfirmDialog";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 
-export const UI = ({ hidden, onExitChat, ...props }) => {
+export const UI = ({ hidden, session_id, ...props }) => {
   const { subtitle } = useChat();
   const input = useRef();
   const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } =
@@ -21,11 +21,21 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
   } = useSpeechRecognition();
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const { session_id, user_id, userName } = location.state || {};
-
+  const [token, setToken] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [targetPath, setTargetPath] = useState(null);
+
+  useEffect(() => {
+    // Ambil token saat komponen dimuat
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+    } else {
+      // Jika tidak ada token, idealnya redirect, 
+      // tapi kita asumsikan Chat.jsx sudah menangani ini
+      console.error("UI: Token tidak ditemukan");
+    }
+  }, []);
 
   useEffect(() => {
     if (transcript) {
@@ -63,11 +73,14 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
     setShowConfirm(false);
 
     // End session untuk semua navigasi (Home atau Dashboard)
-    if (session_id) {
+    if (session_id && token) {
       try {
         await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ 
             status: 'completed', 
             end_time: new Date().toISOString() 
@@ -80,13 +93,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
     }
 
     // Navigate setelah session di-end
-    if (targetPath === `/dashboard/${user_id}`) {
-      navigate(targetPath, { 
-        state: { nama: userName, user_id, session_id } 
-      });
-    } else {
-      navigate(targetPath);
-    }
+    navigate(targetPath, { replace: true });
   };
 
   const handleCancel = () => {
@@ -114,7 +121,7 @@ export const UI = ({ hidden, onExitChat, ...props }) => {
             </button>
 
             <button
-              onClick={() => handleNavigate(`/dashboard/${user_id}`)}
+              onClick={() => handleNavigate(`/dashboard`)}
               className="text-white hover:text-yellow-400 transition"
             >
               Dashboard
