@@ -12,6 +12,7 @@ import Dashboard from "./page/Dashboard";
 import Home from "./page/Home";
 import Profile from "./page/Profile";
 import Report from "./page/Report";
+import Auth from "./page/Auth";
 import { Routes, Route } from "react-router-dom";
 
 
@@ -23,6 +24,7 @@ function App() {
       <Route path="/profile/:patientId" element={<Profile />}  />
       <Route path="/chat/:session_id" element={<Chat />} />
       <Route path="/report/:patientId" element={<Report />} />
+      <Route path="/login" element={<Auth />} />
     </Routes>
   );
 }

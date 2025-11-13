@@ -10,6 +10,7 @@ export default {
       '2.5xl': '1.7rem', // antara 2xl dan 3xl
       },
       colors: {
+        yellowCustom : "#FFCA75",
         dashboardStart: '#150412',
         dashboardMid: '#7e1e75',
         dashboardEnd: '#a61e8f',
