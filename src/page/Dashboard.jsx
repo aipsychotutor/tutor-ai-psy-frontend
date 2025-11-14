@@ -414,33 +414,46 @@ export default function Dashboard() {
   };
 
   const fetchSessionHistory = async () => {
-   if (!token) { // <-- 1. Cek 'token', bukan 'user_id'
+    if (!token) {
       console.log('❌ Belum ada token, skip fetch');
+      setLoadingSessions(false); // PENTING: Set false agar tidak loading forever
       return;
     }
 
     try {
-      console.log('🔍 Fetching sessions...');
+      console.log('🔍 Fetching sessions with token:', token.substring(0, 20) + '...');
       const res = await fetch(`http://localhost:3000/api/sessions`, {
         headers: {
-          'Authorization': `Bearer ${token}` // <-- 2. Sertakan token di header
+          'Authorization': `Bearer ${token}`
         }
       });
+
+      console.log('📡 Response status:', res.status);
+      
       if (res.status === 401 || res.status === 403) {
         return handleAuthError();
       }
-      if (!res.ok) throw new Error('Gagal mengambil riwayat sesi');
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        console.error('❌ Response error:', errorData);
+        throw new Error(errorData.message || 'Gagal mengambil riwayat sesi');
+      }
+
       const data = await res.json();
+      console.log('📋 Session History Response:', data);
 
-      console.log('📋 Session History:', data);
+      // Backend return: { success: true, data: [...] }
+      const sessions = data?.data || [];
+      console.log('📋 Sessions array:', sessions);
 
-      // mapping ke pasien unik untuk ditampilkan di riwayat
+      // mapping ke pasien unik
       const uniquePatients = Array.from(new Map(
-        (data?.data || []).map(s => [s.patient_id, {
+        sessions.map(s => [s.patient_id, {
           id: s.patient_id,
           name: s.patient_name,
           image: s.patient_image,
-          lastSession: s.session_date,
+          lastSession: s.session_date || s.start_time,
           status: s.status
         }])
       ).values());
@@ -449,8 +462,9 @@ export default function Dashboard() {
       setSessionPatients(uniquePatients);
     } catch (err) {
       console.error('❌ Error fetching sessions:', err);
+      alert('Gagal memuat riwayat sesi: ' + err.message);
     } finally {
-      setLoadingSessions(false);
+      setLoadingSessions(false); // PENTING: Selalu set false
     }
   };
 
