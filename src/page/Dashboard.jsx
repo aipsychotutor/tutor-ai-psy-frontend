@@ -1,16 +1,19 @@
 // ./src/page/Dashboard.jsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import AddScenarioModal from "../components/AddScenarioModal";
-import Button from '../components/Button';
+import Button from "../components/Button";
 
 // Card Container Component
-function Card({ children, className = '', span = 1 }) {
-  const spanClass = span === 2 ? 'lg:col-span-2' : span === 3 ? 'lg:col-span-3' : '';
+function Card({ children, className = "", span = 1 }) {
+  const spanClass =
+    span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
   return (
-    <div className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}>
+    <div
+      className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}
+    >
       {children}
     </div>
   );
@@ -29,40 +32,40 @@ function CardHeader({ title, action }) {
 }
 
 // Avatar Component
-function Avatar({ src, alt = '', size = 'md', className = '' }) {
+function Avatar({ src, alt = "", size = "md", className = "" }) {
   const sizes = {
-    sm: 'h-8 w-8',
-    md: 'h-10 w-10',
-    lg: 'h-12 w-12'
+    sm: "h-8 w-8",
+    md: "h-10 w-10",
+    lg: "h-12 w-12",
   };
 
   return (
     <img
-      src={src || '/images/default.png'}
+      src={src || "/images/default.png"}
       alt={alt}
       className={`${sizes[size]} rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 flex-shrink-0 ${className}`}
       onError={(e) => {
-        e.target.src = '/images/default.png';
+        e.target.src = "/images/default.png";
       }}
     />
   );
 }
 
 // Input Component
-function Input({ 
-  id, 
-  label, 
-  type = 'text', 
-  value, 
-  onChange, 
+function Input({
+  id,
+  label,
+  type = "text",
+  value,
+  onChange,
   min,
-  className = '',
-  ...props 
+  className = "",
+  ...props
 }) {
   return (
     <div className="space-y-2">
       {label && (
-        <label 
+        <label
           htmlFor={id}
           className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
         >
@@ -90,8 +93,8 @@ function ChartLegendButton({ item, percentage, isActive, onClick }) {
       className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
       style={{ opacity: isActive ? 1 : 0.5 }}
     >
-      <span 
-        className="w-3 h-3 rounded-full flex-shrink-0" 
+      <span
+        className="w-3 h-3 rounded-full flex-shrink-0"
         style={{ backgroundColor: item.color }}
       />
       <div className="flex-1 min-w-0">
@@ -120,8 +123,8 @@ function ChartEditForm({ data, onChange, onSave, onCancel }) {
           onChange={(e) => onChange(index, e.target.value)}
           label={
             <>
-              <span 
-                className="w-4 h-4 rounded-full flex-shrink-0" 
+              <span
+                className="w-4 h-4 rounded-full flex-shrink-0"
                 style={{ backgroundColor: item.color }}
               />
               {item.name}
@@ -149,7 +152,9 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
       const percentage = ((chartData.value / totalValue) * 100).toFixed(1);
       return (
         <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{chartData.name}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {chartData.name}
+          </p>
           <p className="text-sm text-gray-600 dark:text-gray-300">
             {chartData.value} sesi ({percentage}%)
           </p>
@@ -168,7 +173,7 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
             cx="50%"
             cy="50%"
             innerRadius={30}
-            outerRadius="100%"  
+            outerRadius="100%"
             paddingAngle={2}
             dataKey="value"
             onClick={onPieClick}
@@ -178,7 +183,9 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
               <Cell
                 key={`cell-${index}`}
                 fill={entry.color}
-                opacity={activeIndex === null || activeIndex === index ? 1 : 0.5}
+                opacity={
+                  activeIndex === null || activeIndex === index ? 1 : 0.5
+                }
                 className="transition-opacity duration-200"
               />
             ))}
@@ -207,6 +214,7 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
 
 // Patient List Item Component
 function PatientListItem({ patient, onDetailClick, onReportClick }) {
+  console.log("Rendering PatientListItem for:", patient);
   return (
     <div className="flex items-center justify-between bg-white dark:bg-gray-950 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
       <div className="flex items-center gap-3">
@@ -261,9 +269,16 @@ function SessionPatientList({ patients, onStartSession }) {
           key={pasien.id}
           className="flex flex-col items-center bg-white dark:bg-gray-950 rounded-2xl p-2 shadow-md"
         >
-          <Avatar src={pasien.image} alt={pasien.name} size="sm" className="h-8 w-8"/>
+          <Avatar
+            src={pasien.image}
+            alt={pasien.name}
+            size="sm"
+            className="h-8 w-8"
+          />
           <p className="mt-1 font-medium text-gray-900 dark:text-gray-100 text-center text-xs">
-            {pasien.name}
+            {pasien.users
+              ? `${pasien.name} (${pasien.users?.username})`
+              : pasien.name}
           </p>
 
           <Button
@@ -318,25 +333,25 @@ function DiagramCard({ chartData, setChartData }) {
             size="sm"
             onClick={() => setIsEditing(!isEditing)}
           >
-            {isEditing ? 'Batal' : 'Edit Data'}
+            {isEditing ? "Batal" : "Edit Data"}
           </Button>
         }
       />
-        {isEditing ? (
-          <ChartEditForm
-            data={editData}
-            onChange={handleInputChange}
-            onSave={handleSaveData}
-            onCancel={handleCancelEdit}
-          />
-        ) : (
-          <InteractivePieChart
-            data={chartData}
-            activeIndex={activeIndex}
-            onPieClick={handlePieClick}
-            totalValue={totalValue}
-          />
-        )}
+      {isEditing ? (
+        <ChartEditForm
+          data={editData}
+          onChange={handleInputChange}
+          onSave={handleSaveData}
+          onCancel={handleCancelEdit}
+        />
+      ) : (
+        <InteractivePieChart
+          data={chartData}
+          activeIndex={activeIndex}
+          onPieClick={handlePieClick}
+          totalValue={totalValue}
+        />
+      )}
     </Card>
   );
 }
@@ -346,7 +361,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  
+
   const [patients, setPatients] = useState([]);
   const [isVerifying, setIsVerifying] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -391,19 +406,18 @@ export default function Dashboard() {
     };
 
     checkAuth();
-    window.addEventListener('pageshow', checkAuth);
+    window.addEventListener("pageshow", checkAuth);
 
     return () => {
-      window.removeEventListener('pageshow', checkAuth);
+      window.removeEventListener("pageshow", checkAuth);
     };
-
   }, [navigate]);
 
   const [chartData, setChartData] = useState([
-    { name: 'Selesai', value: 45, color: '#3B82F6' },
-    { name: 'Berlangsung', value: 25, color: '#F97316' },
-    { name: 'Dijadwalkan', value: 20, color: '#14B8A6' },
-    { name: 'Dibatalkan', value: 10, color: '#EF4444' }
+    { name: "Selesai", value: 45, color: "#3B82F6" },
+    { name: "Berlangsung", value: 25, color: "#F97316" },
+    { name: "Dijadwalkan", value: 20, color: "#14B8A6" },
+    { name: "Dibatalkan", value: 10, color: "#EF4444" },
   ]);
 
   const handleAuthError = () => {
@@ -415,85 +429,94 @@ export default function Dashboard() {
 
   const fetchSessionHistory = async () => {
     if (!token) {
-      console.log('❌ Belum ada token, skip fetch');
+      console.log("❌ Belum ada token, skip fetch");
       setLoadingSessions(false); // PENTING: Set false agar tidak loading forever
       return;
     }
 
     try {
-      console.log('🔍 Fetching sessions with token:', token.substring(0, 20) + '...');
+      console.log(
+        "🔍 Fetching sessions with token:",
+        token.substring(0, 20) + "..."
+      );
       const res = await fetch(`http://localhost:3000/api/sessions`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      console.log('📡 Response status:', res.status);
-      
+      console.log("📡 Response status:", res.status);
+
       if (res.status === 401 || res.status === 403) {
         return handleAuthError();
       }
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        console.error('❌ Response error:', errorData);
-        throw new Error(errorData.message || 'Gagal mengambil riwayat sesi');
+        console.error("❌ Response error:", errorData);
+        throw new Error(errorData.message || "Gagal mengambil riwayat sesi");
       }
 
       const data = await res.json();
-      console.log('📋 Session History Response:', data);
+      console.log("📋 Session History Response:", data);
 
       // Backend return: { success: true, data: [...] }
       const sessions = data?.data || [];
-      console.log('📋 Sessions array:', sessions);
+      console.log("📋 Sessions array:", sessions);
 
       // mapping ke pasien unik
-      const uniquePatients = Array.from(new Map(
-        sessions.map(s => [s.patient_id, {
-          id: s.patient_id,
-          name: s.patient_name,
-          image: s.patient_image,
-          lastSession: s.session_date || s.start_time,
-          status: s.status
-        }])
-      ).values());
+      const uniquePatients = Array.from(
+        new Map(
+          sessions.map((s) => [
+            s.patient_id,
+            {
+              id: s.patient_id,
+              name: s.patient_name,
+              image: s.patient_image,
+              lastSession: s.session_date || s.start_time,
+              status: s.status,
+            },
+          ])
+        ).values()
+      );
 
-      console.log('👥 Unique Patients:', uniquePatients);
+      console.log("👥 Unique Patients:", uniquePatients);
       setSessionPatients(uniquePatients);
     } catch (err) {
-      console.error('❌ Error fetching sessions:', err);
-      alert('Gagal memuat riwayat sesi: ' + err.message);
+      console.error("❌ Error fetching sessions:", err);
+      alert("Gagal memuat riwayat sesi: " + err.message);
     } finally {
       setLoadingSessions(false); // PENTING: Selalu set false
     }
   };
 
-// Panggil fetch session history pas component mount atau user_id berubah
+  // Panggil fetch session history pas component mount atau user_id berubah
 
   const fetchPatients = async () => {
-      try {
-        const res = await fetch('http://localhost:3000/api/patients', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (res.status === 401 || res.status === 403) return handleAuthError();
+    try {
+      const res = await fetch("http://localhost:3000/api/patients", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.status === 401 || res.status === 403) return handleAuthError();
 
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
 
-        const mappedPatients = data.map(p => ({
-          id: p.patient_id,   // sesuaikan dengan nama kolom di backend
-          name: p.patient_name,       // sesuaikan dengan nama kolom di backend
-          image: p.profile_image || null
-        }));
-        setPatients(mappedPatients);
-      } catch (err) {
-        console.error('Error fetching patients:', err);
-      } finally {
-        setLoadingPatients(false);
-      }
-    };
+      const mappedPatients = data.map((p) => ({
+        id: p.patient_id, // sesuaikan dengan nama kolom di backend
+        name: p.patient_name, // sesuaikan dengan nama kolom di backend
+        image: p.profile_image || null,
+        users: p.users || null, // menambahkan informasi user jika ada
+      }));
+      setPatients(mappedPatients);
+    } catch (err) {
+      console.error("Error fetching patients:", err);
+    } finally {
+      setLoadingPatients(false);
+    }
+  };
 
   useEffect(() => {
     if (token) {
@@ -503,63 +526,64 @@ export default function Dashboard() {
   }, [token]);
 
   const handleDetailClick = (patient) => {
-    console.log('Detail clicked:', patient);
+    console.log("Detail clicked:", patient);
     navigate(`/profile/${patient.id}`, {
       state: {
         patient: patient,
-      }
+      },
     });
   };
 
   const handleReportClick = (patient) => {
-    console.log('Report clicked:', patient);
+    console.log("Report clicked:", patient);
     navigate(`/report/${patient.id}`, {
       state: {
         patient: patient,
-      }
+      },
     });
   };
 
   const handleStartSession = (patient) => {
-    console.log('Mulai sesi dengan:', patient.name);
+    console.log("Mulai sesi dengan:", patient.name);
     navigate(`/profile/${patient.id}`, {
       state: {
         patientId: patient.id,
         patient: patient,
-      }
+      },
     });
   };
 
   const handleSaveScenario = async (patientData) => {
-  try {
-    const response = await fetch('http://localhost:3000/api/patients', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(patientData)
-    });
+    try {
+      const response = await fetch("http://localhost:3000/api/patients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(patientData),
+      });
 
-    const result = await response.json();
-    if (response.status === 401 || response.status === 403) return handleAuthError();
+      const result = await response.json();
+      if (response.status === 401 || response.status === 403)
+        return handleAuthError();
 
-    if (response.ok) {
-      alert('Pasien berhasil ditambahkan!');
-      fetchPatients();
-    } else {
-      alert(`Error: ${result.message}`);
+      if (response.ok) {
+        alert("Pasien berhasil ditambahkan!");
+        fetchPatients();
+      } else {
+        alert(`Error: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Gagal menambahkan pasien");
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Gagal menambahkan pasien');
-  }
-};
+  };
 
   if (isVerifying) {
     return;
   }
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl space-y-6">
@@ -570,10 +594,11 @@ export default function Dashboard() {
           <DiagramCard chartData={chartData} setChartData={setChartData} />
 
           <Card span={2} className="sm:p-4 lg:p-5 min-h-[80px] flex flex-col">
-            <CardHeader 
-              title="Mulai Sesi" 
+            <CardHeader
+              title="Mulai Sesi"
               action={
                 <Button
+                  type="button"
                   variant="primary"
                   size="sm"
                   onClick={() => setShowAddModal(true)}
@@ -606,6 +631,7 @@ export default function Dashboard() {
         show={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSave={handleSaveScenario}
+        user={user}
       />
     </div>
   );
