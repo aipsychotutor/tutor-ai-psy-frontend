@@ -405,7 +405,7 @@ export default function Dashboard() {
 
     setLoadingStats(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/evaluations/stats`, {
+      const res = await fetch(`http://localhost:3000/api/sessions/stats`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

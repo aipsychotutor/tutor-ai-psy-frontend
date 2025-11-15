@@ -1584,7 +1584,7 @@ lru-cache@^5.1.1:
 
 lucide-react@^0.553.0:
   version "0.553.0"
-  resolved "https://registry.npmjs.org/lucide-react/-/lucide-react-0.553.0.tgz"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.553.0.tgz#50ea2ab682315be9b8a2df575403e4f14cc93e83"
   integrity sha512-BRgX5zrWmNy/lkVAe0dXBgd7XQdZ3HTf+Hwe3c9WK6dqgnj9h+hxV+MDncM88xDWlCq27+TKvHGE70ViODNILw==
 
 maath@^0.6.0:
@@ -1831,7 +1831,7 @@ react-dropzone@^12.0.0:
 
 react-hot-toast@^2.6.0:
   version "2.6.0"
-  resolved "https://registry.npmjs.org/react-hot-toast/-/react-hot-toast-2.6.0.tgz"
+  resolved "https://registry.yarnpkg.com/react-hot-toast/-/react-hot-toast-2.6.0.tgz#4ada6ed3c75c5e42a90d562f55665ff37ee1442b"
   integrity sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==
   dependencies:
     csstype "^3.1.3"
