@@ -14,6 +14,7 @@ export default {
         dashboardStart: '#150412',
         dashboardMid: '#7e1e75',
         dashboardEnd: '#a61e8f',
+        ungu : "#7e1e75",
         cardBackgroundColor: '#fefdfe', // 🌤 mode terang
         cardBackgroundColorDark: '#1a1a1a', // 🌙 mode gelap
       },

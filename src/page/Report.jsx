@@ -1,5 +1,3 @@
-// ./src/page/Report.jsx
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -90,6 +88,354 @@ function ScoreCard({ label, value, maxValue, color = "bg-teal-500" }) {
   );
 }
 
+// ==================== MODAL COMPONENT ====================
+function Modal({ isOpen, onClose, title, children }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==================== CATEGORY DETAIL MODAL CONTENT ====================
+function CategoryDetailModal({ category, items, type }) {
+  const getCategoryColor = (cat, itemType) => {
+    if (itemType === 'question') {
+      const colors = {
+        'Terbuka': 'text-green-600 dark:text-green-400',
+        'Sugestif': 'text-orange-600 dark:text-orange-400',
+        'Tertutup': 'text-blue-600 dark:text-blue-400',
+        'Reflektif': 'text-purple-600 dark:text-purple-400'
+      };
+      return colors[cat] || 'text-gray-600';
+    } else {
+      const colors = {
+        'Empatik': 'text-green-600 dark:text-green-400',
+        'Netral': 'text-blue-600 dark:text-blue-400',
+        'Judgemental': 'text-red-600 dark:text-red-400'
+      };
+      return colors[cat] || 'text-gray-600';
+    }
+  };
+
+  const getCategoryIcon = (cat, itemType) => {
+    if (itemType === 'question') {
+      const icons = {
+        'Terbuka': '🔓',
+        'Sugestif': '💡',
+        'Tertutup': '🔒',
+        'Reflektif': '🪞'
+      };
+      return icons[cat] || '❓';
+    } else {
+      const icons = {
+        'Empatik': '💚',
+        'Netral': '💙',
+        'Judgemental': '⚠️'
+      };
+      return icons[cat] || '💭';
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          {getCategoryIcon(category, type)} Menampilkan {items.length} pesan dalam kategori <span className="font-bold">{category}</span>
+        </p>
+      </div>
+
+      {items.length === 0 ? (
+        <div className="text-center py-12 text-gray-500">
+          <p>Tidak ada pesan dalam kategori ini</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item, idx) => (
+            <div 
+              key={idx}
+              className="bg-white/50 dark:bg-gray-700/50 rounded-xl p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1">
+                  <span className="text-2xl">{idx + 1}</span>
+                </div>
+                <div className="flex-1">
+                  <p className="text-gray-900 dark:text-gray-100 leading-relaxed mb-3">
+                    "{item.text}"
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {type === 'question' ? (
+                      <>
+                        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
+                          <span className={getCategoryColor(item.question_type.label, 'question')}>
+                            ❓ {item.question_type.label}
+                          </span>
+                          <span className="text-gray-500 ml-1">
+                            ({(item.question_type.confidence * 100).toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
+                          <span className={getCategoryColor(item.empathy_level.label, 'empathy')}>
+                            💭 {item.empathy_level.label}
+                          </span>
+                          <span className="text-gray-500 ml-1">
+                            ({(item.empathy_level.confidence * 100).toFixed(0)}%)
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
+                          <span className={getCategoryColor(item.question_type.label, 'question')}>
+                            ❓ {item.question_type.label}
+                          </span>
+                          <span className="text-gray-500 ml-1">
+                            ({(item.question_type.confidence * 100).toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
+                          <span className={getCategoryColor(item.empathy_level.label, 'empathy')}>
+                            💭 {item.empathy_level.label}
+                          </span>
+                          <span className="text-gray-500 ml-1">
+                            ({(item.empathy_level.confidence * 100).toFixed(0)}%)
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ==================== MODEL ANALYSIS STATS COMPONENT ====================
+function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState({ category: '', items: [], type: '' });
+
+  if (!detailedAnalysis || !detailedAnalysis.model_statistics) return null;
+
+  const stats = detailedAnalysis.model_statistics;
+  const hasQuestions = detailedAnalysis.has_questions !== false;
+  const totalQuestions = detailedAnalysis.total_questions || 0;
+  const totalStatements = detailedAnalysis.total_statements || 0;
+
+  const openCategoryModal = (category, type) => {
+    let items = [];
+    
+    if (type === 'question') {
+      items = classificationResults.filter(
+        item => item.question_type.label === category && item.type === 'question'
+      );
+    } else {
+      items = classificationResults.filter(
+        item => item.empathy_level.label === category
+      );
+    }
+
+    setModalData({ category, items, type });
+    setModalOpen(true);
+  };
+
+  return (
+    <>
+      <Card className="mb-6">
+        <CardHeader 
+          title="📊 Detail Analisis Model AI" 
+          subtitle={`Analisis dari ${detailedAnalysis.total_counselor_messages} pesan konselor (${totalQuestions} pertanyaan, ${totalStatements} pernyataan)`}
+        />
+
+        {hasQuestions && Object.keys(stats.question_distribution).length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+              ❓ Distribusi Tipe Pertanyaan
+              <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+                (Dari {totalQuestions} pertanyaan - Klik untuk detail)
+              </span>
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {Object.entries(stats.question_distribution).map(([type, count]) => (
+                <button
+                  key={type}
+                  onClick={() => openCategoryModal(type, 'question')}
+                  className="bg-white/10 backdrop-blur rounded-xl p-3 text-center hover:bg-white/20 transition-all hover:shadow-lg cursor-pointer group"
+                >
+                  <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform">
+                    {count}
+                  </div>
+                  <div className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-medium">
+                    {type}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    ({stats.question_percentages[type]}%)
+                  </div>
+                  <div className="text-xs text-teal-600 dark:text-teal-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Klik untuk detail →
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!hasQuestions && (
+          <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl">
+            <p className="text-sm text-yellow-700 dark:text-yellow-300">
+              ℹ️ Tidak ada pertanyaan (kalimat dengan tanda tanya) dalam sesi ini. 
+              Analisis teknik bertanya tidak tersedia, hanya analisis empati yang ditampilkan.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+            💙 Distribusi Tingkat Empati
+            <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
+              (Dari semua {detailedAnalysis.total_counselor_messages} pesan - Klik untuk detail)
+            </span>
+          </h3>
+          <div className="grid grid-cols-3 gap-3">
+            {Object.entries(stats.empathy_distribution).map(([level, count]) => {
+              const colors = {
+                'Empatik': 'bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-300 hover:bg-green-500/30',
+                'Netral': 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30',
+                'Judgemental': 'bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-500/30'
+              };
+              
+              return (
+                <button
+                  key={level}
+                  onClick={() => openCategoryModal(level, 'empathy')}
+                  className={`backdrop-blur rounded-xl p-4 text-center border transition-all hover:shadow-lg cursor-pointer group ${colors[level] || ''}`}
+                >
+                  <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
+                    {count}
+                  </div>
+                  <div className="text-sm mt-1 font-medium">
+                    {level}
+                  </div>
+                  <div className="text-xs opacity-75 mt-1">
+                    ({stats.empathy_percentages[level]}%)
+                  </div>
+                  <div className="text-xs mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Klik untuk detail →
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {stats.patterns && stats.patterns.length > 0 && (
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+              🔍 Pola Terdeteksi
+            </h3>
+            <div className="space-y-2">
+              {stats.patterns.map((pattern, idx) => (
+                <div 
+                  key={idx} 
+                  className="bg-white/10 backdrop-blur rounded-lg p-3 flex items-start gap-3"
+                >
+                  <span className="text-2xl">
+                    {pattern.type === 'most_common' ? '🎯' : 
+                     pattern.type === 'empathy_trend' ? '📈' : 
+                     pattern.type === 'question_diversity' ? '🎨' : '•'}
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {pattern.type === 'most_common' && (
+                        <>Kombinasi Paling Sering: <span className="text-teal-600 dark:text-teal-400">{pattern.pattern}</span> ({pattern.count}x, {pattern.percentage}%)</>
+                      )}
+                      {pattern.type === 'empathy_trend' && (
+                        <>Tren Empati: <span className={
+                          pattern.direction === 'improving' ? 'text-green-600 dark:text-green-400' :
+                          pattern.direction === 'declining' ? 'text-red-600 dark:text-red-400' :
+                          'text-blue-600 dark:text-blue-400'
+                        }>{
+                          pattern.direction === 'improving' ? 'Meningkat 📈' :
+                          pattern.direction === 'declining' ? 'Menurun 📉' :
+                          'Konsisten ➡️'
+                        }</span></>
+                      )}
+                      {pattern.type === 'question_diversity' && (
+                        <>Variasi Pertanyaan: {pattern.unique_types} dari {pattern.total_types} tipe digunakan</>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {hasQuestions && (
+            <div className="bg-blue-500/10 backdrop-blur rounded-xl p-4 border border-blue-500/20">
+              <div className="text-sm text-blue-700 dark:text-blue-300 mb-1">
+                Confidence Pertanyaan
+              </div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {(stats.avg_question_confidence * 100).toFixed(1)}%
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Tingkat keyakinan model dalam klasifikasi
+              </div>
+            </div>
+          )}
+          <div className="bg-purple-500/10 backdrop-blur rounded-xl p-4 border border-purple-500/20">
+            <div className="text-sm text-purple-700 dark:text-purple-300 mb-1">
+              Confidence Empati
+            </div>
+            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {(stats.avg_empathy_confidence * 100).toFixed(1)}%
+            </div>
+            <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">
+              Tingkat keyakinan model dalam klasifikasi
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={`Detail Kategori: ${modalData.category}`}
+      >
+        <CategoryDetailModal
+          category={modalData.category}
+          items={modalData.items}
+          type={modalData.type}
+        />
+      </Modal>
+    </>
+  );
+}
+
 // ==================== CHAT BUBBLE COMPONENT ====================
 function ChatBubble({ message, isUser }) {
   return (
@@ -176,7 +522,6 @@ export default function ReportPage() {
   const navigate = useNavigate();
   const { patientId } = useParams();
 
-  // State management
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -184,6 +529,8 @@ export default function ReportPage() {
   const [selectedSession, setSelectedSession] = useState(null);
   const [transcripts, setTranscripts] = useState([]);
   const [evaluation, setEvaluation] = useState(null);
+  const [detailedAnalysis, setDetailedAnalysis] = useState(null);
+  const [classificationResults, setClassificationResults] = useState([]);
   const [loadingTranscripts, setLoadingTranscripts] = useState(false);
   const [loadingEvaluation, setLoadingEvaluation] = useState(false);
   const [analyzingSession, setAnalyzingSession] = useState(false);
@@ -204,13 +551,12 @@ export default function ReportPage() {
     console.log("Token tidak valid atau expired. Logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/"); // Redirect ke login
+    navigate("/");
   };
 
-  // ==================== FETCH SESSIONS ====================
   const fetchSessions = async () => {
     if (!patientId || !token) { 
-      return; // Tunggu sampai token dan patientId siap
+      return;
     }
 
     try {
@@ -218,7 +564,7 @@ export default function ReportPage() {
       setError(null);
 
       const res = await fetch(
-       `http://localhost:3000/api/sessions?patient_id=${patientId}`,
+        `http://localhost:3000/api/sessions?patient_id=${patientId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -232,11 +578,8 @@ export default function ReportPage() {
       }
       
       const data = await res.json();
-      
-      // Handle both response formats
       const sessionsData = data.data || data;
 
-      // Sort by date descending and calculate duration
       const sortedSessions = sessionsData
         .map(s => ({
           ...s,
@@ -248,7 +591,6 @@ export default function ReportPage() {
       
       setSessions(sortedSessions);
       
-      // Auto-select first completed session
       const firstCompleted = sortedSessions.find(s => s.status === 'completed');
       if (firstCompleted) {
         handleSessionClick(firstCompleted);
@@ -262,7 +604,6 @@ export default function ReportPage() {
     }
   };
 
-  // ==================== FETCH TRANSCRIPTS ====================
   const fetchTranscripts = async (session_id) => {
     setLoadingTranscripts(true);
     
@@ -284,7 +625,6 @@ export default function ReportPage() {
       const data = await res.json();
       const transcriptsData = Array.isArray(data) ? data : [];
       
-      // Transform data untuk chat bubbles
       const formattedTranscripts = transcriptsData.map(t => ({
         text: t.message_text,
         isUser: t.message_role === 'user',
@@ -300,13 +640,12 @@ export default function ReportPage() {
     }
   };
 
-  // ==================== FETCH EVALUATION ====================
   const fetchEvaluation = async (session_id) => {
     setLoadingEvaluation(true);
     
     try {
       const res = await fetch(
-       `http://localhost:3000/api/reports/evaluation/${session_id}`,
+        `http://localhost:3000/api/reports/evaluation/${session_id}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -322,32 +661,47 @@ export default function ReportPage() {
       const data = await res.json();
       
       if (data.evaluated) { 
-        setEvaluation(data); // Simpan seluruh objek
+        setEvaluation(data);
+        
+        if (data.classification_results) {
+          try {
+            const parsedResults = typeof data.classification_results === 'string'
+              ? JSON.parse(data.classification_results)
+              : data.classification_results;
+            setClassificationResults(parsedResults);
+          } catch (e) {
+            console.error('Error parsing model_statistics:', e);
+            setDetailedAnalysis(null);
+          }
+        }
       } else {
         setEvaluation(null);
+        setDetailedAnalysis(null);
+        setClassificationResults([]);
       }
     } catch (err) {
       console.error("Error fetching evaluation:", err);
       setEvaluation(null);
+      setDetailedAnalysis(null);
+      setClassificationResults([]);
     } finally {
       setLoadingEvaluation(false);
     }
   };
 
-  // ==================== HANDLE SESSION CLICK ====================
   const handleSessionClick = async (session) => {
     setSelectedSession(session);
     setTranscripts([]);
     setEvaluation(null);
+    setDetailedAnalysis(null);
+    setClassificationResults([]);
 
-    // Fetch both transcripts and evaluation
     await Promise.all([
       fetchTranscripts(session.session_id),
       fetchEvaluation(session.session_id)
     ]);
   };
 
-  // ==================== HANDLE ANALYZE SESSION ====================
   const handleAnalyzeSession = async () => {
     if (!selectedSession) return;
 
@@ -370,6 +724,8 @@ export default function ReportPage() {
 
       if (response.ok && data.success) {
         setEvaluation(data.evaluation);
+        setDetailedAnalysis(data.detailed_analysis);
+        setClassificationResults(data.classification_results || data.detailed_analysis?.results || []);
         alert("✅ Evaluasi berhasil dibuat!");
       } else {
         alert(`❌ ${data.message || 'Gagal membuat evaluasi'}`);
@@ -382,18 +738,14 @@ export default function ReportPage() {
     }
   };
 
-  // ==================== HANDLE BACK ====================
   const handleBack = () => {
     navigate(`/dashboard`);
   };
 
-  // ==================== INITIAL LOAD ====================
   useEffect(() => {
-    // Redirect if no patient data
     if (patientId && token) {
       fetchSessions();
     } else if (!token) {
-      // Biarkan useEffect auth yang me-redirect
       setLoading(false);
     } else if (!patientId) {
       setError("Patient ID tidak ditemukan di URL.");
@@ -401,7 +753,6 @@ export default function ReportPage() {
     }
   }, [patientId, token, navigate]);
 
-  // ==================== LOADING STATE ====================
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
@@ -410,7 +761,6 @@ export default function ReportPage() {
     );
   }
 
-  // ==================== ERROR STATE ====================
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center p-4">
@@ -435,7 +785,6 @@ export default function ReportPage() {
     );
   }
 
-  // ==================== NO SESSIONS STATE ====================
   if (sessions.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4">
@@ -466,11 +815,10 @@ export default function ReportPage() {
     );
   }
 
-  // ==================== MAIN RENDER ====================
   return (
     <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* ==================== HEADER ==================== */}
+        {/* HEADER */}
         <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
@@ -488,7 +836,7 @@ export default function ReportPage() {
           </Button>
         </div>
 
-        {/* ==================== SCORING SECTION ==================== */}
+        {/* SCORING SECTION */}
         <Card className="mb-6">
           <CardHeader 
             title="Penilaian"
@@ -499,7 +847,7 @@ export default function ReportPage() {
                   ? selectedSession 
                     ? "Belum ada evaluasi untuk sesi ini"
                     : "Pilih sesi untuk melihat evaluasi"
-                  : "Hasil evaluasi otomatis dari AI"
+                  : "Hasil evaluasi otomatis dari Model AI + Gemini"
             }
             action={
               selectedSession && 
@@ -517,7 +865,7 @@ export default function ReportPage() {
                       Menganalisis...
                     </span>
                   ) : (
-                    '🔍 Analisis Sekarang'
+                    '🤖 Analisis dengan AI'
                   )}
                 </Button>
               )
@@ -564,7 +912,7 @@ export default function ReportPage() {
               {evaluation.feedback_text && (
                 <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                    💬 Feedback
+                    💬 Feedback dari Gemini AI
                   </h3>
                   <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
                     {evaluation.feedback_text}
@@ -609,11 +957,11 @@ export default function ReportPage() {
             </>
           ) : (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-              <div className="text-5xl mb-3">📈</div>
+              <div className="text-5xl mb-3">🤖</div>
               <p className="text-sm">
                 {selectedSession 
                   ? selectedSession.status === 'completed'
-                    ? "Klik 'Analisis Sekarang' untuk mendapatkan evaluasi otomatis dari AI"
+                    ? "Klik 'Analisis dengan AI' untuk mendapatkan evaluasi otomatis menggunakan Dual Model AI + Gemini"
                     : "Sesi ini belum selesai, evaluasi hanya tersedia untuk sesi yang sudah selesai"
                   : "Pilih sesi untuk melihat evaluasi"
                 }
@@ -622,7 +970,15 @@ export default function ReportPage() {
           )}
         </Card>
 
-        {/* ==================== CHAT HISTORY SECTION ==================== */}
+        {/* DETAILED MODEL ANALYSIS */}
+        {detailedAnalysis && classificationResults.length > 0 && (
+          <ModelAnalysisStats 
+            detailedAnalysis={detailedAnalysis} 
+            classificationResults={classificationResults}
+          />
+        )}
+
+        {/* CHAT HISTORY SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Session List */}
           <Card>
@@ -691,7 +1047,7 @@ export default function ReportPage() {
         </div>
       </div>
 
-      {/* ==================== CUSTOM SCROLLBAR STYLES ==================== */}
+      {/* CUSTOM SCROLLBAR STYLES */}
       <style jsx>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;

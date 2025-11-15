@@ -1,135 +1,150 @@
-// ./src/components/AddScenarioModel.jsx
+import { useState, useEffect } from "react";
+import { Toaster, toast } from "react-hot-toast";
+import Button from "./Button";
 
-import { useState, useEffect } from 'react';
-import Button from '../components/Button';
-
-export default function AddScenarioModal({ show, onClose, onSave }) {
+export default function AddScenarioModal({ show, onClose, onSave, user }) {
   const [formData, setFormData] = useState({
-    patient_name: '',
-    background_story: '',
-    personality_type: '',
-    symptom_intensity: '',
-    age: '',
-    gender: '',
-    occupation: '',
-    marital_status: '',
-    personality_traits: ['', '', '', '']
+    patient_name: "",
+    background_story: "",
+    personality_type: "",
+    symptom_intensity: "",
+    age: "",
+    gender: "",
+    occupation: "",
+    marital_status: "",
+    personality_traits: ["", "", "", ""],
   });
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleTraitChange = (index, value) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newTraits = [...prev.personality_traits];
       newTraits[index] = value;
       return {
         ...prev,
-        personality_traits: newTraits
+        personality_traits: newTraits,
       };
     });
   };
 
   const addTraitField = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      personality_traits: [...prev.personality_traits, '']
+      personality_traits: [...prev.personality_traits, ""],
     }));
   };
 
   const removeTraitField = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      personality_traits: prev.personality_traits.filter((_, i) => i !== index)
+      personality_traits: prev.personality_traits.filter((_, i) => i !== index),
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async ({ is_global }) => {
     if (!formData.patient_name || !formData.background_story) {
-      alert('Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)');
+      toast.error(
+        "Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)"
+      );
       return;
     }
 
-    const filteredTraits = formData.personality_traits.filter(trait => trait.trim() !== '');
+    const filteredTraits = formData.personality_traits.filter(
+      (trait) => trait.trim() !== ""
+    );
 
     const dataToSave = {
       ...formData,
       age: formData.age ? parseInt(formData.age) : null,
-      symptom_intensity: formData.symptom_intensity ? parseInt(formData.symptom_intensity) : null,
-      personality_traits: filteredTraits.length > 0 ? filteredTraits : null
+      symptom_intensity: formData.symptom_intensity
+        ? parseInt(formData.symptom_intensity)
+        : null,
+      personality_traits: filteredTraits.length > 0 ? filteredTraits : null,
+      is_global: is_global,
     };
 
-    onSave(dataToSave);
-    
-    setFormData({
-      patient_name: '',
-      background_story: '',
-      personality_type: '',
-      symptom_intensity: '',
-      age: '',
-      gender: '',
-      occupation: '',
-      marital_status: '',
-      personality_traits: ['', '', '', '']
-    });
-    
-    onClose();
+    const sucessToast = toast.success("Berhasil simpan skenario...");
+
+    try {
+      await onSave(dataToSave);
+      toast.dismiss(sucessToast);
+
+      setFormData({
+        patient_name: "",
+        background_story: "",
+        personality_type: "",
+        symptom_intensity: "",
+        age: "",
+        gender: "",
+        occupation: "",
+        marital_status: "",
+        personality_traits: ["", "", "", ""],
+      });
+
+      onClose();
+    } catch (error) {
+      toast.dismiss(sucessToast);
+      toast.error(error.message || "Gagal menyimpan skenario. Coba lagi.");
+      console.error("Save Error:", error);
+    }
   };
 
   const handleCancel = () => {
     setFormData({
-      patient_name: '',
-      background_story: '',
-      personality_type: '',
-      symptom_intensity: '',
-      age: '',
-      gender: '',
-      occupation: '',
-      marital_status: '',
-      personality_traits: ['', '', '', '']
+      patient_name: "",
+      background_story: "",
+      personality_type: "",
+      symptom_intensity: "",
+      age: "",
+      gender: "",
+      occupation: "",
+      marital_status: "",
+      personality_traits: ["", "", "", ""],
     });
     onClose();
   };
 
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && show) {
+      if (e.key === "Escape" && show) {
         handleCancel();
       }
     };
 
     if (show) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
     };
   }, [show]);
 
   const personalityTypeOptions = [
-    { value: 'introvert', label: 'Introvert' },
-    { value: 'extrovert', label: 'Extrovert' },
-    { value: 'ambivert', label: 'Ambivert' }
+    { value: "introvert", label: "Introvert" },
+    { value: "extrovert", label: "Extrovert" },
+    { value: "ambivert", label: "Ambivert" },
   ];
 
   const genderOptions = [
-    { value: 'Laki-laki', label: 'Laki-laki' },
-    { value: 'Perempuan', label: 'Perempuan' },
-    { value: 'Lainnya', label: 'Lainnya' }
+    { value: "Laki-laki", label: "Laki-laki" },
+    { value: "Perempuan", label: "Perempuan" },
+    { value: "Lainnya", label: "Lainnya" },
   ];
 
   const maritalStatusOptions = [
-    { value: 'Belum Menikah', label: 'Belum Menikah' },
-    { value: 'Menikah', label: 'Menikah' },
-    { value: 'Cerai', label: 'Cerai' },
-    { value: 'Duda/Janda', label: 'Duda/Janda' }
+    { value: "Belum Menikah", label: "Belum Menikah" },
+    { value: "Menikah", label: "Menikah" },
+    { value: "Cerai", label: "Cerai" },
+    { value: "Duda/Janda", label: "Duda/Janda" },
   ];
 
   if (!show) return null;
@@ -138,14 +153,15 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-0"
       onClick={handleCancel}
-      style={{ animation: 'fadeIn 0.3s ease-out' }}
+      style={{ animation: "fadeIn 0.3s ease-out" }}
     >
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75 backdrop-blur-sm" />
 
       <div
         className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full sm:w-[95%] sm:max-w-3xl max-h-[95vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
-        style={{ animation: 'slideIn 0.3s ease-out' }}
+        style={{ animation: "slideIn 0.3s ease-out" }}
       >
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -160,16 +176,19 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
                 Informasi Dasar
               </h3>
-              
+
               <div className="space-y-2">
-                <label htmlFor="patient-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="patient-name"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Nama Pasien<span className="text-red-500 ml-1">*</span>
                 </label>
                 <input
                   id="patient-name"
                   type="text"
                   value={formData.patient_name}
-                  onChange={(e) => handleChange('patient_name', e.target.value)}
+                  onChange={(e) => handleChange("patient_name", e.target.value)}
                   placeholder="Nama lengkap pasien"
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                 />
@@ -177,14 +196,17 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="age" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="age"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Usia
                   </label>
                   <input
                     id="age"
                     type="number"
                     value={formData.age}
-                    onChange={(e) => handleChange('age', e.target.value)}
+                    onChange={(e) => handleChange("age", e.target.value)}
                     placeholder="25"
                     min="1"
                     max="120"
@@ -193,13 +215,16 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="gender"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Jenis Kelamin
                   </label>
                   <select
                     id="gender"
                     value={formData.gender}
-                    onChange={(e) => handleChange('gender', e.target.value)}
+                    onChange={(e) => handleChange("gender", e.target.value)}
                     className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
@@ -212,13 +237,18 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="marital-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="marital-status"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Status Pernikahan
                   </label>
                   <select
                     id="marital-status"
                     value={formData.marital_status}
-                    onChange={(e) => handleChange('marital_status', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("marital_status", e.target.value)
+                    }
                     className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
@@ -232,14 +262,17 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="occupation" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="occupation"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Pekerjaan
                 </label>
                 <input
                   id="occupation"
                   type="text"
                   value={formData.occupation}
-                  onChange={(e) => handleChange('occupation', e.target.value)}
+                  onChange={(e) => handleChange("occupation", e.target.value)}
                   placeholder="Contoh: Software Engineer"
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                 />
@@ -253,13 +286,19 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
               </h3>
 
               <div className="space-y-2">
-                <label htmlFor="background-story" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Latar Belakang Cerita<span className="text-red-500 ml-1">*</span>
+                <label
+                  htmlFor="background-story"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Latar Belakang Cerita
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 <textarea
                   id="background-story"
                   value={formData.background_story}
-                  onChange={(e) => handleChange('background_story', e.target.value)}
+                  onChange={(e) =>
+                    handleChange("background_story", e.target.value)
+                  }
                   placeholder="Jelaskan latar belakang pasien, riwayat kehidupan, dan konteks yang relevan dengan kondisi saat ini..."
                   rows={5}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none"
@@ -268,13 +307,18 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="personality-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="personality-type"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Tipe Kepribadian
                   </label>
                   <select
                     id="personality-type"
                     value={formData.personality_type}
-                    onChange={(e) => handleChange('personality_type', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("personality_type", e.target.value)
+                    }
                     className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
@@ -287,14 +331,19 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="symptom-intensity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="symptom-intensity"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Intensitas Gejala (1-10)
                   </label>
                   <input
                     id="symptom-intensity"
                     type="number"
                     value={formData.symptom_intensity}
-                    onChange={(e) => handleChange('symptom_intensity', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("symptom_intensity", e.target.value)
+                    }
                     placeholder="5"
                     min="1"
                     max="10"
@@ -332,10 +381,13 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
                       value={trait}
                       onChange={(e) => handleTraitChange(index, e.target.value)}
                       placeholder={`Contoh: ${
-                        index === 0 ? 'Kreatif dan detail-oriented' :
-                        index === 1 ? 'Perfeksionis, sulit mendelegasikan tugas' :
-                        index === 2 ? 'Emosional, sangat terikat dengan hasil karyanya' :
-                        'Ramah ke pelanggan, tapi tertutup pada orang terdekat'
+                        index === 0
+                          ? "Kreatif dan detail-oriented"
+                          : index === 1
+                          ? "Perfeksionis, sulit mendelegasikan tugas"
+                          : index === 2
+                          ? "Emosional, sangat terikat dengan hasil karyanya"
+                          : "Ramah ke pelanggan, tapi tertutup pada orang terdekat"
                       }`}
                       className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                     />
@@ -360,9 +412,32 @@ export default function AddScenarioModal({ show, onClose, onSave }) {
           <Button type="button" variant="secondary" onClick={handleCancel}>
             Batal
           </Button>
-          <Button type="button" variant="primary" onClick={handleSubmit}>
-            Simpan Pasien
-          </Button>
+          {user.is_admin ? (
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => handleSubmit({ is_global: true })}
+              >
+                Simpan Pasien Ke Global
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => handleSubmit({ is_global: false })}
+              >
+                Simpan Pasien Hanya di Admin
+              </Button>
+            </>
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => handleSubmit({ is_global: false })}
+            >
+              Simpan Pasien
+            </Button>
+          )}
         </div>
       </div>
 
