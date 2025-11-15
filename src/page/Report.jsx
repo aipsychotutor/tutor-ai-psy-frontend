@@ -919,7 +919,7 @@ export default function ReportPage() {
               {evaluation.feedback_text && (
                 <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                    💬 Analisis Intonasi dari Gemini AI
+                    💬 Analisis dan Feedback dari Gemini AI
                   </h3>
                   <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
                     {evaluation.feedback_text}
