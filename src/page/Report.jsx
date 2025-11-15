@@ -450,6 +450,20 @@ function ChatBubble({ message, isUser }) {
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
           {message.text}
         </p>
+         {isUser && message.prosody && (
+          <div className="mt-2 pt-2 border-t border-white/20 opacity-80 text-xs">
+            <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+              <span>Durasi:</span>
+              <span className="font-medium">{message.prosody.duration} dtk</span>
+              
+              <span>Energi (Std):</span>
+              <span className="font-medium">{message.prosody.energy_std}</span>
+              
+              <span>Rasio Diam:</span>
+              <span className="font-medium">{(message.prosody.silence_ratio * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        )}
         <span className="text-xs opacity-70 mt-1 block">
           {new Date(message.timestamp).toLocaleTimeString('id-ID', {
             hour: '2-digit',
@@ -628,7 +642,8 @@ export default function ReportPage() {
       const formattedTranscripts = transcriptsData.map(t => ({
         text: t.message_text,
         isUser: t.message_role === 'user',
-        timestamp: t.created_at
+        timestamp: t.created_at,
+        prosody: t.prosody_data
       }));
       
       setTranscripts(formattedTranscripts);
@@ -912,7 +927,7 @@ export default function ReportPage() {
               {evaluation.feedback_text && (
                 <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                    💬 Feedback dari Gemini AI
+                    💬 Feedback Intonasi dari Gemini AI
                   </h3>
                   <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
                     {evaluation.feedback_text}

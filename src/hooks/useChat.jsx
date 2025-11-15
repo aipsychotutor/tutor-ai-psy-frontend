@@ -64,7 +64,7 @@ export const ChatProvider = ({ children, session_id }) => {
     });
   };
 
-  const chat = async (message) => {
+  const chat = async (message,prosody_data) => {
     if (!session_id) {
       console.error("❌ No session_id available");
       setError("Session tidak valid");
@@ -82,7 +82,8 @@ export const ChatProvider = ({ children, session_id }) => {
         },
         body: JSON.stringify({ 
           message,
-          session_id // ✅ Kirim session_id
+          session_id, // ✅ Kirim session_id
+          prosody_data: prosody_data || null // 👈 TAMBAHKAN INI
         }),
       });
 

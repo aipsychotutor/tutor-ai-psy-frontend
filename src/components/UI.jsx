@@ -1,4 +1,3 @@
-// ./src/components/UI.jsx
 import { useRef, useEffect, useState } from "react";
 import { useChat } from "../hooks/useChat";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +5,7 @@ import ConfirmModal from "./ConfirmDialog";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { useProsodyAnalyzer } from "../hooks/useProsodyAnalyzer";
 
 export const UI = ({ hidden, session_id, ...props }) => {
   const { subtitle } = useChat();
@@ -20,10 +20,22 @@ export const UI = ({ hidden, session_id, ...props }) => {
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
+  const {
+    isRecording, // Kita bisa gunakan 'listening' atau 'isRecording'
+    audioBlob,
+    error: prosodyError,
+    startRecording,
+    stopRecording,
+    getProsodyData,
+    clearAudioData,
+  } = useProsodyAnalyzer();
+
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [targetPath, setTargetPath] = useState(null);
+
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     // Ambil token saat komponen dimuat
@@ -43,20 +55,77 @@ export const UI = ({ hidden, session_id, ...props }) => {
     }
   }, [transcript, setMessage]);
 
-  const sendMessage = () => {
-    if (!loading && message) {
-      chat(message);
+  const sendMessage = async () => {
+    if (loading || isSending || !message) {
+        console.log("Send cancelled: loading/sending/no message");
+        return;
+    }
+
+    setIsSending(true); // Mulai proses pengiriman
+    let prosody = null;
+    let blobForAnalysis = audioBlob; // Ambil blob yang ada (jika user hanya mengetik)
+
+    // 5. Hentikan rekaman jika masih berjalan
+    if (listening) {
+      console.log("Auto-stopping recordings...");
+      SpeechRecognition.stopListening();
+      
+      // 🛑 TUNGGU (await) proses stopRecording selesai
+      // Ini akan mengembalikan blob yang BARU saja direkam
+      const newBlob = await stopRecording(); 
+      
+      if (newBlob) {
+        blobForAnalysis = newBlob; // Gunakan blob baru ini untuk analisis
+      }
+    }
+
+    // 🛑 PERBAIKAN DI SINI:
+    // Kita cek `blobForAnalysis` (variabel lokal baru), BUKAN `audioBlob` (state lama)
+    if (blobForAnalysis) {
+      console.log("UI.jsx: Getting prosody data before sending...");
+      
+      // 🛑 DAN KITA MASUKKAN SEBAGAI ARGUMEN
+      prosody = await getProsodyData(blobForAnalysis); 
+      
+      if (!prosody) {
+        console.warn("UI.jsx: Gagal mendapatkan data prosodi, mengirim tanpa data prosodi.");
+        // Anda bisa menampilkan error prosodyError di sini
+      }
+    } else {
+      console.log("UI.jsx: Tidak ada audio blob, mengirim tanpa data prosodi (teks saja).");
+    }
+
+    try {
+      // 7. Panggil fungsi 'chat' dari useChat.js
+      // Kita kirim 'message' (string) dan 'prosody' (objek)
+      // Ini WAJIB Anda tangani di dalam file `useChat.js`
+      console.log("UI.jsx: Calling chat() with message and prosody:", message, prosody);
+      await chat(message, prosody); 
+      
       resetTranscript();
       setMessage("");
+      clearAudioData(); // Bersihkan audio blob
+
+    } catch (err) {
+      console.error("Gagal mengirim pesan:", err);
+    } finally {
+      setIsSending(false); // Selesai mengirim
     }
   };
 
   const handleToggleListening = () => {
     if (listening) {
-      SpeechRecognition.stopListening();
+      // --- STOPPING ---
+      console.log("UI.jsx: Stopping all recordings");
+      SpeechRecognition.stopListening(); // Stop STT
+      stopRecording(); // Stop Prosody Recording (versi async baru)
     } else {
+      // --- STARTING ---
+      console.log("UI.jsx: Starting all recordings");
       resetTranscript();
-      SpeechRecognition.startListening({ continuous: true, language: "id" });
+      clearAudioData(); // Hapus audio sebelumnya
+      SpeechRecognition.startListening({ continuous: true, language: "id" }); // Mulai STT
+      startRecording(); // Mulai Prosody Recording
     }
   };
 
@@ -206,6 +275,12 @@ export const UI = ({ hidden, session_id, ...props }) => {
               {subtitle}
             </div>
           )}
+          {/* Menampilkan error dari hook prosody jika ada */}
+          {prosodyError && (
+            <div className="mb-2 px-4 py-2 bg-red-800 bg-opacity-70 text-white rounded text-center max-w-xl">
+              Audio Error: {prosodyError}
+            </div>
+          )}
           <div className="flex w-full max-w-2xl gap-2">
             <div className="flex items-center gap-2 pointer-events-auto max-w-screen-sm w-full mx-auto">
               <input
@@ -221,21 +296,24 @@ export const UI = ({ hidden, session_id, ...props }) => {
                 }}
               />
               <button
-disabled={loading || !message}
+                // 9. Arahkan tombol Send ke fungsi sendMessage yang baru
+                disabled={loading || isSending || !message}
                 onClick={sendMessage}
                 className={`bg-yellow-500 hover:bg-yellow-600 text-white p-4 px-10 font-semibold uppercase rounded-full ${
-                  loading || !message ? "cursor-not-allowed opacity-30" : ""
+                  loading || isSending || !message ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >
                 Send
               </button>
               <button
+                // 10. Arahkan tombol Mulai/Berhenti ke fungsi gabungan
                 disabled={loading}
                 onClick={handleToggleListening}
                 className={`bg-blue-500 hover:bg-blue-600 text-white p-4 font-semibold uppercase rounded-full ${
                   loading ? "cursor-not-allowed opacity-30" : ""
                 }`}
               >
+                {/* 11. Gunakan 'listening' (dari STT) sebagai indikator utama */}
                 {listening ? "Berhenti" : "Mulai"}
               </button>
 
