@@ -892,7 +892,7 @@ export default function ReportPage() {
           ) : evaluation ? (
             <>
               {/* Score Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 <ScoreCard 
                   label="Empati" 
                   value={evaluation.empathy_score} 
@@ -906,18 +906,11 @@ export default function ReportPage() {
                   color="bg-green-500"
                 />
                 <ScoreCard 
-                  label="Etika" 
-                  value={evaluation.ethics_score} 
-                  maxValue={100}
-                  color="bg-purple-500"
-                />
-                <ScoreCard 
                   label="Rata-rata" 
                   value={Math.round((
                     evaluation.empathy_score + 
-                    evaluation.question_score + 
-                    evaluation.ethics_score
-                  ) / 3)} 
+                    evaluation.question_score 
+                  ) / 2)} 
                   maxValue={100}
                   color="bg-teal-500"
                 />
@@ -927,7 +920,7 @@ export default function ReportPage() {
               {evaluation.feedback_text && (
                 <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                    💬 Feedback Intonasi dari Gemini AI
+                    💬 Analisis Intonasi dari Gemini AI
                   </h3>
                   <p className="text-gray-900 dark:text-gray-100 leading-relaxed whitespace-pre-wrap">
                     {evaluation.feedback_text}
