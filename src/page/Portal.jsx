@@ -697,7 +697,7 @@ export default function Dashboard() {
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
                   >
                     <option value="Semua">Semua Tag</option>
-                    <option value="Default">Default</option>
+                    <option value="Global">Global</option>
                     <option value="Buatan Sendiri">Buatan Sendiri</option>
                   </select>
                   <Filter
