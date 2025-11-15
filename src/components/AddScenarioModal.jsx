@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
-import Button from './Button';
+import { useState, useEffect } from "react";
+import { Toaster, toast } from "react-hot-toast";
+import Button from "./Button";
 
 export default function AddScenarioModal({ show, onClose, onSave, user }) {
   const [formData, setFormData] = useState({
@@ -47,9 +47,11 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ is_global }) => {
     if (!formData.patient_name || !formData.background_story) {
-      toast.error('Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)');
+      toast.error(
+        "Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)"
+      );
       return;
     }
 
@@ -67,29 +69,28 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
       is_global: is_global,
     };
 
-    const sucessToast = toast.success('Berhasil simpan skenario...');
+    const sucessToast = toast.success("Berhasil simpan skenario...");
 
     try {
       await onSave(dataToSave);
       toast.dismiss(sucessToast);
 
       setFormData({
-        patient_name: '',
-        background_story: '',
-        personality_type: '',
-        symptom_intensity: '',
-        age: '',
-        gender: '',
-        occupation: '',
-        marital_status: '',
-        personality_traits: ['', '', '', '']
+        patient_name: "",
+        background_story: "",
+        personality_type: "",
+        symptom_intensity: "",
+        age: "",
+        gender: "",
+        occupation: "",
+        marital_status: "",
+        personality_traits: ["", "", "", ""],
       });
-      
-      onClose();
 
+      onClose();
     } catch (error) {
       toast.dismiss(sucessToast);
-      toast.error(error.message || 'Gagal menyimpan skenario. Coba lagi.');
+      toast.error(error.message || "Gagal menyimpan skenario. Coba lagi.");
       console.error("Save Error:", error);
     }
   };
@@ -149,7 +150,6 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
   if (!show) return null;
 
   return (
-    
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-0"
       onClick={handleCancel}

@@ -1,17 +1,27 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'; 
-import { Toaster, toast } from 'react-hot-toast';
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import AddScenarioModal from "../components/AddScenarioModal";
-import Button from '../components/Button';
-import { 
-  Search, Filter, Heart, HelpCircle, Layers, 
-  ChevronDown, LogOut, Shield, User as UserIcon 
-} from 'lucide-react'; 
+import Button from "../components/Button";
+import {
+  Search,
+  Filter,
+  Heart,
+  HelpCircle,
+  Layers,
+  ChevronDown,
+  LogOut,
+  Shield,
+  User as UserIcon,
+} from "lucide-react";
 
-function Card({ children, className = '', span = 1 }) {
-  const spanClass = span === 2 ? 'lg:col-span-2' : span === 3 ? 'lg:col-span-3' : '';
+function Card({ children, className = "", span = 1 }) {
+  const spanClass =
+    span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
   return (
-    <div className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}>
+    <div
+      className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}
+    >
       {children}
     </div>
   );
@@ -30,28 +40,27 @@ function CardHeader({ title, action }) {
 }
 
 // Avatar Component
-function Avatar({ src, alt = '', size = 'md', className = '' }) {
+function Avatar({ src, alt = "", size = "md", className = "" }) {
   const sizes = {
-    sm: 'h-8 w-8',
-    md: 'h-10 w-10',
-    lg: 'h-12 w-12'
+    sm: "h-8 w-8",
+    md: "h-10 w-10",
+    lg: "h-12 w-12",
   };
 
   return (
     <img
-      src={src || '/images/default.png'}
+      src={src || "/images/default.png"}
       alt={alt}
       className={`${sizes[size]} rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 flex-shrink-0 ${className}`}
       onError={(e) => {
-        e.target.src = '/images/default.png';
+        e.target.src = "/images/default.png";
       }}
     />
   );
 }
 
-
 // Patient List Item Component
-function PatientListItem({ patient, onDetailClick, onReportClick }) {
+function SessionPatientListItem({ patient, onDetailClick, onReportClick }) {
   return (
     <div className="flex items-center justify-between bg-white dark:bg-gray-950 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
       <div className="flex items-center gap-3">
@@ -83,12 +92,12 @@ function PatientListItem({ patient, onDetailClick, onReportClick }) {
 }
 
 // Patient List Component
-function PatientList({ patients, onDetailClick, onReportClick }) {
+function SessionPatientList({ patients, onDetailClick, onReportClick }) {
   // ... (Tidak ada perubahan)
   return (
     <div className="space-y-px overflow-y-auto max-h-[300px] rounded-lg">
       {patients.map((patient) => (
-        <PatientListItem
+        <SessionPatientListItem
           key={patient.id}
           patient={patient}
           onDetailClick={onDetailClick}
@@ -101,15 +110,16 @@ function PatientList({ patients, onDetailClick, onReportClick }) {
 
 const formatTraits = (traits) => {
   if (!traits || traits.length === 0) {
-    return 'Tidak ada deskripsi traits.';
+    return "Tidak ada deskripsi traits.";
   }
   return traits
     .slice(0, 2)
-    .map(trait => trait.charAt(0).toUpperCase() + trait.slice(1))
-    .join(', ');
+    .map((trait) => trait.charAt(0).toUpperCase() + trait.slice(1))
+    .join(", ");
 };
 
-function SessionPatientList({ patients, onStartSession }) {
+function PatientList({ patients, onStartSession }) {
+  console.log("Rendering PatientList with patients:", patients);
   if (!patients || patients.length === 0) {
     return (
       <div className="text-center text-gray-500 dark:text-gray-400 py-8">
@@ -118,7 +128,7 @@ function SessionPatientList({ patients, onStartSession }) {
       </div>
     );
   }
-  
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 py-2 max-h-[300px] overflow-y-auto pr-1">
       {patients.map((pasien) => (
@@ -128,24 +138,20 @@ function SessionPatientList({ patients, onStartSession }) {
         >
           <div className="p-4 flex-grow">
             <div className="flex items-center gap-3 mb-3">
-              <Avatar src={pasien.image} alt={pasien.name} size="md"/>
+              <Avatar src={pasien.image} alt={pasien.name} size="md" />
               <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                 {pasien.name}
               </h3>
             </div>
 
             <div className="mb-2">
-              {!pasien.user_id ? (
-                <span className="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-blue-900 dark:text-blue-200">
-                  Default
-                </span>
-              ) : (
-                <span className="inline-block bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-200">
-                  Buatan Sendiri
-                </span>
-              )}
+              <span
+                className={`inline-block ${pasien.patient_tag_color} text-xs font-semibold px-2.5 py-0.5 rounded-full`}
+              >
+                {pasien.patient_tag}
+              </span>
             </div>
-            
+
             <p className="text-xs text-gray-600 dark:text-gray-400 h-10 line-clamp-2">
               {formatTraits(pasien.personality_traits)}
             </p>
@@ -154,7 +160,7 @@ function SessionPatientList({ patients, onStartSession }) {
           <div className="p-4 border-t border-gray-100 dark:border-gray-700">
             <Button
               variant="primary"
-              size="sm" 
+              size="sm"
               onClick={() => onStartSession?.(pasien)}
               className="w-full"
             >
@@ -169,21 +175,26 @@ function SessionPatientList({ patients, onStartSession }) {
 
 // --- KOMPONEN STAT CARD ---
 function StatCard({ title, value, icon, bgColor, iconColor, loading }) {
-  const formattedValue = (typeof value === 'number' && value % 1 !== 0) 
-    ? value.toFixed(1) 
-    : (typeof value === 'number' ? value : 0); 
+  const formattedValue =
+    typeof value === "number" && value % 1 !== 0
+      ? value.toFixed(1)
+      : typeof value === "number"
+      ? value
+      : 0;
 
   return (
     <Card className="p-4 sm:p-5">
       {loading ? (
         <div className="h-[52px] animate-pulse">
-            <div className="w-2/4 h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
-            <div className="w-1/3 h-6 bg-gray-300 dark:bg-gray-700 rounded"></div>
+          <div className="w-2/4 h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
+          <div className="w-1/3 h-6 bg-gray-300 dark:bg-gray-700 rounded"></div>
         </div>
       ) : (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className={`flex-shrink-0 rounded-lg p-3 ${bgColor} ${iconColor}`}>
+            <div
+              className={`flex-shrink-0 rounded-lg p-3 ${bgColor} ${iconColor}`}
+            >
               {icon}
             </div>
             <div>
@@ -205,7 +216,7 @@ function StatCard({ title, value, icon, bgColor, iconColor, loading }) {
 function Navbar({ user, onLogout }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   // Hook untuk menutup dropdown saat klik di luar area
   useEffect(() => {
     function handleClickOutside(event) {
@@ -221,12 +232,12 @@ function Navbar({ user, onLogout }) {
 
   const handleLogoutClick = () => {
     setIsDropdownOpen(false);
-    onLogout(); 
+    onLogout();
   };
 
   if (!user) {
     return (
-       <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50">
+      <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -239,16 +250,15 @@ function Navbar({ user, onLogout }) {
     );
   }
 
-  const userRole = user.is_admin === true ? 'Admin' : 'User';
+  const userRole = user.is_admin === true ? "Admin" : "User";
 
   return (
     <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-4">
         <div className="flex items-center justify-between h-16">
-          
           <div className="flex-shrink-0">
             <span className="text-2xl font-bold dark:text-blue-400">
-              CommuLab 
+              CommuLab
             </span>
           </div>
 
@@ -261,29 +271,44 @@ function Navbar({ user, onLogout }) {
               aria-expanded={isDropdownOpen}
             >
               <div className="h-8 w-8 rounded-full bg-ungu text-white flex items-center justify-center font-semibold">
-                {user.username ? user.username.charAt(0).toUpperCase() : '?'}
+                {user.username ? user.username.charAt(0).toUpperCase() : "?"}
               </div>
-              <span className="hidden sm:inline-block font-medium">{user.username}</span>
-              <ChevronDown size={16} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              <span className="hidden sm:inline-block font-medium">
+                {user.username}
+              </span>
+              <ChevronDown
+                size={16}
+                className={`transition-transform ${
+                  isDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
             {isDropdownOpen && (
               <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
-                  
+                <div
+                  className="py-1"
+                  role="menu"
+                  aria-orientation="vertical"
+                  aria-labelledby="menu-button"
+                >
                   <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" title={user.username}>
+                    <p
+                      className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"
+                      title={user.username}
+                    >
                       {user.username}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-1">
-                      {userRole === 'Admin' ? 
-                        <Shield size={14} className="text-green-500" /> : 
+                      {userRole === "Admin" ? (
+                        <Shield size={14} className="text-green-500" />
+                      ) : (
                         <UserIcon size={14} className="text-gray-500" />
-                      }
+                      )}
                       {userRole}
                     </p>
                   </div>
-                  
+
                   <button
                     onClick={handleLogoutClick}
                     className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -302,13 +327,11 @@ function Navbar({ user, onLogout }) {
   );
 }
 
-
-
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  
+
   const [patients, setPatients] = useState([]);
   const [isVerifying, setIsVerifying] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -321,8 +344,8 @@ export default function Dashboard() {
   const [avgQuestionScore, setAvgQuestionScore] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTag, setSelectedTag] = useState('Semua'); 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState("Semua");
 
   useEffect(() => {
     let verificationTimer = null;
@@ -348,15 +371,14 @@ export default function Dashboard() {
     };
 
     checkAuth();
-    window.addEventListener('pageshow', checkAuth);
+    window.addEventListener("pageshow", checkAuth);
 
     return () => {
-      window.removeEventListener('pageshow', checkAuth);
+      window.removeEventListener("pageshow", checkAuth);
       if (verificationTimer) {
         clearTimeout(verificationTimer);
       }
     };
-
   }, [navigate]);
 
   const handleAuthError = () => {
@@ -371,7 +393,7 @@ export default function Dashboard() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-    setToken(null); 
+    setToken(null);
     navigate("/", { replace: true });
   };
 
@@ -380,13 +402,13 @@ export default function Dashboard() {
       setLoadingStats(false);
       return;
     }
-    
+
     setLoadingStats(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/evaluations/stats`, { 
+      const res = await fetch(`http://localhost:3000/api/evaluations/stats`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (res.status === 401 || res.status === 403) {
@@ -394,19 +416,18 @@ export default function Dashboard() {
       }
 
       if (!res.ok) {
-        throw new Error('Gagal mengambil data statistik');
+        throw new Error("Gagal mengambil data statistik");
       }
-      
-      const data = await res.json(); 
+
+      const data = await res.json();
 
       if (data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
         setAvgQuestionScore(data.data.avg_question_score || 0);
       }
-
     } catch (err) {
-      console.error('❌ Error fetching stats:', err);
-      toast.error('Gagal memuat data statistik: ' + err.message);
+      console.error("❌ Error fetching stats:", err);
+      toast.error("Gagal memuat data statistik: " + err.message);
     } finally {
       setLoadingStats(false);
     }
@@ -414,73 +435,94 @@ export default function Dashboard() {
 
   const fetchSessionHistory = async () => {
     if (!token) {
-      console.log('❌ Belum ada token, skip fetch');
+      console.log("❌ Belum ada token, skip fetch");
       setLoadingSessions(false);
       return;
     }
-    setLoadingSessions(true); 
+    setLoadingSessions(true);
     try {
       const res = await fetch(`http://localhost:3000/api/sessions`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+
       if (res.status === 401 || res.status === 403) {
         return handleAuthError();
       }
 
       if (!res.ok) {
-        throw new Error('Gagal mengambil riwayat sesi');
+        throw new Error("Gagal mengambil riwayat sesi");
       }
 
       const data = await res.json();
       const sessions = data?.data || [];
-      
+
       setTotalSessions(sessions.length);
 
-      const uniquePatients = Array.from(new Map(
-        sessions.map(s => [s.patient_id, {
-          id: s.patient_id,
-          name: s.patient_name,
-          image: s.patient_image,
-          lastSession: s.session_date || s.start_time,
-          status: s.status
-        }])
-      ).values());
+      const uniquePatients = Array.from(
+        new Map(
+          sessions.map((s) => [
+            s.patient_id,
+            {
+              id: s.patient_id,
+              name: s.patient_name,
+              image: s.patient_image,
+              lastSession: s.session_date || s.start_time,
+              status: s.status,
+            },
+          ])
+        ).values()
+      );
 
       setSessionPatients(uniquePatients);
     } catch (err) {
-      console.error('❌ Error fetching sessions:', err);
-      toast.error('Gagal memuat riwayat sesi: ' + err.message);
+      console.error("❌ Error fetching sessions:", err);
+      toast.error("Gagal memuat riwayat sesi: " + err.message);
     } finally {
       setLoadingSessions(false);
     }
   };
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (user) => {
     setLoadingPatients(true);
     try {
-      const res = await fetch('http://localhost:3000/api/patients', {
+      const res = await fetch("http://localhost:3000/api/patients", {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (res.status === 401 || res.status === 403) return handleAuthError();
 
-      if (!res.ok) throw new Error('Network response was not ok');
+      if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
 
-      const mappedPatients = data.map(p => ({
-        id: p.patient_id,   
-        name: p.patient_name,       
-        image: p.profile_image || null,
+      const mappedPatients = data.map((p) => {
+        const isGlobal = p.is_global || p.user_id === null;
+        const isCurrentUser = p.user_id === user?.user_id;
+
+        return {
+          id: p.patient_id,
+          name: p.patient_name,
+          image: p.profile_image || null,
           personality_traits: p.personality_traits || [],
-          user_id: p.user_id || null
-      }));
+          patient_tag:
+            isCurrentUser && user?.is_admin && isGlobal
+              ? "Global"
+              : isCurrentUser
+              ? "Buatan Sendiri"
+              : isGlobal
+              ? "Global"
+              : p.users?.username,
+          patient_tag_color: isGlobal
+            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+        };
+      });
+      console.log("Fetched patients:", mappedPatients);
       setPatients(mappedPatients);
     } catch (err) {
-      console.error('Error fetching patients:', err);
+      console.error("Error fetching patients:", err);
     } finally {
       setLoadingPatients(false);
     }
@@ -489,76 +531,72 @@ export default function Dashboard() {
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
-      fetchPatients();
-      fetchStats(); 
+      fetchPatients(user);
+      fetchStats();
     }
   }, [token]);
 
   const filteredPatients = useMemo(() => {
     return patients
-      .filter(patient => {
-        if (selectedTag === 'Default') {
-          return !patient.user_id; 
-        }
-        if (selectedTag === 'Buatan Sendiri') {
-          return !!patient.user_id; 
-        }
-        return true; 
+      .filter((patient) => {
+        if (selectedTag === "Semua") return true;
+        return patient.patient_tag === selectedTag;
       })
-      .filter(patient => {
+      .filter((patient) => {
         return patient.name.toLowerCase().includes(searchTerm.toLowerCase());
       });
-  }, [patients, searchTerm, selectedTag]); 
+  }, [patients, searchTerm, selectedTag]);
 
   const handleDetailClick = (patient) => {
-    console.log('Detail clicked:', patient);
+    console.log("Detail clicked:", patient);
     navigate(`/profile/${patient.id}`, {
       state: {
         patient: patient,
-      }
+      },
     });
   };
 
   const handleReportClick = (patient) => {
-    console.log('Report clicked:', patient);
+    console.log("Report clicked:", patient);
     navigate(`/report/${patient.id}`, {
       state: {
         patient: patient,
-      }
+      },
     });
   };
 
   const handleStartSession = (patient) => {
-    console.log('Mulai sesi dengan:', patient.name);
+    console.log("Mulai sesi dengan:", patient.name);
     navigate(`/profile/${patient.id}`, {
       state: {
         patientId: patient.id,
         patient: patient,
-      }
+      },
     });
   };
 
   const handleSaveScenario = async (patientData) => {
     try {
-      const response = await fetch('http://localhost:3000/api/patients', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      const response = await fetch("http://localhost:3000/api/patients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(patientData)
+        body: JSON.stringify(patientData),
       });
 
       const result = await response.json();
-      if (response.status === 401 || response.status === 403) return handleAuthError();
+      if (response.status === 401 || response.status === 403)
+        return handleAuthError();
 
       if (response.ok) {
-        fetchPatients();
+        fetchPatients(user);
       } else {
-        throw new Error(result.message || 'Gagal menyimpan pasien');
+        throw new Error(result.message || "Gagal menyimpan pasien");
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       throw error;
     }
   };
@@ -566,30 +604,30 @@ export default function Dashboard() {
   if (isVerifying) {
     return null;
   }
-  
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
       <Toaster position="top-center" reverseOrder={false} />
-      
+
       <Navbar user={user} onLogout={handleLogout} />
       <main className="flex-grow">
         <div className="bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8 h-full">
-          
           <div className="mx-auto max-w-screen-2xl space-y-6">
-            <div className='space-y-2'>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                 Selamat Datang, {user?.username}!
-                </h1>
-                <h2 className="text-white text-xl">Berikut adalah ringkasan aktivitas sesi latihan Anda hari ini</h2>
+              </h1>
+              <h2 className="text-white text-xl">
+                Berikut adalah ringkasan aktivitas sesi latihan Anda hari ini
+              </h2>
             </div>
 
             {/* --- STAT CARD GRID --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
-              
               <StatCard
                 title="Total Sesi"
                 value={totalSessions}
-                loading={loadingSessions} 
+                loading={loadingSessions}
                 icon={<Layers size={20} />}
                 bgColor="bg-purple-100 dark:bg-purple-900"
                 iconColor="text-purple-600 dark:text-purple-300"
@@ -613,8 +651,8 @@ export default function Dashboard() {
             </div>
 
             <Card span={3} className="sm:p-4 lg:p-5 min-h-[80px] h-[500px]">
-              <CardHeader 
-                title="Pustaka Skenario" 
+              <CardHeader
+                title="Pustaka Skenario"
                 action={
                   <Button
                     variant="primary"
@@ -625,12 +663,15 @@ export default function Dashboard() {
                   </Button>
                 }
               />
-              <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">Pilih skenario untuk memulai latihan</p>
+              <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">
+                Pilih skenario untuk memulai latihan
+              </p>
 
               <div className="flex flex-col sm:flex-row gap-3 my-4">
-
                 <div className="relative flex-grow">
-                  <label htmlFor="search-scenario" className="sr-only">Cari Skenario</label>
+                  <label htmlFor="search-scenario" className="sr-only">
+                    Cari Skenario
+                  </label>
                   <input
                     type="text"
                     id="search-scenario"
@@ -639,11 +680,16 @@ export default function Dashboard() {
                     onChange={(e) => setSearchTerm(e.g.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search
+                    size={18}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                 </div>
 
                 <div className="relative sm:min-w-[180px]">
-                  <label htmlFor="filter-tag" className="sr-only">Filter berdasarkan Tag</label>
+                  <label htmlFor="filter-tag" className="sr-only">
+                    Filter berdasarkan Tag
+                  </label>
                   <select
                     id="filter-tag"
                     value={selectedTag}
@@ -654,12 +700,15 @@ export default function Dashboard() {
                     <option value="Default">Default</option>
                     <option value="Buatan Sendiri">Buatan Sendiri</option>
                   </select>
-                  <Filter size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Filter
+                    size={18}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                 </div>
               </div>
-              
-              <SessionPatientList
-                patients={filteredPatients} 
+
+              <PatientList
+                patients={filteredPatients}
                 onStartSession={handleStartSession}
               />
             </Card>
@@ -676,7 +725,7 @@ export default function Dashboard() {
                   Mulai sebuah sesi dan laporannya akan muncul di sini.
                 </div>
               ) : (
-                <PatientList
+                <SessionPatientList
                   patients={sessionPatients}
                   onDetailClick={handleDetailClick}
                   onReportClick={handleReportClick}
@@ -689,6 +738,7 @@ export default function Dashboard() {
             show={showAddModal}
             onClose={() => setShowAddModal(false)}
             onSave={handleSaveScenario}
+            user={user}
           />
         </div>
       </main>
