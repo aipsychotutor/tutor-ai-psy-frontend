@@ -6,6 +6,7 @@ import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
 import { useProsodyAnalyzer } from "../hooks/useProsodyAnalyzer";
+import CameraToModelWS from "./CameraToModelWS";
 
 export const UI = ({ hidden, session_id, ...props }) => {
   const { subtitle } = useChat();
@@ -34,6 +35,7 @@ export const UI = ({ hidden, session_id, ...props }) => {
   const [token, setToken] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [targetPath, setTargetPath] = useState(null);
+  const [showCameraWidget, setShowCameraWidget] = useState(false);
 
   const [isSending, setIsSending] = useState(false);
 
@@ -268,6 +270,25 @@ export const UI = ({ hidden, session_id, ...props }) => {
               />
             </svg>
           </button>
+          <button
+            onClick={() => setShowCameraWidget((prev) => !prev)}
+            className="pointer-events-auto bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-md"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 7.5l2.49-2.49A2.25 2.25 0 018.835 4.5h6.33a2.25 2.25 0 011.596.66l2.49 2.49M4.5 7.5h15a1.5 1.5 0 011.5 1.5v7.5A2.25 2.25 0 0119.25 19.5h-14.5A2.25 2.25 0 012.25 16.5V9A1.5 1.5 0 013.75 7.5z"
+              />
+            </svg>
+          </button>
         </div>
         <div className="absolute bottom-8 left-0 w-full flex flex-col items-center">
           {subtitle && (
@@ -328,6 +349,11 @@ export const UI = ({ hidden, session_id, ...props }) => {
               </button>
             </div>
           </div>
+          {showCameraWidget && (
+          <div className="fixed bottom-32 right-6 w-80 max-w-[90vw] rounded-xl bg-black/80 border border-white/10 shadow-2xl z-40 backdrop-blur pointer-events-auto">
+            <CameraToModelWS />
+          </div>
+        )}
         </div>
       </div>
     </>
