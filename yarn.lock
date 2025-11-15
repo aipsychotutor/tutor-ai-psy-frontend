@@ -1584,7 +1584,7 @@ lru-cache@^5.1.1:
 
 lucide-react@^0.553.0:
   version "0.553.0"
-  resolved "https://registry.npmjs.org/lucide-react/-/lucide-react-0.553.0.tgz"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-0.553.0.tgz#50ea2ab682315be9b8a2df575403e4f14cc93e83"
   integrity sha512-BRgX5zrWmNy/lkVAe0dXBgd7XQdZ3HTf+Hwe3c9WK6dqgnj9h+hxV+MDncM88xDWlCq27+TKvHGE70ViODNILw==
 
 maath@^0.6.0:
@@ -1831,7 +1831,7 @@ react-dropzone@^12.0.0:
 
 react-hot-toast@^2.6.0:
   version "2.6.0"
-  resolved "https://registry.npmjs.org/react-hot-toast/-/react-hot-toast-2.6.0.tgz"
+  resolved "https://registry.yarnpkg.com/react-hot-toast/-/react-hot-toast-2.6.0.tgz#4ada6ed3c75c5e42a90d562f55665ff37ee1442b"
   integrity sha512-bH+2EBMZ4sdyou/DPrfgIouFpcRLCJ+HoCA32UoAYHn6T3Ur5yfcDCeSr5mwldl6pFOsiocmrXMuoCJ1vV8bWg==
   dependencies:
     csstype "^3.1.3"
@@ -1918,10 +1918,10 @@ readdirp@~3.6.0:
   dependencies:
     picomatch "^2.2.1"
 
-recharts@^3.2.1:
-  version "3.3.0"
-  resolved "https://registry.npmjs.org/recharts/-/recharts-3.3.0.tgz"
-  integrity sha512-Vi0qmTB0iz1+/Cz9o5B7irVyUjX2ynvEgImbgMt/3sKRREcUM07QiYjS1QpAVrkmVlXqy5gykq4nGWMz9AS4Rg==
+recharts@^3.3.0:
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/recharts/-/recharts-3.4.1.tgz#f8c7b7ad40c9794eb0113f79c17fb1c1f15e2728"
+  integrity sha512-35kYg6JoOgwq8sE4rhYkVWwa6aAIgOtT+Ob0gitnShjwUwZmhrmy7Jco/5kJNF4PnLXgt9Hwq+geEMS+WrjU1g==
   dependencies:
     "@reduxjs/toolkit" "1.x.x || 2.x.x"
     clsx "^2.1.1"
