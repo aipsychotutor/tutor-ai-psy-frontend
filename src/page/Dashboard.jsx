@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-<<<<<<< Updated upstream
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-=======
->>>>>>> Stashed changes
 import AddScenarioModal from "../components/AddScenarioModal";
 import Button from "../components/Button";
 
@@ -147,77 +144,6 @@ function ChartEditForm({ data, onChange, onSave, onCancel }) {
   );
 }
 
-<<<<<<< Updated upstream
-// Interactive Pie Chart Component
-function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const chartData = payload[0];
-      const percentage = ((chartData.value / totalValue) * 100).toFixed(1);
-      return (
-        <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-lg border border-gray-200 dark:border-gray-700">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            {chartData.name}
-          </p>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {chartData.value} sesi ({percentage}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  return (
-    <>
-      <ResponsiveContainer width="100%" height={140}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            innerRadius={30}
-            outerRadius="100%"
-            paddingAngle={2}
-            dataKey="value"
-            onClick={onPieClick}
-            className="cursor-pointer focus:outline-none"
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={entry.color}
-                opacity={
-                  activeIndex === null || activeIndex === index ? 1 : 0.5
-                }
-                className="transition-opacity duration-200"
-              />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-        </PieChart>
-      </ResponsiveContainer>
-
-      <div className="grid grid-cols-2 gap-2 mt-4">
-        {data.map((item, index) => {
-          const percentage = ((item.value / totalValue) * 100).toFixed(1);
-          return (
-            <ChartLegendButton
-              key={item.name}
-              item={item}
-              percentage={percentage}
-              isActive={activeIndex === null || activeIndex === index}
-              onClick={() => onPieClick(item, index)}
-            />
-          );
-        })}
-      </div>
-    </>
-  );
-}
-=======
->>>>>>> Stashed changes
-
 // Patient List Item Component
 function PatientListItem({ patient, onDetailClick, onReportClick }) {
   console.log("Rendering PatientListItem for:", patient);
@@ -300,65 +226,6 @@ function SessionPatientList({ patients, onStartSession }) {
     </div>
   );
 }
-
-
-<<<<<<< Updated upstream
-  const handlePieClick = (data, index) => {
-    setActiveIndex(index === activeIndex ? null : index);
-  };
-
-  const handleInputChange = (index, value) => {
-    const newData = [...editData];
-    newData[index].value = parseInt(value) || 0;
-    setEditData(newData);
-  };
-
-  const handleSaveData = () => {
-    setChartData(editData);
-    setIsEditing(false);
-  };
-
-  const handleCancelEdit = () => {
-    setEditData(chartData);
-    setIsEditing(false);
-  };
-
-  const totalValue = chartData.reduce((sum, item) => sum + item.value, 0);
-
-  return (
-    <Card>
-      <CardHeader
-        title="Diagram"
-        action={
-          <Button
-            variant="link"
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            {isEditing ? "Batal" : "Edit Data"}
-          </Button>
-        }
-      />
-      {isEditing ? (
-        <ChartEditForm
-          data={editData}
-          onChange={handleInputChange}
-          onSave={handleSaveData}
-          onCancel={handleCancelEdit}
-        />
-      ) : (
-        <InteractivePieChart
-          data={chartData}
-          activeIndex={activeIndex}
-          onPieClick={handlePieClick}
-          totalValue={totalValue}
-        />
-      )}
-    </Card>
-  );
-}
-=======
->>>>>>> Stashed changes
 
 // Main Dashboard Component
 export default function Dashboard() {
@@ -572,19 +439,6 @@ export default function Dashboard() {
       if (response.status === 401 || response.status === 403)
         return handleAuthError();
 
-<<<<<<< Updated upstream
-      if (response.ok) {
-        alert("Pasien berhasil ditambahkan!");
-        fetchPatients();
-      } else {
-        alert(`Error: ${result.message}`);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Gagal menambahkan pasien");
-    }
-  };
-=======
     if (response.ok) {
       fetchPatients();
     } else {
@@ -594,7 +448,6 @@ export default function Dashboard() {
     console.error('Error:', error);
   }
 };
->>>>>>> Stashed changes
 
   if (isVerifying) {
     return;
