@@ -112,7 +112,6 @@ export default function Auth() {
         <div className="w-full max-w-md">
           {isSignIn ? (
             // Sign In Form
-
             <div>
               <h1 className="text-4xl font-bold text-black mb-2">
                 Welcome back
