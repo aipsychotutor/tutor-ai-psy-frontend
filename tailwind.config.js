@@ -11,6 +11,7 @@ export default {
       },
       colors: {
         yellowCustom : "#FFCA75",
+        krem : "#CC9D5E",
         dashboardStart: '#150412',
         dashboardMid: '#7e1e75',
         dashboardEnd: '#a61e8f',

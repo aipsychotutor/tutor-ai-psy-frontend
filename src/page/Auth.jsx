@@ -116,19 +116,19 @@ export default function Auth() {
             // Sign In Form
             
             <div>
-              <h1 className="text-4xl font-bold text-black mb-2">Welcome back</h1>
-              <p className="text-gray-600 mb-8">Please enter your details</p>
+              <h1 className="text-4xl font-bold text-black mb-2">Welcome Back</h1>
+              <p className="text-gray-600 mb-8">Lanjutkan sesi pelatihan Anda</p>
               
               {/* === FORM SIGN IN === */}
               <form onSubmit={(e) => { e.preventDefault(); handleSignIn(); }} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Email address
+                    Email Address
                   </label>
                   <input
                     type="email" // <-- Memicu validasi format @
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={email} // Hubungkan ke state
                     onChange={(e) => setEmail(e.target.value)} // Update state
@@ -142,14 +142,14 @@ export default function Auth() {
                   <input
                     type="password"
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 
-                <button type="submit" className="w-full py-3 bg-yellowCustom hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
+                <button type="submit" className="w-full py-3 bg-yellowCustom hover:bg-krem text-black font-medium rounded-full transition-colors">
                   Sign In
                 </button>
               </form>
@@ -170,7 +170,7 @@ export default function Auth() {
             // Sign Up Form
             <div>
               <h1 className="text-4xl font-bold text-black mb-2">Sign Up</h1>
-              <p className="text-gray-600 mb-8">Please enter your details</p>
+              <p className="text-gray-600 mb-8">Akses skenario pasien dan mulai praktik!</p>
 
               {/* === FORM SIGN UP === */}
               <form onSubmit={(e) => { e.preventDefault(); handleSignUp(); }} className="space-y-6">
@@ -181,7 +181,7 @@ export default function Auth() {
                   <input
                     type="text"
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)} 
@@ -193,9 +193,9 @@ export default function Auth() {
                     Email Address
                   </label>
                   <input
-                    type="email" // <-- Memicu validasi format @
+                    type="email" 
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-dashboardStart"
+                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
@@ -212,14 +212,14 @@ export default function Auth() {
                     minLength={8}
                     pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$"
                     title="Password harus mengandung minimal 8 karakter, setidaknya satu huruf kecil, satu huruf besar, dan satu angka."
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
+                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 
-                <button type="submit" className="w-full py-3 bg-yellow-400 hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
+                <button type="submit" className="w-full py-3 bg-yellowCustom hover:bg-krem text-black font-medium rounded-full transition-colors">
                   Sign up
                 </button>
               </form>
@@ -228,7 +228,7 @@ export default function Auth() {
               <p className="text-center text-sm text-gray-600 mt-6">
                 Have an account?{' '}
                 <button 
-                  type="button" // <-- DIPERBAIKI: Harus type="button" agar tidak submit
+                  type="button" 
                   onClick={() => toggleForm(true)}
                   className="text-purple-600 hover:underline font-medium"
                 >
