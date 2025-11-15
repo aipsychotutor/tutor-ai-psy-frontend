@@ -42,9 +42,6 @@ export const useProsodyAnalyzer = () => {
         audioChunksRef.current.push(event.data);
       };
 
-      // 🛑 DIHAPUS: .onstop handler dipindahkan ke stopRecording()
-      // untuk menangani promise-based flow.
-
       mediaRecorderRef.current.start();
       setIsRecording(true);
       setRecordingTime(0);
@@ -59,13 +56,11 @@ export const useProsodyAnalyzer = () => {
     }
   };
 
-  // 🛑 DIUBAH: stopRecording sekarang mengembalikan Promise<Blob>
   const stopRecording = () => {
     return new Promise((resolve) => {
       if (mediaRecorderRef.current && isRecording) {
         console.log("Stopping recording (async)...");
 
-        // Definisikan onstop DI SINI untuk me-resolve promise
         mediaRecorderRef.current.onstop = () => {
           console.log("MediaRecorder: stopped (async callback)");
           const blob = new Blob(audioChunksRef.current, { type: mediaRecorderRef.current.mimeType || 'audio/webm' });
@@ -73,7 +68,6 @@ export const useProsodyAnalyzer = () => {
           
           setAudioBlob(blob); // Tetap set state untuk referensi
           
-          // Matikan stream
           if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
             mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
           }
@@ -81,7 +75,6 @@ export const useProsodyAnalyzer = () => {
           resolve(blob); // Selesaikan promise DENGAN blob baru
         };
 
-        // Hentikan recorder, yang akan memicu onstop
         mediaRecorderRef.current.stop();
         setIsRecording(false);
         if (timerRef.current) {
@@ -90,7 +83,6 @@ export const useProsodyAnalyzer = () => {
         }
 
       } else {
-        // Jika tidak sedang merekam, selesaikan promise dengan null
         resolve(null);
       }
     });
@@ -107,10 +99,14 @@ export const useProsodyAnalyzer = () => {
   };
 
   /**
-   * Fungsi internal untuk kalkulasi fitur.
+   * 🛑 DIPERBARUI: Fungsi ini sekarang HANYA menghitung
+   * fitur yang benar-benar kita gunakan di backend.
    */
   const calculateProsodyFeatures = (channelData, sampleRate, duration) => {
-    // Energy/RMS calculation
+    
+    // --- Perhitungan Inti (Tetap Dibutuhkan) ---
+
+    // 1. Energy/RMS
     const frameSize = Math.floor(sampleRate * 0.025); // 25ms frames
     const hopSize = Math.floor(sampleRate * 0.010); // 10ms hop
     const frames = [];
@@ -124,16 +120,11 @@ export const useProsodyAnalyzer = () => {
     }
 
     const energyMean = frames.reduce((a, b) => a + b, 0) / frames.length;
-    const energyStd = Math.sqrt(
-      frames.reduce((sum, val) => sum + Math.pow(val - energyMean, 2), 0) / frames.length
-    );
 
-    // Silence detection
+    // 2. Silence/Pause
     const threshold = energyMean * 0.1;
     const silentFrames = frames.filter(e => e < threshold).length;
-    const silenceRatio = silentFrames / frames.length;
-
-    // Pause detection
+    
     let pauses = 0;
     let inPause = false;
     frames.forEach(energy => {
@@ -145,7 +136,7 @@ export const useProsodyAnalyzer = () => {
       }
     });
 
-    // Zero crossing rate (proxy for speaking rate)
+    // 3. Speaking Rate (Proxy)
     let zeroCrossings = 0;
     for (let i = 1; i < channelData.length; i++) {
       if ((channelData[i] >= 0 && channelData[i - 1] < 0) ||
@@ -154,24 +145,31 @@ export const useProsodyAnalyzer = () => {
       }
     }
     const zcr = zeroCrossings / channelData.length;
-    const speakingRate = (zcr * sampleRate / 2) / 100;
+
+    // --- Data yang Dikembalikan (Hanya yang Penting) ---
 
     return {
+      // 1. Durasi Total (Digunakan di Agregasi)
       duration: duration.toFixed(2),
-      speaking_rate: speakingRate.toFixed(2),
-      tempo: (100 + Math.random() * 40).toFixed(2), // Tempo masih placeholder
-      energy_std: energyStd.toFixed(4),
-      energy_variance: (energyStd * energyStd).toFixed(6),
-      silence_ratio: silenceRatio.toFixed(3),
-      avg_pause_duration: (silenceRatio * duration / Math.max(pauses, 1)).toFixed(3),
-      num_pauses: pauses,
-      max_pause_duration: (silenceRatio * duration * 0.3).toFixed(3)
+      
+      // 2. Kecepatan Bicara (Digunakan di Agregasi)
+      speaking_rate: (zcr * sampleRate / 2 / 100).toFixed(2),
+      
+      // 3. Variabilitas Energi (Digunakan di Agregasi)
+      energy_std: Math.sqrt(
+        frames.reduce((sum, val) => sum + Math.pow(val - energyMean, 2), 0) / frames.length
+      ).toFixed(4),
+
+      // 4. Rasio Hening (Digunakan di Agregasi)
+      silence_ratio: (silentFrames / frames.length).toFixed(3),
+      
+      // 5. Jumlah Jeda (Digunakan di Agregasi)
+      num_pauses: pauses, 
     };
   };
 
   /**
-   * 🛑 DIUBAH: Fungsi ini sekarang menerima blob sebagai argumen
-   * untuk menghindari race condition dengan state.
+   * Fungsi utama yang diekspos oleh hook untuk mengekstrak prosodi
    */
   const getProsodyData = async (blobToAnalyze) => {
     if (!blobToAnalyze) {
