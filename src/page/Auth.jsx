@@ -1,6 +1,6 @@
-import { use } from 'react';
+import { Toaster, toast } from "react-hot-toast"; 
 import { useState, useEffect } from 'react';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL = "http://localhost:3000/api/auth";
 
@@ -14,8 +14,7 @@ export default function Auth() {
   const [isSignIn, setIsSignIn] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState(''); // Untuk Sign Up
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState(''); 
   const navigate = useNavigate();
 
   const toggleForm = (isSigningIn) => {
@@ -23,17 +22,18 @@ export default function Auth() {
     setEmail('');
     setPassword('');
     setUsername('');
-    setError('');
   }
 
   const handleSignIn = async () => {
     console.log("Tombol Sign In diklik!");
-    setError(''); // Clear previous error
+  
     if (!email || !password) {
-      setError("Email dan password harus diisi.");
+      toast.error("Email dan password harus diisi."); 
       console.log("2. Validasi frontend gagal (Field kosong).");
       return;
     }
+
+    const loadingToastId = toast.loading('Mencoba masuk...');
 
     try {
       console.log("3. Mengirim request ke backend...");
@@ -46,33 +46,39 @@ export default function Auth() {
       });
 
       const data = await response.json();
+      toast.dismiss(loadingToastId);
 
       if (data.status === "ok") {
-        // Simpan token dan info user (misal ke localStorage)
         localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user)); // Opsional
+        localStorage.setItem('user', JSON.stringify(data.user));
 
         console.log("Sign In Success:", data.user);
-        // Navigasi ke dashboard
-        console.log("4. Login Sukses. Navigasi ke Dashboard.");
-        navigate("/dashboard");
+
+        toast.success('Berhasil masuk! Mengarahkan ke dashboard...'); 
+        setTimeout(() => {
+            console.log("4. Login Sukses. Navigasi ke Dashboard (setelah jeda).");
+            navigate("/dashboard");
+        }, 1500);
       } else {
-        // Tampilkan error dari backend
         console.log("4. Login Gagal. Pesan error:", data.message);
-        setError(data.message || "Gagal masuk. Coba lagi.");
+        toast.error(data.message || "Gagal masuk. Coba lagi."); 
       }
     } catch (err) {
-      setError("Terjadi kesalahan koneksi.");
+      toast.dismiss(loadingToastId); 
+      toast.error("Terjadi kesalahan koneksi."); 
       console.error("Sign In Error:", err);
     }
   };
 
   const handleSignUp = async () => {
-    setError(''); // Clear previous error
+  
+
     if (!username || !email || !password) {
-      setError("Username, email, dan password harus diisi.");
+      toast.error("Username, email, dan password harus diisi."); 
       return;
     }
+
+    const loadingToastId = toast.loading('Mendaftarkan akun...');
 
     try {
       const response = await fetch(`${API_BASE_URL}/register`, {
@@ -84,25 +90,25 @@ export default function Auth() {
       });
 
       const data = await response.json();
+      toast.dismiss(loadingToastId); 
 
       if (data.status === "ok") {
-        // Setelah sukses register, biasanya langsung login (opsional) atau kembali ke halaman Sign In
         console.log("Sign Up Success:", data.user);
-        // Kembali ke form Sign In (seperti yang dilakukan backend Anda)
         toggleForm(true); 
-        alert("Pendaftaran berhasil! Silakan masuk.");
+        toast.success("Pendaftaran berhasil! Silakan masuk.");
       } else {
-        // Tampilkan error dari backend
-        setError(data.message || "Gagal mendaftar. Coba lagi.");
+        toast.error(data.message || "Gagal mendaftar. Coba lagi.");
       }
     } catch (err) {
-      setError("Terjadi kesalahan koneksi.");
+      toast.dismiss(loadingToastId); 
+      toast.error("Terjadi kesalahan koneksi.");
       console.error("Sign Up Error:", err);
     }
   }
 
   return (
     <div className="flex h-screen">
+      <Toaster position="top-center" reverseOrder={false} />
       {/* Left Side - Form */}
       <div className="w-1/2 bg-white flex items-center justify-center p-12">
         <div className="w-full max-w-md">
@@ -121,8 +127,8 @@ export default function Auth() {
                     type="email"
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={email} // Hubungkan ke state
-                    onChange={(e) => setEmail(e.target.value)} // Update state
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)} 
                   />
                 </div>
                 
@@ -134,8 +140,8 @@ export default function Auth() {
                     type="password"
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={password} // Hubungkan ke state
-                    onChange={(e) => setPassword(e.target.value)} // Update state
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 
@@ -163,14 +169,14 @@ export default function Auth() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Userame
+                    Username
                   </label>
                   <input
                     type="text"
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={username} // Hubungkan ke state
-                    onChange={(e) => setUsername(e.target.value)} // Update state
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
                   />
                 </div>
                 
@@ -182,8 +188,8 @@ export default function Auth() {
                     type="email"
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-dashboardStart"
                     placeholder=""
-                    value={email} // Hubungkan ke state
-                    onChange={(e) => setEmail(e.target.value)} // Update state
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
                   />
                 </div>
                 
@@ -195,8 +201,8 @@ export default function Auth() {
                     type="password"
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={password} // Hubungkan ke state
-                    onChange={(e) => setPassword(e.target.value)} // Update state
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 

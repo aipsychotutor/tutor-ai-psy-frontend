@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+<<<<<<< Updated upstream
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+=======
+>>>>>>> Stashed changes
 import AddScenarioModal from "../components/AddScenarioModal";
 import Button from "../components/Button";
 
@@ -144,6 +147,7 @@ function ChartEditForm({ data, onChange, onSave, onCancel }) {
   );
 }
 
+<<<<<<< Updated upstream
 // Interactive Pie Chart Component
 function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
   const CustomTooltip = ({ active, payload }) => {
@@ -211,6 +215,8 @@ function InteractivePieChart({ data, activeIndex, onPieClick, totalValue }) {
     </>
   );
 }
+=======
+>>>>>>> Stashed changes
 
 // Patient List Item Component
 function PatientListItem({ patient, onDetailClick, onReportClick }) {
@@ -295,12 +301,8 @@ function SessionPatientList({ patients, onStartSession }) {
   );
 }
 
-// Diagram Card Component
-function DiagramCard({ chartData, setChartData }) {
-  const [activeIndex, setActiveIndex] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState(chartData);
 
+<<<<<<< Updated upstream
   const handlePieClick = (data, index) => {
     setActiveIndex(index === activeIndex ? null : index);
   };
@@ -355,6 +357,8 @@ function DiagramCard({ chartData, setChartData }) {
     </Card>
   );
 }
+=======
+>>>>>>> Stashed changes
 
 // Main Dashboard Component
 export default function Dashboard() {
@@ -568,6 +572,7 @@ export default function Dashboard() {
       if (response.status === 401 || response.status === 403)
         return handleAuthError();
 
+<<<<<<< Updated upstream
       if (response.ok) {
         alert("Pasien berhasil ditambahkan!");
         fetchPatients();
@@ -579,6 +584,17 @@ export default function Dashboard() {
       alert("Gagal menambahkan pasien");
     }
   };
+=======
+    if (response.ok) {
+      fetchPatients();
+    } else {
+      alert(`Error: ${result.message}`);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
+>>>>>>> Stashed changes
 
   if (isVerifying) {
     return;
@@ -591,8 +607,6 @@ export default function Dashboard() {
           Selamat Datang, {user?.username}!
         </h1>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
-          <DiagramCard chartData={chartData} setChartData={setChartData} />
-
           <Card span={2} className="sm:p-4 lg:p-5 min-h-[80px] flex flex-col">
             <CardHeader
               title="Mulai Sesi"

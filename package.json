@@ -14,9 +14,15 @@
     "@react-three/xr": "^5.7.1",
     "@types/three": "0.152.1",
     "leva": "^0.9.35",
+    "lucide-react": "^0.553.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+<<<<<<< Updated upstream
     "react-router-dom": "^7.9.4",
+=======
+    "react-hot-toast": "^2.6.0",
+    "react-router-dom": "^7.9.3",
+>>>>>>> Stashed changes
     "react-speech-recognition": "^4.0.1",
     "recharts": "^3.3.0",
     "three": "0.153.0"

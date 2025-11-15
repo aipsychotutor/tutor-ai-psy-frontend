@@ -1,7 +1,13 @@
+<<<<<<< Updated upstream
 // ./src/components/AddScenarioModel.jsx
 
 import { useState, useEffect } from "react";
 import Button from "../components/Button";
+=======
+import { useState, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
+import Button from './Button';
+>>>>>>> Stashed changes
 
 export default function AddScenarioModal({ show, onClose, onSave, user }) {
   const [formData, setFormData] = useState({
@@ -48,12 +54,18 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
+<<<<<<< Updated upstream
   const handleSubmit = ({ is_global = false }) => {
     console.log("Submitting form data:", formData, "is_global:", is_global);
     if (!formData.patient_name || !formData.background_story) {
       alert(
         "Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)"
       );
+=======
+  const handleSubmit = async () => {
+    if (!formData.patient_name || !formData.background_story) {
+      toast.error('Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)');
+>>>>>>> Stashed changes
       return;
     }
 
@@ -71,6 +83,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
       is_global: is_global,
     };
 
+<<<<<<< Updated upstream
     onSave(dataToSave);
 
     setFormData({
@@ -86,6 +99,33 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     });
 
     onClose();
+=======
+    const sucessToast = toast.success('Berhasil simpan skenario...');
+
+    try {
+      await onSave(dataToSave);
+      toast.dismiss(sucessToast);
+
+      setFormData({
+        patient_name: '',
+        background_story: '',
+        personality_type: '',
+        symptom_intensity: '',
+        age: '',
+        gender: '',
+        occupation: '',
+        marital_status: '',
+        personality_traits: ['', '', '', '']
+      });
+      
+      onClose();
+
+    } catch (error) {
+      toast.dismiss(sucessToast);
+      toast.error(error.message || 'Gagal menyimpan skenario. Coba lagi.');
+      console.error("Save Error:", error);
+    }
+>>>>>>> Stashed changes
   };
 
   const handleCancel = () => {
@@ -143,11 +183,13 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
   if (!show) return null;
 
   return (
+    
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-0"
       onClick={handleCancel}
       style={{ animation: "fadeIn 0.3s ease-out" }}
     >
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75 backdrop-blur-sm" />
 
       <div
