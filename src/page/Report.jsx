@@ -266,7 +266,6 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
       <Card className="mb-6">
         <CardHeader 
           title="📊 Detail Analisis Model AI" 
-          subtitle={`Analisis dari ${detailedAnalysis.total_counselor_messages} pesan konselor (${totalQuestions} pertanyaan, ${totalStatements} pernyataan)`}
         />
 
         {hasQuestions && Object.keys(stats.question_distribution).length > 0 && (
