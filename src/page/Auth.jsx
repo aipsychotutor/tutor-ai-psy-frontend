@@ -108,21 +108,24 @@ export default function Auth() {
         <div className="w-full max-w-md">
           {isSignIn ? (
             // Sign In Form
+            
             <div>
               <h1 className="text-4xl font-bold text-black mb-2">Welcome back</h1>
               <p className="text-gray-600 mb-8">Please enter your details</p>
               
-              <div className="space-y-6">
+              {/* === FORM SIGN IN === */}
+              <form onSubmit={(e) => { e.preventDefault(); handleSignIn(); }} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
                     Email address
                   </label>
                   <input
-                    type="email"
+                    type="email" // <-- Memicu validasi format @
+                    required
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={email} // Hubungkan ke state
-                    onChange={(e) => setEmail(e.target.value)} // Update state
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
                   />
                 </div>
                 
@@ -132,45 +135,50 @@ export default function Auth() {
                   </label>
                   <input
                     type="password"
+                    required
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={password} // Hubungkan ke state
-                    onChange={(e) => setPassword(e.target.value)} // Update state
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 
-                <button className="w-full py-3 bg-yellowCustom hover:bg-yellow-400 text-black font-medium rounded-full transition-colors" onClick={handleSignIn}>
+                <button type="submit" className="w-full py-3 bg-yellowCustom hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
                   Sign In
                 </button>
-                
-                <p className="text-center text-sm text-gray-600">
-                  Don't have an account?{' '}
-                  <button 
-                    onClick={() => toggleForm(false)}
-                    className="text-purple-600 hover:underline font-medium"
-                  >
-                    Sign Up
-                  </button>
-                </p>
-              </div>
+              </form>
+              {/* === END FORM === */}
+              
+              <p className="text-center text-sm text-gray-600 mt-6">
+                Don't have an account?{' '}
+                <button 
+                  type="button" // <-- DIPERBAIKI: Harus type="button" agar tidak submit
+                  onClick={() => toggleForm(false)}
+                  className="text-purple-600 hover:underline font-medium"
+                >
+                  Sign Up
+                </button>
+              </p>
             </div>
           ) : (
             // Sign Up Form
             <div>
               <h1 className="text-4xl font-bold text-black mb-2">Sign Up</h1>
               <p className="text-gray-600 mb-8">Please enter your details</p>
-              
-              <div className="space-y-6">
+
+              {/* === FORM SIGN UP === */}
+              <form onSubmit={(e) => { e.preventDefault(); handleSignUp(); }} className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-black mb-2">
-                    Userame
+                    Username
                   </label>
                   <input
                     type="text"
+                    required
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={username} // Hubungkan ke state
-                    onChange={(e) => setUsername(e.target.value)} // Update state
+                    value={username} 
+                    onChange={(e) => setUsername(e.target.value)} 
                   />
                 </div>
                 
@@ -179,11 +187,12 @@ export default function Auth() {
                     Email Address
                   </label>
                   <input
-                    type="email"
+                    type="email" // <-- Memicu validasi format @
+                    required
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-dashboardStart"
                     placeholder=""
-                    value={email} // Hubungkan ke state
-                    onChange={(e) => setEmail(e.target.value)} // Update state
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
                   />
                 </div>
                 
@@ -193,27 +202,33 @@ export default function Auth() {
                   </label>
                   <input
                     type="password"
+                    required
+                    minLength={8}
+                    pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$"
+                    title="Password harus mengandung minimal 8 karakter, setidaknya satu huruf kecil, satu huruf besar, dan satu angka."
                     className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder=""
-                    value={password} // Hubungkan ke state
-                    onChange={(e) => setPassword(e.target.value)} // Update state
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
                   />
                 </div>
                 
-                <button className="w-full py-3 bg-yellow-400 hover:bg-yellow-400 text-black font-medium rounded-full transition-colors" onClick={handleSignUp}>
+                <button type="submit" className="w-full py-3 bg-yellow-400 hover:bg-yellow-400 text-black font-medium rounded-full transition-colors">
                   Sign up
                 </button>
-                
-                <p className="text-center text-sm text-gray-600">
-                  Have an account?{' '}
-                  <button 
-                    onClick={() => toggleForm(true)}
-                    className="text-purple-600 hover:underline font-medium"
-                  >
-                    Sign In
-                  </button>
-                </p>
-              </div>
+              </form>
+              {/* === END FORM === */}
+              
+              <p className="text-center text-sm text-gray-600 mt-6">
+                Have an account?{' '}
+                <button 
+                  type="button" // <-- DIPERBAIKI: Harus type="button" agar tidak submit
+                  onClick={() => toggleForm(true)}
+                  className="text-purple-600 hover:underline font-medium"
+                >
+                  Sign In
+                </button>
+              </p>
             </div>
           )}
         </div>
