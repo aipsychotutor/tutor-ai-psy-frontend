@@ -722,7 +722,7 @@ export default function ReportPage() {
     setAnalyzingSession(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/sessions/${selectedSession.session_id}/analyze`,
+        `http://localhost:3000/api/reports/${selectedSession.session_id}/analyze`,
         { 
           method: 'POST',
           headers: {
@@ -1055,7 +1055,7 @@ export default function ReportPage() {
       </div>
 
       {/* CUSTOM SCROLLBAR STYLES */}
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }

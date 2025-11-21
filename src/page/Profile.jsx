@@ -94,7 +94,7 @@ export default function ProfilePage() {
     try {
       // Set persona berdasarkan patient yang dipilih
       console.log('🎭 Setting persona for patient:', patientId);
-      const personaResponse = await fetch('http://localhost:3000/set-persona-from-patient', {
+      const personaResponse = await fetch('http://localhost:3000/api/chat/set-persona-from-patient', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

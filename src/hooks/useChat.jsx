@@ -75,7 +75,7 @@ export const ChatProvider = ({ children, session_id }) => {
     setError(null);
 
     try {
-      const response = await fetch(`${backendUrl}/chat`, {
+      const response = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
