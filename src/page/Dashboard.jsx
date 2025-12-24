@@ -1,355 +1,69 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import AddScenarioModal from "../components/AddScenarioModal";
-import Button from "../components/Button";
+// Import Icons
 import {
   Search,
   Filter,
   Heart,
   HelpCircle,
   Layers,
-  ChevronDown,
-  LogOut,
-  Shield,
-  User as UserIcon,
 } from "lucide-react";
 
-function Card({ children, className = "", span = 1 }) {
-  const spanClass =
-    span === 2 ? "lg:col-span-2" : span === 3 ? "lg:col-span-3" : "";
-  return (
-    <div
-      className={`rounded-[2.5rem] bg-cardBackgroundColor p-4 dark:bg-cardBackgroundColorDark backdrop-blur shadow-lg ${spanClass} ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
+// Import Custom Components
+import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
+import Button from "../components/Dashboard/ButtonDashboard";
+import { Card, CardHeader } from "../components/Dashboard/Card"; 
+import Navbar from "../components/Dashboard/Navbar"; 
+import StatCard from "../components/Dashboard/StatCard";
+import PatientList, { SessionPatientList } from "../components/Dashboard/PatientList";
 
-// Card Header Component
-function CardHeader({ title, action }) {
-  return (
-    <div className="flex items-center justify-between mb-2">
-      <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">
-        {title}
-      </h2>
-      {action}
-    </div>
-  );
-}
-
-// Avatar Component
-function Avatar({ src, alt = "", size = "md", className = "" }) {
-  const sizes = {
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-12 w-12",
-  };
-
-  return (
-    <img
-      src={src || "/images/default.png"}
-      alt={alt}
-      className={`${sizes[size]} rounded-full object-cover border-2 border-gray-200 dark:border-gray-700 flex-shrink-0 ${className}`}
-      onError={(e) => {
-        e.target.src = "/images/default.png";
-      }}
-    />
-  );
-}
-
-// Patient List Item Component
-function SessionPatientListItem({ patient, onDetailClick, onReportClick }) {
-  return (
-    <div className="flex items-center justify-between bg-white dark:bg-gray-950 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-      <div className="flex items-center gap-3">
-        <Avatar src={patient.image} alt="" />
-        <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
-          {patient.name}
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => onDetailClick(patient)}
-          aria-label={`Lihat detail ${patient.name}`}
-        >
-          Detail
-        </Button>
-        <Button
-          variant="ghost"
-          size="xs"
-          onClick={() => onReportClick(patient)}
-          aria-label={`Lihat laporan ${patient.name}`}
-        >
-          Laporan
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-// Patient List Component
-function SessionPatientList({ patients, onDetailClick, onReportClick }) {
-  // ... (Tidak ada perubahan)
-  return (
-    <div className="space-y-px overflow-y-auto max-h-[300px] rounded-lg">
-      {patients.map((patient) => (
-        <SessionPatientListItem
-          key={patient.id}
-          patient={patient}
-          onDetailClick={onDetailClick}
-          onReportClick={onReportClick}
-        />
-      ))}
-    </div>
-  );
-}
-
-const formatTraits = (traits) => {
-  if (!traits || traits.length === 0) {
-    return "Tidak ada deskripsi traits.";
-  }
-  return traits
-    .slice(0, 2)
-    .map((trait) => trait.charAt(0).toUpperCase() + trait.slice(1))
-    .join(", ");
-};
-
-function PatientList({ patients, onStartSession }) {
-  console.log("Rendering PatientList with patients:", patients);
-  if (!patients || patients.length === 0) {
-    return (
-      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-        Tidak ada skenario yang cocok. <br />
-        Coba ubah filter atau kata kunci pencarian Anda.
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 py-2 max-h-[300px] overflow-y-auto pr-1">
-      {patients.map((pasien) => (
-        <div
-          key={pasien.id}
-          className="flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-[1.02]"
-        >
-          <div className="p-4 flex-grow">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar src={pasien.image} alt={pasien.name} size="md" />
-              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {pasien.name}
-              </h3>
-            </div>
-
-            <div className="mb-2">
-              <span
-                className={`inline-block ${pasien.patient_tag_color} text-xs font-semibold px-2.5 py-0.5 rounded-full`}
-              >
-                {pasien.patient_tag}
-              </span>
-            </div>
-
-            <p className="text-xs text-gray-600 dark:text-gray-400 h-10 line-clamp-2">
-              {formatTraits(pasien.personality_traits)}
-            </p>
-          </div>
-
-          <div className="p-4 border-t border-gray-100 dark:border-gray-700">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => onStartSession?.(pasien)}
-              className="w-full"
-            >
-              Mulai Sesi
-            </Button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- KOMPONEN STAT CARD ---
-function StatCard({ title, value, icon, bgColor, iconColor, loading }) {
-  const formattedValue =
-    typeof value === "number" && value % 1 !== 0
-      ? value.toFixed(1)
-      : typeof value === "number"
-      ? value
-      : 0;
-
-  return (
-    <Card className="p-4 sm:p-5">
-      {loading ? (
-        <div className="h-[52px] animate-pulse">
-          <div className="w-2/4 h-4 bg-gray-300 dark:bg-gray-700 rounded mb-3"></div>
-          <div className="w-1/3 h-6 bg-gray-300 dark:bg-gray-700 rounded"></div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div
-              className={`flex-shrink-0 rounded-lg p-3 ${bgColor} ${iconColor}`}
-            >
-              {icon}
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {title}
-              </h3>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {formattedValue}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </Card>
-  );
-}
-
-// --- KOMPONEN NAVBAR BARU ---
-function Navbar({ user, onLogout }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Hook untuk menutup dropdown saat klik di luar area
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
-
-  const handleLogoutClick = () => {
-    setIsDropdownOpen(false);
-    onLogout();
-  };
-
-  if (!user) {
-    return (
-      <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              AppSkenario
-            </span>
-            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
-  const userRole = user.is_admin === true ? "Admin" : "User";
-
-  return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md w-full sticky top-0 z-50">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0">
-            <span className="text-2xl font-bold dark:text-blue-400">
-              CommuLab
-            </span>
-          </div>
-
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-lg focus:outline-none"
-              aria-haspopup="true"
-              aria-expanded={isDropdownOpen}
-            >
-              <div className="h-8 w-8 rounded-full bg-ungu text-white flex items-center justify-center font-semibold">
-                {user.username ? user.username.charAt(0).toUpperCase() : "?"}
-              </div>
-              <span className="hidden sm:inline-block font-medium">
-                {user.username}
-              </span>
-              <ChevronDown
-                size={16}
-                className={`transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {isDropdownOpen && (
-              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div
-                  className="py-1"
-                  role="menu"
-                  aria-orientation="vertical"
-                  aria-labelledby="menu-button"
-                >
-                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <p
-                      className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate"
-                      title={user.username}
-                    >
-                      {user.username}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-1">
-                      {userRole === "Admin" ? (
-                        <Shield size={14} className="text-green-500" />
-                      ) : (
-                        <UserIcon size={14} className="text-gray-500" />
-                      )}
-                      {userRole}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    role="menuitem"
-                  >
-                    <LogOut size={16} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
+/**
+ * ============================================================================
+ * DASHBOARD COMPONENT
+ * ============================================================================
+ * Halaman utama aplikasi (Home).
+ * Menampilkan statistik pengguna, daftar skenario (pasien) yang tersedia,
+ * dan riwayat sesi latihan yang pernah dilakukan.
+ */
 export default function Dashboard() {
   const navigate = useNavigate();
+  
+  // --- STATE: OTENTIKASI & USER ---
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(true); // Loading state saat cek login
 
-  const [patients, setPatients] = useState([]);
-  const [isVerifying, setIsVerifying] = useState(true);
+  // --- STATE: DATA PASIEN (SKENARIO) ---
+  const [patients, setPatients] = useState([]); // Daftar semua skenario
   const [loadingPatients, setLoadingPatients] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [sessionPatients, setSessionPatients] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false); // Modal tambah skenario
+  
+  // --- STATE: RIWAYAT SESI ---
+  const [sessionPatients, setSessionPatients] = useState([]); // Daftar pasien yang pernah diajak chat
   const [loadingSessions, setLoadingSessions] = useState(true);
 
+  // --- STATE: STATISTIK ---
   const [totalSessions, setTotalSessions] = useState(0);
   const [avgEmpathyScore, setAvgEmpathyScore] = useState(0);
   const [avgQuestionScore, setAvgQuestionScore] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
+  // --- STATE: FILTER & PENCARIAN ---
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("Semua");
 
+  /**
+   * ==========================================================================
+   * AUTHENTICATION LOGIC
+   * ==========================================================================
+   * Memeriksa keberadaan token dan user di localStorage saat halaman dimuat.
+   * Menggunakan event 'pageshow' untuk menangani kasus navigasi Back/Forward cache.
+   */
   useEffect(() => {
     let verificationTimer = null;
     const checkAuth = (event) => {
+      // Cek jika halaman dimuat dari cache browser (tombol back)
       if (event && event.persisted) {
         console.log("Halaman dimuat dari bfcache, cek ulang otentikasi...");
       }
@@ -362,8 +76,9 @@ export default function Dashboard() {
         navigate("/", { replace: true });
       } else {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser)); // <-- Data user diambil di sini
+        setUser(JSON.parse(storedUser));
 
+        // Memberi jeda sedikit agar transisi UI lebih halus
         verificationTimer = setTimeout(() => {
           setIsVerifying(false);
         }, 500);
@@ -381,6 +96,7 @@ export default function Dashboard() {
     };
   }, [navigate]);
 
+  // Handler jika token expired atau invalid saat request API
   const handleAuthError = () => {
     console.log("Token tidak valid atau expired. Logout...");
     localStorage.removeItem("token");
@@ -388,6 +104,7 @@ export default function Dashboard() {
     navigate("/", { replace: true });
   };
 
+  // Handler Logout manual
   const handleLogout = () => {
     console.log("Logging out...");
     localStorage.removeItem("token");
@@ -397,6 +114,13 @@ export default function Dashboard() {
     navigate("/", { replace: true });
   };
 
+  /**
+   * ==========================================================================
+   * DATA FETCHING FUNCTIONS
+   * ==========================================================================
+   */
+
+  // 1. Fetch Statistics: Mengambil skor rata-rata empati & pertanyaan
   const fetchStats = async () => {
     if (!token) {
       setLoadingStats(false);
@@ -433,6 +157,7 @@ export default function Dashboard() {
     }
   };
 
+  // 2. Fetch Session History: Mengambil riwayat sesi untuk list di sidebar kanan/bawah
   const fetchSessionHistory = async () => {
     if (!token) {
       console.log("❌ Belum ada token, skip fetch");
@@ -460,6 +185,8 @@ export default function Dashboard() {
 
       setTotalSessions(sessions.length);
 
+      // Filter unik: Hanya ambil satu entry per pasien (sesi terakhir)
+      // Menggunakan Map untuk deduping berdasarkan patient_id
       const uniquePatients = Array.from(
         new Map(
           sessions.map((s) => [
@@ -484,6 +211,7 @@ export default function Dashboard() {
     }
   };
 
+  // 3. Fetch Patients (Scenarios): Mengambil daftar semua skenario yang tersedia
   const fetchPatients = async (user) => {
     setLoadingPatients(true);
     try {
@@ -497,6 +225,7 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
 
+      // Mapping data untuk menambahkan Tagging (Global vs Buatan Sendiri)
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
         const isCurrentUser = p.user_id === user?.user_id;
@@ -506,6 +235,7 @@ export default function Dashboard() {
           name: p.patient_name,
           image: p.profile_image || null,
           personality_traits: p.personality_traits || [],
+          // Logic penentuan Label Tag
           patient_tag:
             isCurrentUser && user?.is_admin && isGlobal
               ? "Global"
@@ -514,6 +244,7 @@ export default function Dashboard() {
               : isGlobal
               ? "Global"
               : p.users?.username,
+          // Logic penentuan Warna Tag
           patient_tag_color: isGlobal
             ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
             : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -528,25 +259,42 @@ export default function Dashboard() {
     }
   };
 
+  // Effect: Jalankan semua fetch saat token tersedia
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
       fetchPatients(user);
       fetchStats();
     }
-  }, [token]);
+  }, [token, user]);
 
+  /**
+   * ==========================================================================
+   * FILTERING LOGIC
+   * ==========================================================================
+   * Menggunakan useMemo agar filtering tidak dijalankan ulang jika
+   * data patients, searchTerm, atau selectedTag tidak berubah.
+   */
   const filteredPatients = useMemo(() => {
     return patients
       .filter((patient) => {
+        // Filter by Tag
         if (selectedTag === "Semua") return true;
         return patient.patient_tag === selectedTag;
       })
       .filter((patient) => {
+        // Filter by Search Name
         return patient.name.toLowerCase().includes(searchTerm.toLowerCase());
       });
   }, [patients, searchTerm, selectedTag]);
 
+  /**
+   * ==========================================================================
+   * EVENT HANDLERS
+   * ==========================================================================
+   */
+
+  // Navigasi ke Halaman Profil (Detail Pasien) dari History
   const handleDetailClick = (patient) => {
     console.log("Detail clicked:", patient);
     navigate(`/profile/${patient.id}`, {
@@ -556,6 +304,7 @@ export default function Dashboard() {
     });
   };
 
+  // Navigasi ke Halaman Report
   const handleReportClick = (patient) => {
     console.log("Report clicked:", patient);
     navigate(`/report/${patient.id}`, {
@@ -565,6 +314,7 @@ export default function Dashboard() {
     });
   };
 
+  // Navigasi Mulai Sesi (dari Pustaka Skenario)
   const handleStartSession = (patient) => {
     console.log("Mulai sesi dengan:", patient.name);
     navigate(`/profile/${patient.id}`, {
@@ -575,6 +325,7 @@ export default function Dashboard() {
     });
   };
 
+  // Simpan Skenario Baru (Callback dari AddScenarioModal)
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
@@ -591,16 +342,20 @@ export default function Dashboard() {
         return handleAuthError();
 
       if (response.ok) {
-        fetchPatients(user);
+        toast.success("Skenario berhasil disimpan!");
+        setShowAddModal(false);
+        fetchPatients(user); // Refresh list setelah simpan
       } else {
         throw new Error(result.message || "Gagal menyimpan pasien");
       }
     } catch (error) {
       console.error("Error:", error);
+      toast.error("Gagal menyimpan skenario: " + error.message);
       throw error;
     }
   };
 
+  // Tampilkan null saat masih proses verifikasi token (mencegah kedip)
   if (isVerifying) {
     return null;
   }
@@ -610,9 +365,12 @@ export default function Dashboard() {
       <Toaster position="top-center" reverseOrder={false} />
 
       <Navbar user={user} onLogout={handleLogout} />
+      
       <main className="flex-grow">
         <div className="bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8 h-full">
           <div className="mx-auto max-w-screen-2xl space-y-6">
+            
+            {/* Header Title */}
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                 Selamat Datang, {user?.username}!
@@ -622,7 +380,8 @@ export default function Dashboard() {
               </h2>
             </div>
 
-            {/* --- STAT CARD GRID --- */}
+            {/* --- SECTION 1: STAT CARD GRID --- */}
+            {/* Menampilkan ringkasan metrik utama */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
               <StatCard
                 title="Total Sesi"
@@ -650,6 +409,8 @@ export default function Dashboard() {
               />
             </div>
 
+            {/* --- SECTION 2: PUSTAKA SKENARIO --- */}
+            {/* Daftar skenario/pasien yang bisa dipilih untuk latihan */}
             <Card span={3} className="sm:p-4 lg:p-5 min-h-[80px] h-[500px]">
               <CardHeader
                 title="Pustaka Skenario"
@@ -667,6 +428,7 @@ export default function Dashboard() {
                 Pilih skenario untuk memulai latihan
               </p>
 
+              {/* Search & Filter Controls */}
               <div className="flex flex-col sm:flex-row gap-3 my-4">
                 <div className="relative flex-grow">
                   <label htmlFor="search-scenario" className="sr-only">
@@ -707,12 +469,21 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <PatientList
-                patients={filteredPatients}
-                onStartSession={handleStartSession}
-              />
+              {/* List Pasien */}
+              {loadingPatients ? (
+                 <div className="text-center py-4 text-gray-700 dark:text-gray-300">
+                    Memuat daftar skenario...
+                </div>
+              ) : (
+                <PatientList
+                    patients={filteredPatients}
+                    onStartSession={handleStartSession}
+                />
+              )}
             </Card>
 
+            {/* --- SECTION 3: RIWAYAT SESI --- */}
+            {/* List sesi yang pernah dilakukan sebelumnya */}
             <Card span={3} className="sm:p-4 lg:p-5">
               <CardHeader title="Riwayat Sesi" />
               {loadingSessions ? (
@@ -734,6 +505,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* Modal Tambah Skenario */}
           <AddScenarioModal
             show={showAddModal}
             onClose={() => setShowAddModal(false)}

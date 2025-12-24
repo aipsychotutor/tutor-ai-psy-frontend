@@ -1,4 +1,3 @@
-// ./src/components/Experience.jsx
 import {
   CameraControls,
   ContactShadows,
@@ -6,14 +5,14 @@ import {
   Text,
 } from "@react-three/drei";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useChat } from "../hooks/useChat";
+import { useChat } from "../../hooks/useChat";
 import { Avatar } from "./Avatar";
 import React from "react";
 
 const Dots = (props) => {
   const { loading } = useChat();
   const [loadingText, setLoadingText] = useState("");
-  
+
   useEffect(() => {
     if (loading) {
       const interval = setInterval(() => {
@@ -29,9 +28,9 @@ const Dots = (props) => {
       setLoadingText("");
     }
   }, [loading]);
-  
+
   if (!loading) return null;
-  
+
   return (
     <group {...props}>
       <Text fontSize={0.14} anchorX={"left"} anchorY={"bottom"}>
@@ -57,7 +56,7 @@ export const Experience = ({ avatarPath = "/models/default.glb" }) => {
       cameraControls.current.setLookAt(0, 2.2, 5, 0, 1.0, 0, true);
     }
   }, [cameraZoomed]);
-  
+
   return (
     <>
       <CameraControls ref={cameraControls} />

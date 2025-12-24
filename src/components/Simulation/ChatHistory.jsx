@@ -1,6 +1,6 @@
 // ./src/components/ChatHistory.jsx
 import { useState, useEffect } from "react";
-import { useChat } from "../hooks/useChat";
+import { useChat } from "../../hooks/useChat";
 
 export const ChatHistory = () => {
   const { history } = useChat();

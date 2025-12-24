@@ -1,20 +1,37 @@
 import { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import Button from "./Button";
+import Button from "./ButtonDashboard";
 
+/**
+ * AddScenarioModal Component
+ *
+ * Modal form untuk menambahkan data skenario pasien baru.
+ * Komponen ini menangani input data biodata, latar belakang, dan traits kepribadian dinamis.
+ *
+ * @param {boolean} show - Mengontrol visibilitas modal (true = tampil).
+ * @param {function} onClose - Fungsi callback untuk menutup modal.
+ * @param {function} onSave - Fungsi callback (async) yang dipanggil saat form disubmit valid. Menerima object data pasien.
+ * @param {object} user - Data user yang sedang login (digunakan untuk cek role Admin).
+ */
 export default function AddScenarioModal({ show, onClose, onSave, user }) {
+  // --- STATE MANAGEMENT ---
+
+  // State tunggal untuk menampung seluruh field input agar lebih rapi
   const [formData, setFormData] = useState({
     patient_name: "",
     background_story: "",
     personality_type: "",
-    symptom_intensity: "",
-    age: "",
+    symptom_intensity: "", // Akan dikonversi ke integer saat submit
+    age: "", // Akan dikonversi ke integer saat submit
     gender: "",
     occupation: "",
     marital_status: "",
-    personality_traits: ["", "", "", ""],
+    personality_traits: ["", "", "", ""], // Array string untuk input dinamis
   });
 
+  // --- HANDLERS ---
+
+  // Handler generik untuk input text/select biasa
   const handleChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -22,6 +39,10 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
+  /**
+   * Mengupdate nilai specific trait berdasarkan index array.
+   * Diperlukan karena personality_traits adalah array di dalam object state.
+   */
   const handleTraitChange = (index, value) => {
     setFormData((prev) => {
       const newTraits = [...prev.personality_traits];
@@ -33,6 +54,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     });
   };
 
+  // Menambah slot input kosong baru ke array traits
   const addTraitField = () => {
     setFormData((prev) => ({
       ...prev,
@@ -40,6 +62,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
+  // Menghapus slot input trait berdasarkan index
   const removeTraitField = (index) => {
     setFormData((prev) => ({
       ...prev,
@@ -47,7 +70,15 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
+  /**
+   * Handle Final Submission
+   * Melakukan validasi, formatting data, dan memanggil prop onSave.
+   *
+   * @param {object} params - Parameter submit
+   * @param {boolean} params.is_global - Menentukan visibilitas skenario (khusus admin)
+   */
   const handleSubmit = async ({ is_global }) => {
+    // 1. Validasi Field Wajib
     if (!formData.patient_name || !formData.background_story) {
       toast.error(
         "Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)"
@@ -55,10 +86,12 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
       return;
     }
 
+    // 2. Bersihkan empty strings dari array traits agar tidak tersimpan ke DB
     const filteredTraits = formData.personality_traits.filter(
       (trait) => trait.trim() !== ""
     );
 
+    // 3. Format Data (Convert String ke Int untuk angka)
     const dataToSave = {
       ...formData,
       age: formData.age ? parseInt(formData.age) : null,
@@ -66,15 +99,17 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
         ? parseInt(formData.symptom_intensity)
         : null,
       personality_traits: filteredTraits.length > 0 ? filteredTraits : null,
-      is_global: is_global,
+      is_global: is_global, // Flag penentu apakah skenario bisa dilihat semua user atau tidak
     };
 
     const sucessToast = toast.success("Berhasil simpan skenario...");
 
     try {
+      // Panggil API/Function dari Parent Component
       await onSave(dataToSave);
       toast.dismiss(sucessToast);
 
+      // Reset form ke kondisi awal setelah sukses
       setFormData({
         patient_name: "",
         background_story: "",
@@ -87,7 +122,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
         personality_traits: ["", "", "", ""],
       });
 
-      onClose();
+      onClose(); // Tutup modal
     } catch (error) {
       toast.dismiss(sucessToast);
       toast.error(error.message || "Gagal menyimpan skenario. Coba lagi.");
@@ -95,6 +130,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }
   };
 
+  // Reset form dan tutup modal tanpa menyimpan
   const handleCancel = () => {
     setFormData({
       patient_name: "",
@@ -110,6 +146,9 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     onClose();
   };
 
+  // --- EFFECTS ---
+
+  // Menangani penutupan modal via tombol ESC dan mematikan scroll body saat modal aktif
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === "Escape" && show) {
@@ -119,15 +158,18 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
 
     if (show) {
       document.addEventListener("keydown", handleEscape);
+      // Mencegah background scrolling saat modal terbuka (UX improvement)
       document.body.style.overflow = "hidden";
     }
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
+      // Mengembalikan scroll saat modal tertutup
       document.body.style.overflow = "unset";
     };
   }, [show]);
 
+  // --- STATIC DATA OPTIONS ---
   const personalityTypeOptions = [
     { value: "introvert", label: "Introvert" },
     { value: "extrovert", label: "Extrovert" },
@@ -147,6 +189,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     { value: "Duda/Janda", label: "Duda/Janda" },
   ];
 
+  // Early return jika modal tidak ditampilkan
   if (!show) return null;
 
   return (
@@ -156,22 +199,27 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
       style={{ animation: "fadeIn 0.3s ease-out" }}
     >
       <Toaster position="top-center" reverseOrder={false} />
+      {/* Backdrop Gelap */}
       <div className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75 backdrop-blur-sm" />
 
+      {/* Modal Content Container */}
       <div
         className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full sm:w-[95%] sm:max-w-3xl max-h-[95vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam modal menutup modal
         style={{ animation: "slideIn 0.3s ease-out" }}
       >
+        {/* Header Modal */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Tambah Skenario Pasien Baru
           </h2>
         </div>
 
+        {/* Scrollable Form Area */}
         <div className="overflow-y-auto max-h-[calc(95vh-180px)]">
           <div className="px-6 py-4 space-y-5">
-            {/* Basic Information */}
+            
+            {/* === SECTION 1: INFORMASI DASAR === */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
                 Informasi Dasar
@@ -194,6 +242,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                 />
               </div>
 
+              {/* Grid Layout untuk field pendek (Usia, Gender, Status) */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label
@@ -213,12 +262,10 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                   />
                 </div>
-
+                
+                {/* ... (Code Gender & Status sama seperti sebelumnya) ... */}
                 <div className="space-y-2">
-                  <label
-                    htmlFor="gender"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Jenis Kelamin
                   </label>
                   <select
@@ -237,7 +284,8 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                 </div>
 
                 <div className="space-y-2">
-                  <label
+                    {/* ... (Marital Status Input) ... */}
+                   <label
                     htmlFor="marital-status"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
@@ -279,7 +327,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
               </div>
             </div>
 
-            {/* Background Story */}
+            {/* === SECTION 2: LATAR BELAKANG & KONDISI === */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
                 Latar Belakang & Kondisi
@@ -299,13 +347,14 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   onChange={(e) =>
                     handleChange("background_story", e.target.value)
                   }
-                  placeholder="Jelaskan latar belakang pasien, riwayat kehidupan, dan konteks yang relevan dengan kondisi saat ini..."
+                  placeholder="Jelaskan latar belakang pasien..."
                   rows={5}
                   className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ... (Sisa input Background story) ... */}
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label
                     htmlFor="personality-type"
@@ -353,12 +402,13 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
               </div>
             </div>
 
-            {/* Personality Traits */}
+            {/* === SECTION 3: TRAITS KEPRIBADIAN (DYNAMIC INPUT) === */}
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Traits Kepribadian - Opsional
                 </h3>
+                {/* Tombol tambah trait dinamis */}
                 <Button
                   type="button"
                   variant="ghost"
@@ -369,10 +419,8 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   + Tambah Trait
                 </Button>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Tambahkan deskripsi karakter dan sifat kepribadian pasien
-              </p>
-
+              
+              {/* Rendering list input traits */}
               <div className="space-y-3">
                 {formData.personality_traits.map((trait, index) => (
                   <div key={index} className="flex gap-2">
@@ -380,17 +428,10 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                       type="text"
                       value={trait}
                       onChange={(e) => handleTraitChange(index, e.target.value)}
-                      placeholder={`Contoh: ${
-                        index === 0
-                          ? "Kreatif dan detail-oriented"
-                          : index === 1
-                          ? "Perfeksionis, sulit mendelegasikan tugas"
-                          : index === 2
-                          ? "Emosional, sangat terikat dengan hasil karyanya"
-                          : "Ramah ke pelanggan, tapi tertutup pada orang terdekat"
-                      }`}
+                      placeholder={`Contoh trait ke-${index + 1}...`}
                       className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
                     />
+                    {/* Tombol hapus trait, hanya muncul jika ada lebih dari 1 trait */}
                     {formData.personality_traits.length > 1 && (
                       <button
                         type="button"
@@ -408,10 +449,13 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
           </div>
         </div>
 
+        {/* === FOOTER / ACTION BUTTONS === */}
         <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={handleCancel}>
             Batal
           </Button>
+          
+          {/* Conditional Rendering tombol berdasarkan Role Admin */}
           {user?.is_admin ? (
             <>
               <Button
@@ -441,6 +485,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
         </div>
       </div>
 
+      {/* Inline Styles untuk Animasi */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
