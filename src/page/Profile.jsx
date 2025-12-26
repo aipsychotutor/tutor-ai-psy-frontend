@@ -211,7 +211,6 @@ export default function ProfilePage() {
     const storedUser = localStorage.getItem("user");
 
     if (!storedToken || !storedUser) {
-      console.log("Tidak ada token/user, redirect ke halaman utama...");
       navigate("/", { replace: true });
     } else {
       setToken(storedToken);
@@ -221,14 +220,12 @@ export default function ProfilePage() {
 
   // --- HANDLERS: LOGOUT & ERROR ---
   const handleAuthError = () => {
-    console.log("Token tidak valid atau expired. Logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true }); 
   };
 
   const handleLogout = () => {
-    console.log("Melakukan logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true }); 
@@ -241,8 +238,6 @@ export default function ProfilePage() {
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
-      console.log("🎭 Setting persona for patient:", patientId);
-      
       // Step 1: Set Persona
       const personaResponse = await fetch(
         "http://localhost:3000/api/chat/set-persona-from-patient",
@@ -264,8 +259,6 @@ export default function ProfilePage() {
         throw new Error(personaResult.message || "Gagal set persona");
       }
 
-      console.log("✅ Persona set successfully:", personaResult.activePersona.nama_pasien);
-
       // Step 2: Create Session
       const response = await fetch("http://localhost:3000/api/sessions", {
         method: "POST",
@@ -283,7 +276,6 @@ export default function ProfilePage() {
       if (response.ok && newSession.data) {
         setIsSessionStarted(true);
         setCurrentSessionId(newSession.data.session_id);
-        console.log("Session started:", newSession);
 
         // Step 3: Navigate ke Chat Page dengan membawa state awal
         navigate(`/chat/${newSession.data.session_id}`, {
@@ -356,7 +348,6 @@ export default function ProfilePage() {
   }, [patientId, token, navigate]);
 
   const handleBack = () => {
-    console.log("kembali ke dashboard...");
     navigate(`/dashboard`);
   };
 

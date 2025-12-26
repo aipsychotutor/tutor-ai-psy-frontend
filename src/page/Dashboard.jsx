@@ -63,16 +63,10 @@ export default function Dashboard() {
   useEffect(() => {
     let verificationTimer = null;
     const checkAuth = (event) => {
-      // Cek jika halaman dimuat dari cache browser (tombol back)
-      if (event && event.persisted) {
-        console.log("Halaman dimuat dari bfcache, cek ulang otentikasi...");
-      }
-
       const storedToken = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
 
       if (!storedToken || !storedUser) {
-        console.log("Otentikasi gagal, redirect ke login...");
         navigate("/", { replace: true });
       } else {
         setToken(storedToken);
@@ -98,7 +92,6 @@ export default function Dashboard() {
 
   // Handler jika token expired atau invalid saat request API
   const handleAuthError = () => {
-    console.log("Token tidak valid atau expired. Logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true });
@@ -106,7 +99,6 @@ export default function Dashboard() {
 
   // Handler Logout manual
   const handleLogout = () => {
-    console.log("Logging out...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
@@ -160,7 +152,6 @@ export default function Dashboard() {
   // 2. Fetch Session History: Mengambil riwayat sesi untuk list di sidebar kanan/bawah
   const fetchSessionHistory = async () => {
     if (!token) {
-      console.log("❌ Belum ada token, skip fetch");
       setLoadingSessions(false);
       return;
     }
@@ -250,7 +241,6 @@ export default function Dashboard() {
             : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
         };
       });
-      console.log("Fetched patients:", mappedPatients);
       setPatients(mappedPatients);
     } catch (err) {
       console.error("Error fetching patients:", err);
@@ -296,7 +286,6 @@ export default function Dashboard() {
 
   // Navigasi ke Halaman Profil (Detail Pasien) dari History
   const handleDetailClick = (patient) => {
-    console.log("Detail clicked:", patient);
     navigate(`/profile/${patient.id}`, {
       state: {
         patient: patient,
@@ -306,7 +295,6 @@ export default function Dashboard() {
 
   // Navigasi ke Halaman Report
   const handleReportClick = (patient) => {
-    console.log("Report clicked:", patient);
     navigate(`/report/${patient.id}`, {
       state: {
         patient: patient,
@@ -316,7 +304,6 @@ export default function Dashboard() {
 
   // Navigasi Mulai Sesi (dari Pustaka Skenario)
   const handleStartSession = (patient) => {
-    console.log("Mulai sesi dengan:", patient.name);
     navigate(`/profile/${patient.id}`, {
       state: {
         patientId: patient.id,

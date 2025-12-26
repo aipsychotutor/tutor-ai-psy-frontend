@@ -26,7 +26,6 @@ export default function Auth() {
   // Tujuannya memastikan user benar-benar "keluar" jika mengunjungi halaman login,
   // mencegah token lama tertinggal yang bisa menyebabkan konflik sesi.
   useEffect(() => {
-    console.log("Membersihkan sisa sesi di halaman Login...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   }, []);
@@ -49,12 +48,9 @@ export default function Auth() {
 
   // --- HANDLER: LOGIN (SIGN IN) ---
   const handleSignIn = async () => {
-    console.log("Tombol Sign In diklik!");
-  
     // 1. Validasi Input Dasar
     if (!email || !password) {
       toast.error("Email dan password harus diisi."); 
-      console.log("2. Validasi frontend gagal (Field kosong).");
       return;
     }
 
@@ -62,8 +58,6 @@ export default function Auth() {
     const loadingToastId = toast.loading('Mencoba masuk...');
 
     try {
-      console.log("3. Mengirim request ke backend...");
-      
       // 2. Kirim Request ke API Login
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
@@ -82,25 +76,18 @@ export default function Auth() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        console.log("Sign In Success:", data.user);
-
         toast.success('Berhasil masuk! Mengarahkan ke dashboard...'); 
         
         // Beri jeda 1.5 detik agar user bisa membaca pesan sukses sebelum redirect
         setTimeout(() => {
-            console.log("4. Login Sukses. Navigasi ke Dashboard (setelah jeda).");
             navigate("/dashboard");
         }, 1500);
       } else {
-        // GAGAL: Tampilkan pesan error dari backend
-        console.log("4. Login Gagal. Pesan error:", data.message);
         toast.error(data.message || "Gagal masuk. Coba lagi."); 
       }
     } catch (err) {
-      // ERROR JARINGAN: Backend mati atau tidak bisa dihubungi
       toast.dismiss(loadingToastId); 
-      toast.error("Terjadi kesalahan koneksi."); 
-      console.error("Sign In Error:", err);
+      toast.error("Terjadi kesalahan koneksi.");
     }
   };
 
@@ -129,8 +116,6 @@ export default function Auth() {
 
       // 3. Cek Response Status
       if (data.status === "ok") {
-        console.log("Sign Up Success:", data.user);
-        
         // SUKSES: Pindahkan tampilan ke mode Login agar user bisa masuk manual
         toggleForm(true); 
         toast.success("Pendaftaran berhasil! Silakan masuk.");

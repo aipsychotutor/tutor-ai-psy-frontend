@@ -36,7 +36,6 @@ function Chat() {
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     if (!storedToken) {
-      console.log("Tidak ada token, redirect ke halaman utama...");
       navigate("/", { replace: true });
     } else {
       setToken(storedToken);
@@ -45,7 +44,6 @@ function Chat() {
 
   // Helper: Handle jika token expired/invalid saat fetch API
   const handleAuthError = () => {
-    console.log("Token tidak valid atau expired. Logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true });
@@ -68,8 +66,6 @@ function Chat() {
     // KASUS 2: Halaman di-refresh (Data state hilang, perlu fetch ulang ke API)
     const fetchAvatarOnRefresh = async () => {
       try {
-        console.log("Refreshing chat, fetching session data...");
-        
         // 1. Ambil detail sesi untuk mendapatkan patient_id
         const sessionRes = await fetch(
           `http://localhost:3000/api/sessions/${session_id}`,
@@ -90,7 +86,6 @@ function Chat() {
         const patientId = sessionData.data.patient_id;
 
         // 2. Ambil data pasien untuk mendapatkan avatar_path
-        console.log(`Fetching avatar for patient ${patientId}...`);
         const avatarRes = await fetch(
           `http://localhost:3000/api/patients/model/${patientId}`,
           {
@@ -108,7 +103,6 @@ function Chat() {
             ? avatarData.avatar_path
             : `/${avatarData.avatar_path}`;
           setAvatarPath(normalizedPath);
-          console.log("Loaded avatar path on refresh:", normalizedPath);
         } else {
           setAvatarPath("/models/default.glb"); // Fallback ke default
         }

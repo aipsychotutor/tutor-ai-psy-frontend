@@ -601,7 +601,6 @@ export default function ReportPage() {
   };
 
   const handleAuthError = () => {
-    console.log("Token tidak valid/expired.");
     handleLogout();
   };
 
