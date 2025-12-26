@@ -1,12 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-// Import Icons
-import {
-  ChevronDown,
-  Shield,
-  User as UserIcon,
-  LogOut,
-} from "lucide-react";
+// 1. IMPORT NAVBAR YANG SUDAH DIBUAT
+import Navbar from "../components/Navbar"; 
 
 /**
  * ============================================================================
@@ -14,7 +9,7 @@ import {
  * ============================================================================
  */
 
-// Button Component: Wrapper tombol dengan varian 'danger' (merah) dan 'success' (teal)
+// Button Component
 function Button({
   children,
   onClick,
@@ -42,118 +37,7 @@ function Button({
   );
 }
 
-// Navbar Component: Navigasi atas dengan posisi FIXED (mengambang saat scroll)
-function Navbar({ user, onLogout }) {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Hook: Menutup dropdown jika user klik di luar area menu
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
-
-  const handleLogoutClick = () => {
-    setIsDropdownOpen(false);
-    onLogout();
-  };
-
-  // Render Skeleton Loading jika user belum terload
-  if (!user) {
-    return (
-      <nav className="bg-white dark:bg-gray-900 shadow-md w-full fixed top-0 left-0 z-50">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              AppSkenario
-            </span>
-            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
-  const userRole = user.is_admin === true ? "Admin" : "User";
-
-  return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md w-full fixed top-0 left-0 z-50">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo Brand */}
-          <div className="flex-shrink-0">
-            <span className="text-2xl font-bold dark:text-blue-400">
-              CommuLab
-            </span>
-          </div>
-
-          {/* User Menu & Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 p-2 rounded-lg focus:outline-none"
-              aria-haspopup="true"
-              aria-expanded={isDropdownOpen}
-            >
-              <div className="h-8 w-8 rounded-full bg-ungu text-white flex items-center justify-center font-semibold">
-                {user.username ? user.username.charAt(0).toUpperCase() : "?"}
-              </div>
-              <span className="hidden sm:inline-block font-medium">
-                {user.username}
-              </span>
-              <ChevronDown
-                size={16}
-                className={`transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {/* Dropdown Content */}
-            {isDropdownOpen && (
-              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
-                <div className="py-1" role="menu">
-                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" title={user.username}>
-                      {user.username}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-1">
-                      {userRole === "Admin" ? (
-                        <Shield size={14} className="text-green-500" />
-                      ) : (
-                        <UserIcon size={14} className="text-gray-500" />
-                      )}
-                      {userRole}
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={handleLogoutClick}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    role="menuitem"
-                  >
-                    <LogOut size={16} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-// Avatar Component: Menampilkan foto profil bulat dengan shadow
+// Avatar Component
 function Avatar({ src, alt = "" }) {
   return (
     <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white p-2 shadow-xl">
@@ -162,14 +46,14 @@ function Avatar({ src, alt = "" }) {
         alt={alt}
         className="w-full h-full rounded-full object-cover"
         onError={(e) => {
-          e.target.src = "/images/default.png"; // Fallback jika gambar error
+          e.target.src = "/images/default.png"; 
         }}
       />
     </div>
   );
 }
 
-// InfoRow Component: Menampilkan baris data label: value
+// InfoRow Component
 function InfoRow({ label, value }) {
   return (
     <div className="flex items-start gap-2 py-1.5">
@@ -184,12 +68,10 @@ function InfoRow({ label, value }) {
  * ============================================================================
  * MAIN PAGE COMPONENT (ProfilePage)
  * ============================================================================
- * Halaman detail profil pasien sebelum memulai sesi chat.
- * Menampilkan Biodata, Latar Belakang, dan Kepribadian.
  */
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { patientId } = useParams(); // Mengambil ID pasien dari URL
+  const { patientId } = useParams();
 
   // State Auth
   const [user, setUser] = useState(null);
@@ -199,11 +81,9 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState(null);
   
   // State Loading & Session
-  const [loading, setLoading] = useState(true); // Loading awal fetch data
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isSessionStarted, setIsSessionStarted] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Loading saat tombol 'Mulai' ditekan
+  const [isLoading, setIsLoading] = useState(false); 
 
   // --- EFFECT: AUTH CHECK ---
   useEffect(() => {
@@ -218,7 +98,7 @@ export default function ProfilePage() {
     }
   }, [navigate]);
 
-  // --- HANDLERS: LOGOUT & ERROR ---
+  // --- HANDLERS ---
   const handleAuthError = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -231,10 +111,11 @@ export default function ProfilePage() {
     navigate("/", { replace: true }); 
   };
 
-  // --- LOGIC: MEMULAI SESI (PENTING) ---
-  // 1. Set Persona AI berdasarkan ID Pasien
-  // 2. Buat Sesi Baru di Database
-  // 3. Redirect ke Halaman Chat
+  const handleBack = () => {
+    navigate(`/dashboard`);
+  };
+
+  // --- LOGIC: MEMULAI SESI ---
   const handleStartSession = async () => {
     setIsLoading(true);
     try {
@@ -274,10 +155,7 @@ export default function ProfilePage() {
       const newSession = await response.json();
 
       if (response.ok && newSession.data) {
-        setIsSessionStarted(true);
-        setCurrentSessionId(newSession.data.session_id);
-
-        // Step 3: Navigate ke Chat Page dengan membawa state awal
+        // Step 3: Navigate ke Chat Page
         navigate(`/chat/${newSession.data.session_id}`, {
           state: {
             patient: profileData,
@@ -289,6 +167,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       alert("Gagal memulai sesi");
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -316,7 +195,6 @@ export default function ProfilePage() {
 
         const data = await response.json();
 
-        // Formatting data untuk ditampilkan di UI
         setProfileData({
           biodata: {
             nama: data.patient_name,
@@ -346,45 +224,50 @@ export default function ProfilePage() {
     fetchPatientData();
   }, [patientId, token, navigate]);
 
-  const handleBack = () => {
-    navigate(`/dashboard`);
-  };
 
-  // --- CONDITIONAL RENDERING: LOADING & ERROR ---
+  // --- CONDITIONAL RENDERING ---
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-white text-xl animate-pulse">Memuat data pasien...</div>
       </div>
     );
   }
 
   if (error || !profileData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
-        <div className="text-white text-center">
-          <p className="text-xl mb-4">Gagal memuat data pasien</p>
-          <Button variant="danger" onClick={handleBack}>
+      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex flex-col items-center justify-center gap-4">
+        <div className="text-white text-center text-xl">Gagal memuat data pasien</div>
+        <Button variant="danger" onClick={handleBack}>
             Kembali ke Dashboard
-          </Button>
-        </div>
+        </Button>
       </div>
     );
   }
 
   // --- RENDER UTAMA ---
   return (
-    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd pt-20 pb-8 px-4 sm:px-6 lg:px-8">
-      <Navbar user={user} onLogout={handleLogout} />
+    // Hapus pt-20 di sini agar Navbar menempel di atas
+    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd pb-8">
       
-      <div className="mx-auto max-w-5xl">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+      {/* 2. PASANG NAVBAR DISINI */}
+      {/* onEndSession diarahkan ke handleBack karena belum masuk sesi chat */}
+      <Navbar 
+        user={user} 
+        onLogout={handleLogout} 
+        onEndSession={handleBack} 
+      />
+      
+      {/* Tambahkan pt-10 atau pt-20 di container konten agar tidak tertutup Navbar */}
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-12">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 mt-8">
           Profil Pasien
         </h1>
         
         {/* Container Kartu Profil */}
-        <div className="relative">
-          {/* Avatar Floating di kanan atas */}
+        <div className="relative mt-16"> {/* mt-16 memberi ruang untuk avatar floating */}
+          
+          {/* Avatar Floating */}
           <div className="absolute -top-16 right-4 sm:right-8 z-10">
             <Avatar
               src={profileData.profileImage}
@@ -393,7 +276,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Konten Detail Profil */}
-          <div className="backdrop-blur rounded-[3rem] p-6 sm:p-8 shadow-2xl pt-20 sm:pt-8">
+          <div className="backdrop-blur bg-white/10 border border-white/20 rounded-[3rem] p-6 sm:p-8 shadow-2xl pt-20 sm:pt-8">
             
             {/* Bagian Biodata */}
             <section className="mb-6">
@@ -411,7 +294,7 @@ export default function ProfilePage() {
 
             <hr className="border-t border-white/30 my-6" />
 
-            {/* Bagian Latar Belakang Cerita */}
+            {/* Bagian Latar Belakang */}
             <section className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
                 Latar Belakang Cerita
@@ -425,7 +308,7 @@ export default function ProfilePage() {
 
             <hr className="border-t border-white/30 my-6" />
 
-            {/* Bagian Kepribadian (List Point) */}
+            {/* Bagian Kepribadian */}
             <section className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
                 Kepribadian
@@ -449,7 +332,7 @@ export default function ProfilePage() {
               )}
             </section>
 
-            {/* Action Buttons (Kembali & Mulai Sesi) */}
+            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8 pt-4">
               <Button
                 variant="danger"

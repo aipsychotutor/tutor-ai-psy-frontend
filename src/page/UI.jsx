@@ -9,7 +9,7 @@ import { useChat } from "../hooks/useChat";
 import { useProsodyAnalyzer } from "../hooks/useProsodyAnalyzer";
 
 // Sub-components
-import Navbar from "../components/Simulation/Navbar"; 
+import Navbar from "../components/Navbar"; 
 import ConfirmModal from "../components/Simulation/ConfirmModal";
 import ToolsPanel from "../components/Simulation/ToolsPanel";
 import ChatBar from "../components/Simulation/ChatBar";
@@ -195,6 +195,7 @@ export const UI = ({ hidden, session_id, ...props }) => {
           user={userData}
           onLogout={handleLogout}
           onEndSession={() => setShowConfirm(true)}
+          isSimulation={true}
         />
 
         {/* Right Side Tools (Zoom, Green Screen, etc.) */}

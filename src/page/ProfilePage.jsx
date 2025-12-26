@@ -11,23 +11,31 @@ export default function ProfilePage() {
   
   const user = JSON.parse(localStorage.getItem("user")) || { username: "Jojo", email: "jojo@example.com" };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token"); 
+    localStorage.removeItem("user");  
+    navigate("/");               
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950">
-      <Navbar user={user} />
+      
+      <Navbar 
+        user={user} 
+        onLogout={handleLogout} 
+        isSimulation={false}    
+      />
 
       <main className="max-w-4xl mx-auto py-10 px-4">
-        
-        {/* === BAGIAN HEADER PAGE (JUDUL & TOMBOL) === */}
+        {/* HEADER HALAMAN */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          
-          {/* Bagian Kiri: Judul Halaman */}
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Profil Pengguna
             </h1>
           </div>
 
-          {/* Bagian Kanan: Tombol Kembali */}
+          {/*Tombol Kembali */}
           <button 
             onClick={() => navigate(-1)} 
             className="flex items-center justify-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 px-5 py-2.5 rounded-full shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium text-sm w-fit"
@@ -42,8 +50,8 @@ export default function ProfilePage() {
           
           {/* HEADER DALAM: Avatar & Info User */}
           <div className="p-8 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center sm:flex-row sm:items-start gap-6 bg-gray-50/50 dark:bg-gray-800/50">
-            <div className="w-24 h-24 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-indigo-50 dark:border-indigo-900/30 shadow-sm">
-              <User size={48} className="text-indigo-500 dark:text-indigo-400" />
+            <div className="w-24 h-24 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-ungu-50 dark:border-ungu-900/30 shadow-sm">
+              <User size={48} className="text-ungu dark:text-ungu-400" />
             </div>
             <div className="text-center sm:text-left space-y-1 pt-2">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.username}</h2>
@@ -79,16 +87,16 @@ export default function ProfilePage() {
               <div className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Lama</label>
-                  <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                  <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-ungu focus:border-ungu outline-none transition-all" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Baru</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-ungu outline-none transition-all" />
                     </div>
                     <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Konfirmasi</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-ungu outline-none transition-all" />
                     </div>
                 </div>
                 <div className="pt-2">
