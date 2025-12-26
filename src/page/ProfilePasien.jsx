@@ -1,91 +1,93 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-// 1. IMPORT NAVBAR YANG SUDAH DIBUAT
+// Import Navbar
 import Navbar from "../components/Navbar"; 
+// Import Icons
+import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles } from "lucide-react";
 
 /**
  * ============================================================================
- * HELPER COMPONENTS
+ * HELPER COMPONENTS (AESTHETIC UPGRADE)
  * ============================================================================
  */
 
-// Button Component
-function Button({
-  children,
-  onClick,
-  variant = "primary",
-  className = "",
-  disabled = false,
-  ...props
-}) {
+// Modern Button
+const ActionButton = ({ onClick, children, variant = 'primary', icon: Icon, className = '', disabled }) => {
   const variants = {
-    danger:
-      "bg-white text-red-500 hover:bg-red-50 border-2 border-white disabled:opacity-50 disabled:cursor-not-allowed",
-    success:
-      "bg-teal-500 text-white hover:bg-teal-600 border-2 border-teal-500 disabled:opacity-50 disabled:cursor-not-allowed",
+    primary: "bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg shadow-teal-500/30",
+    danger: "bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur-sm",
+    secondary: "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-8 py-2 rounded-full font-medium transition-all ${variants[variant]} ${className}`}
-      {...props}
+      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
     >
+      {Icon && <Icon size={20} strokeWidth={2.5} />}
       {children}
     </button>
   );
-}
+};
 
-// Avatar Component
-function Avatar({ src, alt = "" }) {
-  return (
-    <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white p-2 shadow-xl">
+// Avatar Component with Pulse Effect
+const AestheticAvatar = ({ src, alt }) => (
+  <div className="relative group">
+    <div className="absolute inset-0 bg-gradient-to-br from-teal-400 to-purple-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-500"></div>
+    <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 bg-white dark:bg-gray-900 shadow-2xl">
       <img
         src={src || "/images/default.png"}
         alt={alt}
-        className="w-full h-full rounded-full object-cover"
-        onError={(e) => {
-          e.target.src = "/images/default.png"; 
-        }}
+        className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-800 bg-gray-100"
+        onError={(e) => { e.target.src = "/images/default.png"; }}
       />
     </div>
-  );
-}
-
-// InfoRow Component
-function InfoRow({ label, value }) {
-  return (
-    <div className="flex items-start gap-2 py-1.5">
-      <span className="text-white/90 text-sm">{label}</span>
-      <span className="text-white/90 text-sm">:</span>
-      <span className="text-white font-medium text-sm flex-1">{value}</span>
+    <div className="absolute bottom-2 right-2 p-2 bg-teal-500 rounded-full border-4 border-white dark:border-gray-900 text-white shadow-lg">
+      <User size={20} />
     </div>
-  );
-}
+  </div>
+);
+
+// Info Item Component
+const InfoItem = ({ label, value, icon: Icon }) => (
+  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+    <div className="p-3 rounded-xl bg-white/10 text-teal-300">
+      <Icon size={20} />
+    </div>
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-0.5">{label}</p>
+      <p className="text-lg font-semibold text-white">{value}</p>
+    </div>
+  </div>
+);
+
+// Trait Chip
+const TraitChip = ({ label }) => (
+  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-500/20 text-purple-200 border border-purple-500/30 text-sm font-medium">
+    <Sparkles size={14} className="text-purple-400" />
+    {label}
+  </span>
+);
 
 /**
  * ============================================================================
- * MAIN PAGE COMPONENT (ProfilePage)
+ * MAIN PAGE COMPONENT
  * ============================================================================
  */
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { patientId } = useParams();
 
-  // State Auth
+  // State
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-
-  // State Data Pasien
   const [profileData, setProfileData] = useState(null);
-  
-  // State Loading & Session
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); 
+  const [isStartingSession, setIsStartingSession] = useState(false);
 
-  // --- EFFECT: AUTH CHECK ---
+  // Auth Check
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -98,267 +100,194 @@ export default function ProfilePage() {
     }
   }, [navigate]);
 
-  // --- HANDLERS ---
-  const handleAuthError = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/", { replace: true }); 
-  };
-
+  // Handlers
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/", { replace: true }); 
+    navigate("/", { replace: true });
   };
 
-  const handleBack = () => {
-    navigate(`/dashboard`);
-  };
+  const handleBack = () => navigate('/dashboard');
 
-  // --- LOGIC: MEMULAI SESI ---
+  // Start Session Logic
   const handleStartSession = async () => {
-    setIsLoading(true);
+    setIsStartingSession(true);
     try {
-      // Step 1: Set Persona
-      const personaResponse = await fetch(
-        "http://localhost:3000/api/chat/set-persona-from-patient",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            patient_id: patientId,
-          }),
-        }
-      );
-
-      const personaResult = await personaResponse.json();
-
-      if (!personaResponse.ok) {
-        throw new Error(personaResult.message || "Gagal set persona");
-      }
-
-      // Step 2: Create Session
-      const response = await fetch("http://localhost:3000/api/sessions", {
+      // 1. Set Persona
+      const personaRes = await fetch("http://localhost:3000/api/chat/set-persona-from-patient", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          patient_id: patientId,
-        }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ patient_id: patientId }),
       });
+      if (!personaRes.ok) throw new Error("Gagal set persona");
 
-      const newSession = await response.json();
+      // 2. Create Session
+      const sessionRes = await fetch("http://localhost:3000/api/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ patient_id: patientId }),
+      });
+      const sessionData = await sessionRes.json();
 
-      if (response.ok && newSession.data) {
-        // Step 3: Navigate ke Chat Page
-        navigate(`/chat/${newSession.data.session_id}`, {
-          state: {
-            patient: profileData,
-            avatarPath: profileData.avatarPath,
-          },
+      if (sessionRes.ok && sessionData.data) {
+        navigate(`/chat/${sessionData.data.session_id}`, {
+          state: { patient: profileData, avatarPath: profileData.avatarPath },
         });
       } else {
-        alert("Gagal memulai sesi: " + (newSession.message || "Respons tidak valid"));
+        throw new Error(sessionData.message || "Gagal membuat sesi");
       }
-    } catch (error) {
-      alert("Gagal memulai sesi");
-      console.error(error);
+    } catch (err) {
+      alert("Error: " + err.message);
     } finally {
-      setIsLoading(false);
+      setIsStartingSession(false);
     }
   };
 
-  // --- EFFECT: FETCH DATA PASIEN ---
+  // Fetch Data
   useEffect(() => {
     if (!token || !patientId) return;
     const fetchPatientData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `http://localhost:3000/api/patients/${patientId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (response.status === 401 || response.status === 403)
-          return handleAuthError();
-        if (!response.ok) {
-          throw new Error("Failed to fetch patient data");
-        }
+        const response = await fetch(`http://localhost:3000/api/patients/${patientId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 401) return handleLogout();
+        if (!response.ok) throw new Error("Gagal mengambil data");
 
         const data = await response.json();
-
         setProfileData({
           biodata: {
             nama: data.patient_name,
-            usia: data.age ? `${data.age} tahun` : "-",
+            usia: data.age ? `${data.age} Tahun` : "-",
             jenisKelamin: data.gender || "-",
             pekerjaan: data.occupation || "-",
             status: data.marital_status || "-",
           },
           latarBelakang: {
-            cerita: data.background_story || "Tidak ada informasi latar belakang",
+            cerita: data.background_story || "Tidak ada informasi.",
           },
-          kepribadian: Array.isArray(data.personality_traits)
-            ? data.personality_traits
-            : [],
+          kepribadian: Array.isArray(data.personality_traits) ? data.personality_traits : [],
           profileImage: data.profile_image,
           avatarPath: data.avatar_path,
         });
-
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching patient data:", err);
         setError(err.message);
+      } finally {
         setLoading(false);
       }
     };
-
     fetchPatientData();
-  }, [patientId, token, navigate]);
+  }, [patientId, token]);
 
-
-  // --- CONDITIONAL RENDERING ---
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex items-center justify-center">
-        <div className="text-white text-xl animate-pulse">Memuat data pasien...</div>
+  // Render Loading / Error
+  if (loading) return (
+    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-white/20 border-t-teal-400 rounded-full animate-spin"></div>
+        <p className="text-white/80 font-medium animate-pulse">Memuat profil pasien...</p>
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !profileData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-8 px-4 flex flex-col items-center justify-center gap-4">
-        <div className="text-white text-center text-xl">Gagal memuat data pasien</div>
-        <Button variant="danger" onClick={handleBack}>
-            Kembali ke Dashboard
-        </Button>
+  if (error || !profileData) return (
+    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex flex-col items-center justify-center gap-6 px-4">
+      <div className="p-4 rounded-full bg-red-500/20 text-red-200">
+        <Activity size={48} />
       </div>
-    );
-  }
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-2">Gagal Memuat Data</h2>
+        <p className="text-white/60">{error || "Data pasien tidak ditemukan."}</p>
+      </div>
+      <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft}>Kembali ke Dashboard</ActionButton>
+    </div>
+  );
 
-  // --- RENDER UTAMA ---
+  // Main Render
   return (
-    // Hapus pt-20 di sini agar Navbar menempel di atas
-    <div className="h-full w-full overflow-y-auto bg-transparent flex flex-col">
+    <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
       
-      {/* 2. PASANG NAVBAR DISINI */}
-      {/* onEndSession diarahkan ke handleBack karena belum masuk sesi chat */}
-      <Navbar 
-        user={user} 
-        onLogout={handleLogout} 
-        onEndSession={handleBack} 
-      />
-      
-      {/* Tambahkan pt-10 atau pt-20 di container konten agar tidak tertutup Navbar */}
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-12">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 mt-8">
-          Profil Pasien
-        </h1>
-        
-        {/* Container Kartu Profil */}
-        <div className="relative mt-16"> {/* mt-16 memberi ruang untuk avatar floating */}
+      <Navbar user={user} onLogout={handleLogout} isSimulation={false} />
+
+      <div className="flex-grow pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
           
-          {/* Avatar Floating */}
-          <div className="absolute -top-16 right-4 sm:right-8 z-10">
-            <Avatar
-              src={profileData.profileImage}
-              alt={profileData.biodata.nama}
-            />
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-12 animate-in slide-in-from-top-5 duration-700">
+            <div className="relative z-10 -mb-16 md:mb-0 md:-mr-12">
+              <AestheticAvatar src={profileData.profileImage} alt={profileData.biodata.nama} />
+            </div>
+            
+            <div className="flex-1 text-center md:text-left pt-16 md:pt-0 md:pl-8">
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg mb-2">
+                {profileData.biodata.nama}
+              </h1>
+              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium border border-white/20 backdrop-blur-sm">
+                  {profileData.biodata.usia}
+                </span>
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium border border-white/20 backdrop-blur-sm">
+                  {profileData.biodata.jenisKelamin}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 w-full md:w-auto">
+              <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft} className="flex-1 md:flex-none">
+                Kembali
+              </ActionButton>
+              <ActionButton 
+                onClick={handleStartSession} 
+                variant="primary" 
+                icon={isStartingSession ? Activity : Play} 
+                className="flex-1 md:flex-none"
+                disabled={isStartingSession}
+              >
+                {isStartingSession ? "Memulai..." : "Mulai Sesi"}
+              </ActionButton>
+            </div>
           </div>
 
-          {/* Konten Detail Profil */}
-          <div className="backdrop-blur bg-white/10 border border-white/20 rounded-[3rem] p-6 sm:p-8 shadow-2xl pt-20 sm:pt-8">
+          {/* Main Card Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-700 delay-200">
             
-            {/* Bagian Biodata */}
-            <section className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
-                Biodata
-              </h2>
-              <div className="space-y-1">
-                <InfoRow label="Nama" value={profileData.biodata.nama} />
-                <InfoRow label="Usia" value={profileData.biodata.usia} />
-                <InfoRow label="Jenis Kelamin" value={profileData.biodata.jenisKelamin} />
-                <InfoRow label="Pekerjaan" value={profileData.biodata.pekerjaan} />
-                <InfoRow label="Status" value={profileData.biodata.status} />
-              </div>
-            </section>
+            {/* Left Column: Biodata Grid */}
+            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <InfoItem label="Pekerjaan" value={profileData.biodata.pekerjaan} icon={Briefcase} />
+              <InfoItem label="Status" value={profileData.biodata.status} icon={Heart} />
+              <InfoItem label="Usia" value={profileData.biodata.usia} icon={User} />
+            </div>
 
-            <hr className="border-t border-white/30 my-6" />
-
-            {/* Bagian Latar Belakang */}
-            <section className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
-                Latar Belakang Cerita
+            {/* Bottom Row: Story & Traits */}
+            <div className="lg:col-span-2 backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl p-8 shadow-xl">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <FileText className="text-teal-300" /> Latar Belakang Cerita
               </h2>
-              <div className="space-y-3">
-                <p className="text-white/90 text-sm leading-relaxed">
+              <div className="prose prose-invert max-w-none">
+                <p className="text-white/80 leading-relaxed text-lg">
                   {profileData.latarBelakang.cerita}
                 </p>
               </div>
-            </section>
-
-            <hr className="border-t border-white/30 my-6" />
-
-            {/* Bagian Kepribadian */}
-            <section className="mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">
-                Kepribadian
-              </h2>
-              {profileData.kepribadian.length > 0 ? (
-                <ul className="space-y-2">
-                  {profileData.kepribadian.map((trait, index) => (
-                    <li
-                      key={index}
-                      className="flex items-start gap-2 text-white/90 text-sm"
-                    >
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/90 flex-shrink-0" />
-                      <span>{trait}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-white/70 text-sm italic">
-                  Tidak ada informasi kepribadian
-                </p>
-              )}
-            </section>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-end mt-8 pt-4">
-              <Button
-                variant="danger"
-                onClick={handleBack}
-                className="w-full sm:w-auto"
-                disabled={isLoading}
-              >
-                Kembali
-              </Button>
-              <Button
-                variant="success"
-                onClick={handleStartSession}
-                className="w-full sm:w-auto"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Memulai...
-                  </span>
-                ) : (
-                  "Mulai"
-                )}
-              </Button>
             </div>
+
+            <div className="lg:col-span-1 backdrop-blur-md bg-white/10 border border-white/20 rounded-3xl p-8 shadow-xl">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Activity className="text-purple-300" /> Kepribadian
+              </h2>
+              
+              {profileData.kepribadian.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {profileData.kepribadian.map((trait, idx) => (
+                    <TraitChip key={idx} label={trait} />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-white/50 italic">Tidak ada data kepribadian.</p>
+              )}
+            </div>
+
           </div>
+
         </div>
       </div>
     </div>

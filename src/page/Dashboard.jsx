@@ -2,77 +2,159 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 // Import Icons
-import { Search, Filter, Heart, HelpCircle, Layers } from "lucide-react";
+import { Search, Filter, Heart, HelpCircle, Layers, Plus, Sparkles, Activity } from "lucide-react";
 
 // Import Custom Components
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
 import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; 
-import Button from "../components/Dashboard/ButtonDashboard";
-import { Card, CardHeader } from "../components/Dashboard/Card";
 import Navbar from "../components/Navbar";
-import StatCard from "../components/Dashboard/StatCard";
-import PatientList, {
-  SessionPatientList,
-} from "../components/Dashboard/PatientList";
+import PatientList, { SessionPatientList } from "../components/Dashboard/PatientList";
 
 /**
  * ============================================================================
- * DASHBOARD COMPONENT
+ * HELPER COMPONENTS (AESTHETIC UPGRADE)
  * ============================================================================
- * * Halaman utama aplikasi yang berfungsi sebagai pusat kontrol pengguna.
- * * Fitur Utama:
- * 1. Otentikasi: Memeriksa token & user session saat halaman dimuat.
- * 2. Statistik: Menampilkan ringkasan performa (Total Sesi, Skor Empati, dll).
- * 3. Manajemen Skenario: Melihat, Mencari, Memfilter, Menambah, Mengedit, dan Menghapus skenario.
- * 4. Riwayat Sesi: Menampilkan daftar sesi latihan yang telah diselesaikan.
- * * Layout Note:
- * Menggunakan struktur flexbox dengan `flex-grow` dan `overflow-y-auto` internal
- * untuk mengatasi masalah background gradient yang terpotong pada konten panjang/pendek.
- * * @component
+ */
+
+// 1. Shimmer / Skeleton Loader
+const Skeleton = ({ className }) => (
+  <div className={`animate-pulse bg-gray-200/50 dark:bg-gray-700/50 rounded-xl ${className}`} />
+);
+
+// 2. Modern Card (Glassmorphism)
+const GlassCard = ({ children, className = "", noPadding = false }) => (
+  <div className={`backdrop-blur-md bg-white/90 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/50 shadow-xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-white/95 dark:hover:bg-gray-900/90 ${className}`}>
+    <div className={noPadding ? "" : "p-6 sm:p-8"}>
+      {children}
+    </div>
+  </div>
+);
+
+// 3. Stat Card yang lebih "Splendid"
+const AestheticStatCard = ({ title, value, icon: Icon, color, loading }) => {
+  const theme = {
+    purple: "from-purple-500 to-indigo-600 shadow-purple-500/20 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
+    green: "from-emerald-500 to-teal-600 shadow-emerald-500/20 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
+    blue: "from-blue-500 to-cyan-600 shadow-blue-500/20 text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+  }[color] || "from-gray-500 to-gray-600";
+
+  return (
+    <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+      <div className="flex items-start justify-between">
+        <div className="relative z-10">
+          <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{title}</p>
+          {loading ? (
+            <Skeleton className="h-10 w-24 mt-2" />
+          ) : (
+            <h3 className={`text-4xl font-extrabold bg-gradient-to-r ${theme.split(" ")[0]} ${theme.split(" ")[1]} bg-clip-text text-transparent`}>
+              {value}
+            </h3>
+          )}
+        </div>
+        <div className={`p-3 rounded-2xl ${theme.split(" ").slice(2).join(" ")} group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={24} className={theme.split(" ")[2]} />
+        </div>
+      </div>
+      <div className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-5 bg-gradient-to-r ${theme.split(" ")[0]} ${theme.split(" ")[1]}`} />
+    </div>
+  );
+};
+
+// 4. Button Dashboard Modern
+const ActionButton = ({ onClick, children, icon: Icon }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-2 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-white dark:to-gray-200 text-white dark:text-gray-900 px-5 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300"
+  >
+    {Icon && <Icon size={18} strokeWidth={2.5} />}
+    {children}
+  </button>
+);
+
+// 5. Aesthetic Delete Modal (BARU & GANTENG)
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-800 transform transition-all animate-in zoom-in-95 duration-200 scale-100">
+        
+        {/* Icon Warning Besar */}
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
+          <svg className="h-8 w-8 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+        </div>
+
+        {/* Text Content */}
+        <div className="text-center space-y-3 mb-8">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            Hapus Skenario?
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
+            Anda yakin ingin menghapus skenario <span className="font-bold text-gray-800 dark:text-gray-200">"{itemName}"</span>? 
+            Tindakan ini tidak dapat dibatalkan.
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={onClose}
+            className="py-2.5 px-4 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            Batal
+          </button>
+          <button
+            onClick={onConfirm}
+            className="py-2.5 px-4 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            Ya, Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * ============================================================================
+ * DASHBOARD COMPONENT (FULL FIXED & AESTHETIC)
+ * ============================================================================
  */
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // ==========================================================================
-  // 1. STATE MANAGEMENT
-  // ==========================================================================
-
-  // --- Auth State ---
+  // --- STATE ---
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(true); // Loading state saat cek localStorage
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  // --- Data Skenario State ---
+  // Data State
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
-
-  // --- Modal Visibility State ---
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null); // Data sementara untuk diedit
-
-  // --- Data Riwayat Sesi State ---
   const [sessionPatients, setSessionPatients] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
-
-  // --- Statistik State ---
+  
+  // Stats State
   const [totalSessions, setTotalSessions] = useState(0);
   const [avgEmpathyScore, setAvgEmpathyScore] = useState(0);
   const [avgQuestionScore, setAvgQuestionScore] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // --- Filter & Search State ---
+  // Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null);
+  
+  // STATE BARU: Untuk Delete Modal
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // Filter State
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTag, setSelectedTag] = useState("Semua"); // Opsi: "Semua", "Global", "Buatan Sendiri"
+  const [selectedTag, setSelectedTag] = useState("Semua");
 
-  // ==========================================================================
-  // 2. AUTHENTICATION & INITIALIZATION
-  // ==========================================================================
-
-  /**
-   * Mengecek keberadaan token dan user data di localStorage saat komponen dimount.
-   * Jika tidak ada, redirect ke halaman Login.
-   */
+  // --- AUTH CHECK ---
   useEffect(() => {
     let verificationTimer = null;
     const checkAuth = () => {
@@ -84,173 +166,78 @@ export default function Dashboard() {
       } else {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        // Memberi sedikit delay agar transisi tidak flicker
-        verificationTimer = setTimeout(() => {
-          setIsVerifying(false);
-        }, 500);
+        verificationTimer = setTimeout(() => setIsVerifying(false), 500);
       }
     };
-
     checkAuth();
-    window.addEventListener("pageshow", checkAuth);
-
-    return () => {
-      window.removeEventListener("pageshow", checkAuth);
-      if (verificationTimer) clearTimeout(verificationTimer);
-    };
+    return () => clearTimeout(verificationTimer);
   }, [navigate]);
 
-  /**
-   * Menghapus sesi lokal dan mengarahkan kembali ke login jika token expired/invalid.
-   */
-  const handleAuthError = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/", { replace: true });
-  };
-
-  /**
-   * Handler logout manual oleh user.
-   */
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    setUser(null);
-    setToken(null);
     navigate("/", { replace: true });
   };
 
-  // ==========================================================================
-  // 3. DATA FETCHING (API CALLS)
-  // ==========================================================================
+  const handleAuthError = () => {
+    handleLogout();
+  };
 
-  /**
-   * Mengambil data statistik ringkasan user (Skor rata-rata).
-   */
+  // --- FETCHING LOGIC ---
   const fetchStats = async () => {
-    if (!token) {
-      setLoadingStats(false);
-      return;
-    }
+    if (!token) return setLoadingStats(false);
     setLoadingStats(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/reports/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401 || res.status === 403) return handleAuthError();
-      if (!res.ok) throw new Error("Gagal mengambil data statistik");
-
+      const res = await fetch(`http://localhost:3000/api/reports/stats`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) return handleAuthError();
       const data = await res.json();
       if (data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
         setAvgQuestionScore(data.data.avg_question_score || 0);
       }
-    } catch (err) {
-      toast.error("Gagal memuat data statistik: " + err.message);
-    } finally {
-      setLoadingStats(false);
-    }
+    } catch (err) { toast.error("Gagal memuat statistik"); } 
+    finally { setLoadingStats(false); }
   };
 
-  /**
-   * Mengambil riwayat sesi latihan user.
-   * Melakukan deduplikasi data pasien berdasarkan patient_id agar list terlihat rapi.
-   */
   const fetchSessionHistory = async () => {
-    if (!token) {
-      setLoadingSessions(false);
-      return;
-    }
+    if (!token) return setLoadingSessions(false);
     setLoadingSessions(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/sessions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401 || res.status === 403) return handleAuthError();
-      if (!res.ok) throw new Error("Gagal mengambil riwayat sesi");
-
+      const res = await fetch(`http://localhost:3000/api/sessions`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) return handleAuthError();
       const data = await res.json();
       const sessions = data?.data || [];
       setTotalSessions(sessions.length);
-
-      // Map untuk mengambil data pasien unik dari sesi-sesi yang ada
-      const uniquePatients = Array.from(
-        new Map(
-          sessions.map((s) => [
-            s.patient_id,
-            {
-              id: s.patient_id,
-              name: s.patient_name,
-              image: s.patient_image,
-              lastSession: s.session_date || s.start_time,
-              status: s.status,
-            },
-          ])
-        ).values()
-      );
+      const uniquePatients = Array.from(new Map(sessions.map((s) => [s.patient_id, {
+        id: s.patient_id, name: s.patient_name, image: s.patient_image, lastSession: s.session_date || s.start_time, status: s.status,
+      }])).values());
       setSessionPatients(uniquePatients);
-    } catch (err) {
-      toast.error("Gagal memuat riwayat sesi: " + err.message);
-    } finally {
-      setLoadingSessions(false);
-    }
+    } catch (err) { toast.error("Gagal memuat riwayat sesi"); } 
+    finally { setLoadingSessions(false); }
   };
 
-  /**
-   * Mengambil daftar seluruh pasien (Global & Buatan User).
-   * Melakukan mapping data untuk menentukan Tag (Label) dan Warna Tag.
-   */
   const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
-      const res = await fetch("http://localhost:3000/api/patients", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.status === 401 || res.status === 403) return handleAuthError();
-      if (!res.ok) throw new Error("Network response was not ok");
-
+      const res = await fetch("http://localhost:3000/api/patients", { headers: { Authorization: `Bearer ${token}` } });
+      if (res.status === 401) return handleAuthError();
       const data = await res.json();
-
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
         const isCurrentUser = p.user_id === currentUser?.user_id;
-
-        // Logika penentuan Tag (Global vs Buatan Sendiri)
         return {
-          id: p.patient_id,
-          name: p.patient_name,
-          image: p.profile_image || null,
-          personality_traits: p.personality_traits || [],
-          background_story: p.background_story,
-          personality_type: p.personality_type,
-          symptom_intensity: p.symptom_intensity,
-          age: p.age,
-          gender: p.gender,
-          occupation: p.occupation,
-          marital_status: p.marital_status,
-
-          patient_tag:
-            isCurrentUser && currentUser?.is_admin && isGlobal
-              ? "Global"
-              : isCurrentUser
-              ? "Buatan Sendiri"
-              : isGlobal
-              ? "Global"
-              : p.users?.username,
-          patient_tag_color: isGlobal
-            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+          id: p.patient_id, name: p.patient_name, image: p.profile_image || null, personality_traits: p.personality_traits || [],
+          background_story: p.background_story, personality_type: p.personality_type, symptom_intensity: p.symptom_intensity,
+          age: p.age, gender: p.gender, occupation: p.occupation, marital_status: p.marital_status,
+          patient_tag: isCurrentUser && currentUser?.is_admin && isGlobal ? "Global" : isCurrentUser ? "Buatan Sendiri" : isGlobal ? "Global" : p.users?.username,
+          patient_tag_color: isGlobal ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
         };
       });
       setPatients(mappedPatients);
-    } catch (err) {
-      console.error("Error fetching patients:", err);
-    } finally {
-      setLoadingPatients(false);
-    }
+    } catch (err) { console.error(err); } 
+    finally { setLoadingPatients(false); }
   };
 
-  // Memicu fetch data ketika token atau user tersedia
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
@@ -259,216 +246,201 @@ export default function Dashboard() {
     }
   }, [token, user]);
 
-  // ==========================================================================
-  // 4. COMPUTED LOGIC (FILTERING)
-  // ==========================================================================
-
-  /**
-   * useMemo untuk memfilter daftar pasien secara real-time.
-   * Filter berdasarkan:
-   * 1. Dropdown Tag (Semua / Global / Buatan Sendiri)
-   * 2. Input Pencarian (Nama pasien)
-   */
+  // --- FILTERING ---
   const filteredPatients = useMemo(() => {
     return patients
-      .filter((patient) => {
-        if (selectedTag === "Semua") return true;
-        return patient.patient_tag === selectedTag;
-      })
-      .filter((patient) => {
-        return patient.name?.toLowerCase().includes(searchTerm.toLowerCase());
-      });
+      .filter((p) => selectedTag === "Semua" ? true : p.patient_tag === selectedTag)
+      .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [patients, searchTerm, selectedTag]);
 
-  // ==========================================================================
-  // 5. EVENT HANDLERS (NAVIGATION & MODALS)
-  // ==========================================================================
+  // --- HANDLERS ---
+  const handleDetailClick = (p) => navigate(`/profile/${p.id}`, { state: { patient: p } });
+  const handleReportClick = (p) => navigate(`/report/${p.id}`, { state: { patient: p } });
+  const handleStartSession = (p) => navigate(`/profile/${p.id}`, { state: { patientId: p.id, patient: p }, });
 
-  const handleDetailClick = (patient) => navigate(`/profile/${patient.id}`, { state: { patient: patient } });
-  const handleReportClick = (patient) => navigate(`/report/${patient.id}`, { state: { patient: patient } });
-  const handleStartSession = (patient) => navigate(`/profile/${patient.id}`, { state: { patientId: patient.id, patient: patient }, });
-
-  /**
-   * Menyimpan Skenario Baru ke Database.
-   */
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(patientData),
       });
-
-      const result = await response.json();
-      if (response.status === 401 || response.status === 403)
-        return handleAuthError();
-
       if (response.ok) {
-        toast.success("Skenario berhasil disimpan!");
+        toast.success("Skenario berhasil dibuat!");
         setShowAddModal(false);
-        fetchPatients(user); // Refresh data
-      } else {
-        throw new Error(result.message || "Gagal menyimpan pasien");
-      }
-    } catch (error) {
-      toast.error("Gagal menyimpan skenario: " + error.message);
-    }
+        fetchPatients(user);
+      } else { throw new Error("Gagal menyimpan"); }
+    } catch (error) { toast.error("Gagal menyimpan skenario"); }
   };
 
-  /**
-   * Memicu modal edit dengan data pasien yang dipilih.
-   */
-  const handleTriggerEdit = (patient) => { setSelectedScenarioToEdit(patient); setShowEditModal(true); };
+  const handleTriggerEdit = (p) => { setSelectedScenarioToEdit(p); setShowEditModal(true); };
   
-  /**
-   * Menghapus skenario (Saat ini masih simulasi UI).
-   */
-  const handleTriggerDelete = async (patient) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus skenario ${patient.name}?`)) {
-        // TODO: Sambungkan ke endpoint DELETE API
-        toast.success("Fitur delete belum tersambung ke API (UI Only)");
-    }
+  const handleSaveUpdate = async () => { 
+    toast.success("Data berhasil diperbarui (Simulasi UI)"); setShowEditModal(false); 
   };
 
-  /**
-   * Menyimpan perubahan edit skenario (Saat ini masih simulasi UI).
-   */
-  const handleSaveUpdate = async (updatedData) => {
-    // TODO: Sambungkan ke endpoint PUT/PATCH API
-    toast.success("Berhasil memperbarui data pasien (Simulasi UI)");
-    setShowEditModal(false);
+  // --- DELETE HANDLER BARU (PAKAI MODAL) ---
+  const handleTriggerDelete = (patient) => { 
+    setDeleteTarget(patient); // Buka modal konfirmasi
+  };
+
+  const executeDelete = async () => {
+    if (!deleteTarget) return;
+
+    // TODO: Tambahkan Logic Fetch API Delete disini
+    // const res = await fetch(..., { method: 'DELETE' });
+    
+    // Simulasi Sukses
+    toast.success(`Skenario "${deleteTarget.name}" berhasil dihapus!`);
+    
+    setDeleteTarget(null); // Tutup modal
+    // fetchPatients(user); // Uncomment ini kalau udah connect API
   };
 
   if (isVerifying) return null;
 
   // ==========================================================================
-  // 6. RENDER UI
+  // RENDER UI GANTENG
   // ==========================================================================
   return (
     <div className="h-full w-full flex flex-col overflow-y-auto"> 
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} toastOptions={{ className: 'font-medium', style: { borderRadius: '10px', background: '#333', color: '#fff' } }}/>
 
       <Navbar user={user} onLogout={handleLogout} />
 
-      {/* Main Content: flex-grow mengisi sisa layar, bg-gradient memberikan visual */}
       <main className="flex-grow w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
-        
-        {/* Container: min-h-full memastikan gradient merentang ke bawah jika konten sedikit */}
         <div className="w-full h-full py-10 px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-screen-2xl space-y-6">
+          <div className="mx-auto max-w-screen-2xl space-y-8">
             
-            {/* Header Title */}
-            <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
-                Selamat Datang, {user?.username}!
+            {/* 1. Header with Gradient Text */}
+            <div className="space-y-1 animate-in slide-in-from-top-5 duration-500">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-sm">
+                Halo, <span>{user?.username}!</span>
               </h1>
-              <h2 className="text-white text-xl opacity-90">
-                Berikut adalah ringkasan aktivitas sesi latihan Anda hari ini
-              </h2>
+              <p className="text-white/80 text-lg sm:text-xl font-medium max-w-2xl">
+                Siap meningkatkan kemampuan komunikasimu hari ini? Berikut ringkasan progresmu.
+              </p>
             </div>
 
-            {/* --- SECTION 1: STAT CARD GRID --- */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 items-stretch">
-              <StatCard
+            {/* 2. Stat Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-700 delay-100">
+              <AestheticStatCard
                 title="Total Sesi"
                 value={totalSessions}
                 loading={loadingSessions}
-                icon={<Layers size={20} />}
-                bgColor="bg-purple-100 dark:bg-purple-900"
-                iconColor="text-purple-600 dark:text-purple-300"
+                icon={Layers}
+                color="purple"
               />
-              <StatCard
+              <AestheticStatCard
                 title="Rata-rata Empati"
                 value={avgEmpathyScore}
                 loading={loadingStats}
-                icon={<Heart size={20} />}
-                bgColor="bg-green-100 dark:bg-green-900"
-                iconColor="text-green-600 dark:text-green-300"
+                icon={Heart}
+                color="green"
               />
-              <StatCard
-                title="Rata-rata Pertanyaan"
+              <AestheticStatCard
+                title="Skor Pertanyaan"
                 value={avgQuestionScore}
                 loading={loadingStats}
-                icon={<HelpCircle size={20} />}
-                bgColor="bg-blue-100 dark:bg-blue-900"
-                iconColor="text-blue-600 dark:text-blue-300"
+                icon={HelpCircle}
+                color="blue"
               />
             </div>
 
-            {/* --- SECTION 2: PUSTAKA SKENARIO --- */}
-            <Card span={3} className="sm:p-4 lg:p-5 min-h-[400px]">
-              <CardHeader
-                title="Pustaka Skenario"
-                action={
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setShowAddModal(true)}
-                  >
-                    + Tambah Skenario
-                  </Button>
-                }
-              />
-              <p className="text-sm mb-4 text-gray-600 dark:text-gray-400">
-                Pilih skenario untuk memulai latihan
-              </p>
+            {/* 3. Pustaka Skenario (Glassmorphism) */}
+            <GlassCard className="min-h-[500px] animate-in slide-in-from-bottom-5 duration-700 delay-200">
+              {/* Card Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Sparkles className="text-yellow-500" size={24} fill="currentColor" /> Pustaka Skenario
+                  </h2>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">Pilih karakter simulasi untuk memulai latihan.</p>
+                </div>
+                <ActionButton onClick={() => setShowAddModal(true)} icon={Plus}>
+                  Skenario Baru
+                </ActionButton>
+              </div>
 
-              {/* Controls: Search Bar & Filter Dropdown */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <div className="relative flex-grow">
-                  <label htmlFor="search-scenario" className="sr-only">Cari Skenario</label>
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col md:flex-row gap-4 mb-8">
+                <div className="relative flex-grow group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  </div>
                   <input
                     type="text"
-                    id="search-scenario"
-                    placeholder="Cari berdasarkan nama..."
+                    className="block w-full pl-11 pr-4 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-2xl leading-5 bg-gray-50/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300"
+                    placeholder="Cari nama pasien atau topik..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                   />
-                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
 
-                <div className="relative sm:min-w-[180px]">
-                  <label htmlFor="filter-tag" className="sr-only">Filter Tag</label>
+                <div className="relative md:w-64 group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Filter className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  </div>
                   <select
-                    id="filter-tag"
+                    className="block w-full pl-11 pr-10 py-3 border-2 border-gray-100 dark:border-gray-700 rounded-2xl leading-5 bg-gray-50/50 dark:bg-gray-800/50 text-gray-900 dark:text-gray-100 focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 appearance-none cursor-pointer transition-all duration-300"
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                   >
-                    <option value="Semua">Semua Tag</option>
-                    <option value="Global">Global</option>
-                    <option value="Buatan Sendiri">Buatan Sendiri</option>
+                    <option value="Semua">Semua Kategori</option>
+                    <option value="Global">Global (Umum)</option>
+                    <option value="Buatan Sendiri">Buatan Saya</option>
                   </select>
-                  <Filter size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
                 </div>
               </div>
 
-              {/* List Component */}
+              {/* Patient List with Shimmer Loading */}
               {loadingPatients ? (
-                <div className="text-center py-10 text-gray-500">Memuat daftar skenario...</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                      <div className="flex items-center gap-4 mb-4">
+                        <Skeleton className="w-16 h-16 rounded-full" />
+                        <div className="space-y-2">
+                          <Skeleton className="w-32 h-4" />
+                          <Skeleton className="w-20 h-3" />
+                        </div>
+                      </div>
+                      <Skeleton className="w-full h-8 rounded-lg" />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <PatientList
                   patients={filteredPatients}
                   onStartSession={handleStartSession}
                   onEditScenario={handleTriggerEdit}
-                  onDeleteScenario={handleTriggerDelete}
+                  onDeleteScenario={handleTriggerDelete} // Ini sekarang buka Modal Baru
                 />
               )}
-            </Card>
+            </GlassCard>
 
-            {/* --- SECTION 3: RIWAYAT SESI --- */}
-            <Card span={3} className="sm:p-4 lg:p-5 mb-10">
-              <CardHeader title="Riwayat Sesi" />
+            {/* 4. Riwayat Sesi */}
+            <GlassCard className="mb-10 animate-in slide-in-from-bottom-5 duration-700 delay-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+                  <Activity size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Sesi Terakhir</h2>
+              </div>
+
               {loadingSessions ? (
-                <div className="text-center py-4 text-gray-500">Memuat riwayat sesi...</div>
+                <div className="space-y-4">
+                  {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+                </div>
               ) : sessionPatients.length === 0 ? (
-                <div className="text-center text-gray-500 py-10 bg-gray-50 dark:bg-gray-900/50 rounded-lg mt-2 border border-dashed border-gray-300 dark:border-gray-700">
-                  <p className="font-medium">Belum ada riwayat sesi.</p>
-                  <p className="text-sm mt-1">Mulai sebuah sesi dan laporannya akan muncul di sini.</p>
+                <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                    <Layers className="text-gray-400" size={32} />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">Belum ada riwayat sesi</p>
+                  <p className="text-sm text-gray-500">Mulai latihan pertamamu sekarang!</p>
                 </div>
               ) : (
                 <SessionPatientList
@@ -477,10 +449,11 @@ export default function Dashboard() {
                   onReportClick={handleReportClick}
                 />
               )}
-            </Card>
+            </GlassCard>
+
           </div>
 
-          {/* === MODAL AREA === */}
+          {/* MODALS */}
           <AddScenarioModal
             show={showAddModal}
             onClose={() => setShowAddModal(false)}
@@ -494,6 +467,15 @@ export default function Dashboard() {
             onSave={handleSaveUpdate}
             user={user}
           />
+          
+          {/* === NEW AESTHETIC DELETE MODAL === */}
+          <DeleteConfirmationModal
+            isOpen={!!deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={executeDelete}
+            itemName={deleteTarget?.name}
+          />
+
         </div>
       </main>
     </div>

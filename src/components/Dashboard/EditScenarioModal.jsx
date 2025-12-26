@@ -1,91 +1,134 @@
-import { useState, useEffect } from "react";
-import { Toaster, toast } from "react-hot-toast";
-import Button from "./ButtonDashboard"; // Pastikan path import sesuai struktur foldermu
+import React, { useState, useEffect } from "react";
+import { X, Save, User, Briefcase, Heart, Activity, FileText, Sparkles, Plus, Trash2 } from "lucide-react";
 
 /**
  * ============================================================================
- * MODULE: EditScenarioModal.jsx
+ * HELPER COMPONENTS (AESTHETIC INPUTS)
  * ============================================================================
- * Komponen Modal untuk MENGUBAH (Update) data skenario pasien yang sudah ada.
- * * Perbedaan utama dengan AddScenarioModal:
- * 1. Menerima prop 'initialData'.
- * 2. Menggunakan useEffect untuk mengisi form otomatis saat modal dibuka.
  */
 
+// Input Field Modern
+const InputField = ({ label, name, value, onChange, type = "text", placeholder, icon: Icon, required, min, max, className = "" }) => (
+  <div className={`space-y-1.5 ${className}`}>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        className={`block w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200`}
+      />
+    </div>
+  </div>
+);
+
+// Select Field Modern
+const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{label}</label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={`block w-full ${Icon ? 'pl-10' : 'pl-4'} pr-8 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer`}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+      </div>
+    </div>
+  </div>
+);
+
+// Text Area Modern
+const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3, icon: Icon }) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{label}</label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute top-3 left-3 pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows={rows}
+        className={`block w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none`}
+      />
+    </div>
+  </div>
+);
+
 /**
- * EditScenarioModal Component
- * * @component
- * @param {object} props - Properti komponen
- * @param {boolean} props.show - Mengontrol visibilitas modal (true = tampil)
- * @param {function} props.onClose - Callback untuk menutup modal
- * @param {function} props.onSave - Callback saat tombol "Update" diklik (mengirim data baru ke parent)
- * @param {object} props.initialData - Data object pasien SBLM diedit (untuk pre-fill form)
- * @param {object} props.user - Data user (untuk keperluan validasi role/admin jika ada)
+ * ============================================================================
+ * EDIT SCENARIO MODAL COMPONENT
+ * ============================================================================
  */
-export default function EditScenarioModal({
-  show,
-  onClose,
-  onSave,
-  initialData,
-  user,
-}) {
-  // --- STATE MANAGEMENT ---
-  // Menyimpan data form sementara sebelum disubmit.
-  // Struktur state disesuaikan dengan field database.
+export default function EditScenarioModal({ show, onClose, onSave, initialData }) {
+  // State Form
   const [formData, setFormData] = useState({
     patient_name: "",
-    background_story: "",
-    personality_type: "",
-    symptom_intensity: "",
     age: "",
-    gender: "",
+    gender: "Laki-laki",
     occupation: "",
-    marital_status: "",
-    personality_traits: ["", "", "", ""], // Default 4 slot kosong
+    marital_status: "Belum Menikah",
+    symptom_intensity: "Sedang",
+    personality_type: "Introvert",
+    background_story: "",
+    personality_traits: [], // Array traits
   });
 
-  /**
-   * --- EFFECT: POPULATE DATA (Pre-fill) ---
-   * Dijalankan setiap kali modal dibuka (show=true) atau initialData berubah.
-   * Tujuannya agar form tidak kosong, tapi terisi data pasien yang mau diedit.
-   */
+  // Effect: Isi form saat modal dibuka & data tersedia
   useEffect(() => {
-    if (show && initialData) {
+    if (initialData) {
       setFormData({
-        // Mapping: pastikan key di sini sesuai dengan key di state formData
-        // Operator '|| ""' mencegah error 'uncontrolled input' jika data null
         patient_name: initialData.name || "",
-        background_story: initialData.background_story || "",
-        personality_type: initialData.personality_type || "",
-        symptom_intensity: initialData.symptom_intensity || "",
         age: initialData.age || "",
-        gender: initialData.gender || "",
+        gender: initialData.gender || "Laki-laki",
         occupation: initialData.occupation || "",
-        marital_status: initialData.marital_status || "",
-
-        // Logika Traits: Jika ada data traits, pakai itu. Jika tidak, reset ke 4 slot kosong.
-        personality_traits:
-          initialData.personality_traits &&
-          initialData.personality_traits.length > 0
-            ? initialData.personality_traits
-            : ["", "", "", ""],
+        marital_status: initialData.marital_status || "Belum Menikah",
+        symptom_intensity: initialData.symptom_intensity || "Sedang",
+        personality_type: initialData.personality_type || "Introvert",
+        background_story: initialData.background_story || "",
+        // Pastikan traits berbentuk array, kalau null kasih array kosong minimal 1
+        personality_traits: Array.isArray(initialData.personality_traits) && initialData.personality_traits.length > 0 
+          ? initialData.personality_traits 
+          : ["", "", "", ""],
       });
     }
-  }, [show, initialData]);
+  }, [initialData, show]);
 
-  // --- HANDLERS (LOGIKA FORM) ---
-
-  /**
-   * Mengupdate field text/select biasa.
-   */
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // Handler Change Input Biasa
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Mengupdate specific trait berdasarkan index array.
-   * Diperlukan karena traits adalah array strings.
-   */
+  // --- TRAIT HANDLERS ---
   const handleTraitChange = (index, value) => {
     setFormData((prev) => {
       const newTraits = [...prev.personality_traits];
@@ -94,9 +137,6 @@ export default function EditScenarioModal({
     });
   };
 
-  /**
-   * Menambah input field baru ke array traits.
-   */
   const addTraitField = () => {
     setFormData((prev) => ({
       ...prev,
@@ -104,9 +144,6 @@ export default function EditScenarioModal({
     }));
   };
 
-  /**
-   * Menghapus input field trait tertentu.
-   */
   const removeTraitField = (index) => {
     setFormData((prev) => ({
       ...prev,
@@ -114,265 +151,219 @@ export default function EditScenarioModal({
     }));
   };
 
-  /**
-   * Menangani proses submit (Update).
-   */
-  const handleSubmit = async () => {
-    // 1. Validasi Field Wajib
-    if (!formData.patient_name || !formData.background_story) {
-      toast.error("Mohon lengkapi Nama dan Latar Belakang");
-      return;
-    }
-
-    // 2. Simulasi Save (Debug)
-    console.log("Data Updated:", formData);
-
-    // 3. Eksekusi Callback Parent (Integrasi API)
-    // await onSave(formData); // Uncomment baris ini jika API sudah siap
-
-    // 4. Feedback UI
-    toast.success("Berhasil update data pasien (Simulasi UI)");
-    onClose();
+  // Handler Submit
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Bersihkan traits kosong sebelum simpan
+    const cleanedTraits = formData.personality_traits.filter(t => t.trim() !== "");
+    
+    onSave({ 
+      ...initialData, 
+      ...formData, 
+      personality_traits: cleanedTraits.length > 0 ? cleanedTraits : null
+    }); 
   };
 
-  // --- STATIC OPTIONS (Pilihan Dropdown) ---
-  const personalityTypeOptions = [
-    { value: "introvert", label: "Introvert" },
-    { value: "extrovert", label: "Extrovert" },
-    { value: "ambivert", label: "Ambivert" },
-  ];
-  const genderOptions = [
-    { value: "Laki-laki", label: "Laki-laki" },
-    { value: "Perempuan", label: "Perempuan" },
-  ];
-  const maritalStatusOptions = [
-    { value: "Belum Kawin", label: "Belum Kawin" },
-    { value: "Kawin Tercatat", label: "Kawin Tercatat" },
-    { value: "Kawin Belum Tercatat", label: "Kawin Belum Tercatat" },
-    { value: "Cerai Hidup Tercatat", label: "Cerai Hidup Tercatat" },
-    { value: "Cerai Mati", label: "Cerai Mati" },
-  ];
-
-  // Early Return: Jangan render apapun jika show = false
   if (!show) return null;
 
   return (
-    // Overlay Container (Fixed Position, Full Screen)
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-0">
-      <Toaster position="top-center" />
-
-      {/* Backdrop Gelap (Blur Effect) */}
-      <div
-        className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal Card */}
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full sm:w-[95%] sm:max-w-3xl max-h-[95vh] overflow-hidden animate-[slideIn_0.3s_ease-out]">
-        {/* === HEADER MODAL === */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Edit Skenario Pasien
-          </h2>
+    // BACKDROP
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      
+      {/* MODAL CONTENT */}
+      <div className="bg-white dark:bg-gray-900 w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 scale-100">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Skenario</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Perbarui detail karakter simulasi</p>
+            </div>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* === BODY FORM (SCROLLABLE) === */}
-        <div className="overflow-y-auto max-h-[calc(95vh-180px)] px-6 py-4 space-y-5">
-          {/* BAGIAN 1: INFORMASI DASAR */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
-              Informasi Dasar
-            </h3>
+        {/* BODY (SCROLLABLE) */}
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          <form id="edit-scenario-form" onSubmit={handleSubmit} className="space-y-8">
+            
+            {/* SECTION 1: INFO DASAR */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                <User size={16} className="text-blue-500" /> Informasi Dasar
+              </h3>
 
-            {/* Input Nama */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nama Pasien*
-              </label>
-              <input
-                type="text"
-                value={formData.patient_name}
-                onChange={(e) => handleChange("patient_name", e.target.value)}
-                className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="sm:col-span-2">
+                  <InputField 
+                    label="Nama Karakter" 
+                    name="patient_name" 
+                    value={formData.patient_name} 
+                    onChange={handleChange} 
+                    icon={User} 
+                    placeholder="Contoh: Budi Santoso" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <InputField 
+                    label="Usia" 
+                    name="age" 
+                    type="number" 
+                    value={formData.age} 
+                    onChange={handleChange} 
+                    placeholder="30" 
+                    required 
+                  />
+                </div>
+              </div>
 
-            {/* Grid 3 Kolom: Usia, Gender, Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Usia
-                </label>
-                <input
-                  type="number"
-                  value={formData.age}
-                  onChange={(e) => handleChange("age", e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <SelectField 
+                  label="Jenis Kelamin" 
+                  name="gender" 
+                  value={formData.gender} 
+                  onChange={handleChange}
+                  options={[
+                    { value: "Laki-laki", label: "Laki-laki" },
+                    { value: "Perempuan", label: "Perempuan" }
+                  ]}
+                />
+                <SelectField 
+                  label="Status Pernikahan" 
+                  name="marital_status" 
+                  value={formData.marital_status} 
+                  onChange={handleChange}
+                  icon={Heart}
+                  options={[
+                    { value: "Belum Menikah", label: "Belum Menikah" },
+                    { value: "Menikah", label: "Menikah" },
+                    { value: "Cerai", label: "Cerai" },
+                    { value: "Janda/Duda", label: "Janda/Duda" }
+                  ]}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Gender
-                </label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => handleChange("gender", e.target.value)}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Pilih...</option>
-                  {genderOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Status
-                </label>
-                <select
-                  value={formData.marital_status}
-                  onChange={(e) =>
-                    handleChange("marital_status", e.target.value)
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Pilih...</option>
-                  {maritalStatusOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
-            {/* Input Pekerjaan */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Pekerjaan
-              </label>
-              <input
-                type="text"
-                value={formData.occupation}
-                onChange={(e) => handleChange("occupation", e.target.value)}
-                className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-              />
-            </div>
-          </div>
-
-          {/* BAGIAN 2: LATAR BELAKANG */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b pb-2">
-              Latar Belakang & Kondisi
-            </h3>
-
-            {/* Input Story (Textarea) */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Latar Belakang Cerita*
-              </label>
-              <textarea
-                rows={5}
-                value={formData.background_story}
-                onChange={(e) =>
-                  handleChange("background_story", e.target.value)
-                }
-                className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-indigo-500"
+              <InputField 
+                label="Pekerjaan" 
+                name="occupation" 
+                value={formData.occupation} 
+                onChange={handleChange} 
+                icon={Briefcase} 
+                placeholder="Contoh: Guru SD" 
               />
             </div>
 
-            {/* Grid 2 Kolom: Tipe Personality & Intensitas */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Tipe Kepribadian
-                </label>
-                <select
-                  value={formData.personality_type}
-                  onChange={(e) =>
-                    handleChange("personality_type", e.target.value)
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Pilih...</option>
-                  {personalityTypeOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Intensitas Gejala (1-10)
-                </label>
-                <input
-                  type="number"
+            {/* SECTION 2: PARAMETER PSIKOLOGIS */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                <Activity size={16} className="text-green-500" /> Kondisi Psikologis
+              </h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <SelectField 
+                  label="Tipe Kepribadian" 
+                  name="personality_type" 
+                  value={formData.personality_type} 
+                  onChange={handleChange}
+                  options={[
+                    { value: "Introvert", label: "Introvert (Tertutup)" },
+                    { value: "Ekstrovert", label: "Ekstrovert (Terbuka)" },
+                    { value: "Ambivert", label: "Ambivert (Seimbang)" }
+                  ]}
+                />
+                <InputField 
+                  label="Intensitas Gejala (1-10)" 
+                  name="symptom_intensity"
+                  type="number" 
+                  value={formData.symptom_intensity} 
+                  onChange={handleChange}
                   min="1"
                   max="10"
-                  value={formData.symptom_intensity}
-                  onChange={(e) =>
-                    handleChange("symptom_intensity", e.target.value)
-                  }
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
                 />
               </div>
-            </div>
-          </div>
 
-          {/* BAGIAN 3: TRAITS KEPRIBADIAN (DYNAMIC) */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                Traits Kepribadian
-              </h3>
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                onClick={addTraitField}
-                className="text-indigo-600"
-              >
-                + Tambah
-              </Button>
+              <TextAreaField 
+                label="Latar Belakang Cerita" 
+                name="background_story" 
+                value={formData.background_story} 
+                onChange={handleChange} 
+                icon={FileText}
+                rows={4}
+                placeholder="Ceritakan latar belakang masalah yang dihadapi karakter ini..." 
+              />
             </div>
-            <div className="space-y-3">
-              {formData.personality_traits.map((trait, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={trait}
-                    onChange={(e) => handleTraitChange(index, e.target.value)}
-                    placeholder={`Trait ${index + 1}`}
-                    className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100"
-                  />
-                  {/* Tombol Hapus Trait (Hanya muncul jika > 1 trait) */}
-                  {formData.personality_traits.length > 1 && (
+
+            {/* SECTION 3: TRAITS (DYNAMIC) */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Sparkles size={16} className="text-yellow-500" /> Traits Kepribadian
+                </h3>
+                <button
+                  type="button"
+                  onClick={addTraitField}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg transition-colors"
+                >
+                  <Plus size={14} /> Tambah
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {formData.personality_traits.map((trait, index) => (
+                  <div key={index} className="flex gap-2 group">
+                    <input
+                      type="text"
+                      value={trait}
+                      onChange={(e) => handleTraitChange(index, e.target.value)}
+                      placeholder={`Trait #${index + 1}`}
+                      className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
                     <button
                       type="button"
                       onClick={() => removeTraitField(index)}
-                      className="text-red-500"
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                      title="Hapus trait"
                     >
-                      ✕
+                      <Trash2 size={16} />
                     </button>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+
+          </form>
         </div>
 
-        {/* === FOOTER ACTIONS === */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={onClose}>
+        {/* FOOTER */}
+        <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/30 rounded-b-3xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+          >
             Batal
-          </Button>
-          <Button type="button" variant="primary" onClick={handleSubmit}>
-            Update Pasien
-          </Button>
+          </button>
+          <button
+            type="submit"
+            form="edit-scenario-form"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-95"
+          >
+            <Save size={18} />
+            Simpan Perubahan
+          </button>
         </div>
+
       </div>
     </div>
   );

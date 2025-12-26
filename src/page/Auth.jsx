@@ -153,9 +153,9 @@ export default function Auth() {
                     Email Address
                   </label>
                   <input
-                    type="email" // Memicu validasi format email browser
+                    type="email" 
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
+                    className="w-full text-black px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
@@ -169,7 +169,7 @@ export default function Auth() {
                   <input
                     type="password"
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
+                    className="w-full text-black px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
@@ -209,7 +209,7 @@ export default function Auth() {
                   <input
                     type="text"
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
+                    className=" text-black w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={username} 
                     onChange={(e) => setUsername(e.target.value)} 
@@ -223,7 +223,7 @@ export default function Auth() {
                   <input
                     type="email" 
                     required
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
+                    className="text-black w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
@@ -241,7 +241,7 @@ export default function Auth() {
                     minLength={8}
                     pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$"
                     title="Password harus mengandung minimal 8 karakter, setidaknya satu huruf kecil, satu huruf besar, dan satu angka."
-                    className="w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
+                    className="text-black w-full px-4 py-3 bg-gray-200 rounded-full outline-none focus:ring-2 focus:ring-ungu"
                     placeholder=""
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 

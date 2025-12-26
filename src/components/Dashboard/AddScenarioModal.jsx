@@ -1,60 +1,182 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Toaster, toast } from "react-hot-toast";
-import Button from "./ButtonDashboard";
+import {
+  X,
+  Save,
+  User,
+  Briefcase,
+  Heart,
+  Activity,
+  FileText,
+  Sparkles,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 /**
- * AddScenarioModal Component
- *
- * Modal form untuk menambahkan data skenario pasien baru.
- * Komponen ini menangani input data biodata, latar belakang, dan traits kepribadian dinamis.
- *
- * @param {boolean} show - Mengontrol visibilitas modal (true = tampil).
- * @param {function} onClose - Fungsi callback untuk menutup modal.
- * @param {function} onSave - Fungsi callback (async) yang dipanggil saat form disubmit valid. Menerima object data pasien.
- * @param {object} user - Data user yang sedang login (digunakan untuk cek role Admin).
+ * ============================================================================
+ * HELPER COMPONENTS (AESTHETIC INPUTS)
+ * ============================================================================
+ */
+
+// Input Field Modern
+const InputField = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  icon: Icon,
+  required,
+  min,
+  max,
+  className = "",
+}) => (
+  <div className={`space-y-1.5 ${className}`}>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        className={`block w-full ${
+          Icon ? "pl-10" : "pl-4"
+        } pr-4 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200`}
+      />
+    </div>
+  </div>
+);
+
+// Select Field Modern
+const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        className={`block w-full ${
+          Icon ? "pl-10" : "pl-4"
+        } pr-8 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer`}
+      >
+        <option value="">Pilih...</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        <svg
+          className="h-4 w-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+);
+
+// Text Area Modern
+const TextAreaField = ({
+  label,
+  name,
+  value,
+  onChange,
+  placeholder,
+  rows = 3,
+  icon: Icon,
+  required,
+}) => (
+  <div className="space-y-1.5">
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <div className="relative group">
+      {Icon && (
+        <div className="absolute top-3 left-3 pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+          <Icon size={18} />
+        </div>
+      )}
+      <textarea
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        rows={rows}
+        className={`block w-full ${
+          Icon ? "pl-10" : "pl-4"
+        } pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none`}
+      />
+    </div>
+  </div>
+);
+
+/**
+ * ============================================================================
+ * ADD SCENARIO MODAL COMPONENT
+ * ============================================================================
  */
 export default function AddScenarioModal({ show, onClose, onSave, user }) {
-  // --- STATE MANAGEMENT ---
-
-  // State tunggal untuk menampung seluruh field input agar lebih rapi
+  // State Form
   const [formData, setFormData] = useState({
     patient_name: "",
     background_story: "",
-    personality_type: "",
-    symptom_intensity: "", // Akan dikonversi ke integer saat submit
-    age: "", // Akan dikonversi ke integer saat submit
-    gender: "",
+    personality_type: "Introvert",
+    symptom_intensity: "",
+    age: "",
+    gender: "Laki-laki",
     occupation: "",
-    marital_status: "",
-    personality_traits: ["", "", "", ""], // Array string untuk input dinamis
+    marital_status: "Belum Menikah",
+    personality_traits: ["", "", "", ""],
   });
 
   // --- HANDLERS ---
 
-  // Handler generik untuk input text/select biasa
-  const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  // Generic Handler
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**
-   * Mengupdate nilai specific trait berdasarkan index array.
-   * Diperlukan karena personality_traits adalah array di dalam object state.
-   */
+  // Trait Handler
   const handleTraitChange = (index, value) => {
     setFormData((prev) => {
       const newTraits = [...prev.personality_traits];
       newTraits[index] = value;
-      return {
-        ...prev,
-        personality_traits: newTraits,
-      };
+      return { ...prev, personality_traits: newTraits };
     });
   };
 
-  // Menambah slot input kosong baru ke array traits
   const addTraitField = () => {
     setFormData((prev) => ({
       ...prev,
@@ -62,7 +184,6 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
-  // Menghapus slot input trait berdasarkan index
   const removeTraitField = (index) => {
     setFormData((prev) => ({
       ...prev,
@@ -70,28 +191,20 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
     }));
   };
 
-  /**
-   * Handle Final Submission
-   * Melakukan validasi, formatting data, dan memanggil prop onSave.
-   *
-   * @param {object} params - Parameter submit
-   * @param {boolean} params.is_global - Menentukan visibilitas skenario (khusus admin)
-   */
-  const handleSubmit = async ({ is_global }) => {
-    // 1. Validasi Field Wajib
+  // Submit Handler
+  const handleSubmit = async (is_global) => {
+    // 1. Validasi
     if (!formData.patient_name || !formData.background_story) {
-      toast.error(
-        "Mohon lengkapi semua field yang wajib diisi (Nama dan Latar Belakang)"
-      );
+      toast.error("Mohon lengkapi Nama dan Latar Belakang!");
       return;
     }
 
-    // 2. Bersihkan empty strings dari array traits agar tidak tersimpan ke DB
+    // 2. Bersihkan Traits
     const filteredTraits = formData.personality_traits.filter(
-      (trait) => trait.trim() !== ""
+      (t) => t.trim() !== ""
     );
 
-    // 3. Format Data (Convert String ke Int untuk angka)
+    // 3. Format Data
     const dataToSave = {
       ...formData,
       age: formData.age ? parseInt(formData.age) : null,
@@ -99,347 +212,219 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
         ? parseInt(formData.symptom_intensity)
         : null,
       personality_traits: filteredTraits.length > 0 ? filteredTraits : null,
-      is_global: is_global, // Flag penentu apakah skenario bisa dilihat semua user atau tidak
+      is_global: is_global,
     };
 
-    const sucessToast = toast.success("Berhasil simpan skenario...");
+    const loadingToast = toast.loading("Menyimpan skenario...");
 
     try {
-      // Panggil API/Function dari Parent Component
       await onSave(dataToSave);
-      toast.dismiss(sucessToast);
+      toast.dismiss(loadingToast);
 
-      // Reset form ke kondisi awal setelah sukses
+      // Reset Form
       setFormData({
         patient_name: "",
         background_story: "",
-        personality_type: "",
+        personality_type: "Introvert",
         symptom_intensity: "",
         age: "",
-        gender: "",
+        gender: "Laki-laki",
         occupation: "",
-        marital_status: "",
+        marital_status: "Belum Menikah",
         personality_traits: ["", "", "", ""],
       });
 
-      onClose(); // Tutup modal
+      onClose();
     } catch (error) {
-      toast.dismiss(sucessToast);
-      toast.error(error.message || "Gagal menyimpan skenario. Coba lagi.");
-      console.error("Save Error:", error);
+      toast.dismiss(loadingToast);
+      toast.error("Gagal menyimpan skenario.");
     }
   };
 
-  // Reset form dan tutup modal tanpa menyimpan
-  const handleCancel = () => {
-    setFormData({
-      patient_name: "",
-      background_story: "",
-      personality_type: "",
-      symptom_intensity: "",
-      age: "",
-      gender: "",
-      occupation: "",
-      marital_status: "",
-      personality_traits: ["", "", "", ""],
-    });
-    onClose();
-  };
-
-  // --- EFFECTS ---
-
-  // Menangani penutupan modal via tombol ESC dan mematikan scroll body saat modal aktif
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === "Escape" && show) {
-        handleCancel();
-      }
-    };
-
-    if (show) {
-      document.addEventListener("keydown", handleEscape);
-      // Mencegah background scrolling saat modal terbuka (UX improvement)
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscape);
-      // Mengembalikan scroll saat modal tertutup
-      document.body.style.overflow = "unset";
-    };
-  }, [show]);
-
-  // --- STATIC DATA OPTIONS ---
-  const personalityTypeOptions = [
-    { value: "introvert", label: "Introvert" },
-    { value: "extrovert", label: "Extrovert" },
-    { value: "ambivert", label: "Ambivert" },
-  ];
-
-  const genderOptions = [
-    { value: "Laki-laki", label: "Laki-laki" },
-    { value: "Perempuan", label: "Perempuan" },
-  ];
-
-  const maritalStatusOptions = [
-    { value: "Belum Kawin", label: "Belum Kawin" },
-    { value: "Kawin Tercatat", label: "Kawin Tercatat" },
-    { value: "Kawin Belum Tercatat", label: "Kawin Belum Tercatat" },
-    { value: "Cerai Hidup Tercatat", label: "Cerai Hidup Tercatat" },
-    { value: "Cerai Mati", label: "Cerai Mati" },
-  ];
-
-  // Early return jika modal tidak ditampilkan
   if (!show) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 sm:px-0"
-      onClick={handleCancel}
-      style={{ animation: "fadeIn 0.3s ease-out" }}
-    >
+    // BACKDROP
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
       <Toaster position="top-center" reverseOrder={false} />
-      {/* Backdrop Gelap */}
-      <div className="absolute inset-0 bg-gray-500/75 dark:bg-gray-900/75 backdrop-blur-sm" />
 
-      {/* Modal Content Container */}
-      <div
-        className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full sm:w-[95%] sm:max-w-3xl max-h-[95vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()} // Mencegah klik di dalam modal menutup modal
-        style={{ animation: "slideIn 0.3s ease-out" }}
-      >
-        {/* Header Modal */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            Tambah Skenario Pasien Baru
-          </h2>
+      {/* MODAL WINDOW */}
+      <div className="bg-white dark:bg-gray-900 w-full max-w-3xl rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-800 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 scale-100">
+        {/* HEADER */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+              <Plus size={20} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Tambah Skenario
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Buat karakter pasien baru untuk simulasi
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Scrollable Form Area */}
-        <div className="overflow-y-auto max-h-[calc(95vh-180px)]">
-          <div className="px-6 py-4 space-y-5">
-            
-            {/* === SECTION 1: INFORMASI DASAR === */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
-                Informasi Dasar
+        {/* BODY (SCROLLABLE) */}
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          <div className="space-y-8">
+            {/* SECTION 1: INFO DASAR */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                <User size={16} className="text-blue-500" /> Informasi Dasar
               </h3>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="patient-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Nama Pasien<span className="text-red-500 ml-1">*</span>
-                </label>
-                <input
-                  id="patient-name"
-                  type="text"
-                  value={formData.patient_name}
-                  onChange={(e) => handleChange("patient_name", e.target.value)}
-                  placeholder="Nama lengkap pasien"
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
-                />
-              </div>
-
-              {/* Grid Layout untuk field pendek (Usia, Gender, Status) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="age"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Usia
-                  </label>
-                  <input
-                    id="age"
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="sm:col-span-2">
+                  <InputField
+                    label="Nama Pasien"
+                    name="patient_name"
+                    value={formData.patient_name}
+                    onChange={handleChange}
+                    placeholder="Nama lengkap pasien"
+                    required
+                  />
+                </div>
+                <div>
+                  <InputField
+                    label="Usia"
+                    name="age"
                     type="number"
                     value={formData.age}
-                    onChange={(e) => handleChange("age", e.target.value)}
+                    onChange={handleChange}
                     placeholder="25"
                     min="1"
                     max="120"
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   />
-                </div>
-                
-                {/* ... (Code Gender & Status sama seperti sebelumnya) ... */}
-                <div className="space-y-2">
-                  <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Jenis Kelamin
-                  </label>
-                  <select
-                    id="gender"
-                    value={formData.gender}
-                    onChange={(e) => handleChange("gender", e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
-                  >
-                    <option value="">Pilih...</option>
-                    {genderOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                    {/* ... (Marital Status Input) ... */}
-                   <label
-                    htmlFor="marital-status"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Status Pernikahan
-                  </label>
-                  <select
-                    id="marital-status"
-                    value={formData.marital_status}
-                    onChange={(e) =>
-                      handleChange("marital_status", e.target.value)
-                    }
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
-                  >
-                    <option value="">Pilih...</option>
-                    {maritalStatusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="occupation"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Pekerjaan
-                </label>
-                <input
-                  id="occupation"
-                  type="text"
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <SelectField
+                  label="Jenis Kelamin"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  options={[
+                    { value: "Laki-laki", label: "Laki-laki" },
+                    { value: "Perempuan", label: "Perempuan" },
+                  ]}
+                />
+                <SelectField
+                  label="Status Pernikahan"
+                  name="marital_status"
+                  value={formData.marital_status}
+                  onChange={handleChange}
+                  options={[
+                    { value: "Belum Kawin", label: "Belum Kawin" },
+                    { value: "Kawin Tercatat", label: "Kawin Tercatat" },
+                    {
+                      value: "Kawin Belum Tercatat",
+                      label: "Kawin Belum Tercatat",
+                    },
+                    {
+                      value: "Cerai Hidup Tercatat",
+                      label: "Cerai Hidup Tercatat",
+                    },
+                    { value: "Cerai Mati", label: "Cerai Mati" },
+                  ]}
+                />
+                <InputField
+                  label="Pekerjaan"
+                  name="occupation"
                   value={formData.occupation}
-                  onChange={(e) => handleChange("occupation", e.target.value)}
-                  placeholder="Contoh: Software Engineer"
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
+                  onChange={handleChange}
+                  icon={Briefcase}
+                  placeholder="Software Engineer"
                 />
               </div>
             </div>
 
-            {/* === SECTION 2: LATAR BELAKANG & KONDISI === */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">
-                Latar Belakang & Kondisi
+            {/* SECTION 2: PSIKOLOGIS & LATAR BELAKANG */}
+            <div className="space-y-5">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                <Activity size={16} className="text-green-500" /> Kondisi
+                Psikologis
               </h3>
 
-              <div className="space-y-2">
-                <label
-                  htmlFor="background-story"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Latar Belakang Cerita
-                  <span className="text-red-500 ml-1">*</span>
-                </label>
-                <textarea
-                  id="background-story"
-                  value={formData.background_story}
-                  onChange={(e) =>
-                    handleChange("background_story", e.target.value)
-                  }
-                  placeholder="Jelaskan latar belakang pasien..."
-                  rows={5}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400 resize-none"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <SelectField
+                  label="Tipe Kepribadian"
+                  name="personality_type"
+                  value={formData.personality_type}
+                  onChange={handleChange}
+                  options={[
+                    { value: "Introvert", label: "Introvert" },
+                    { value: "Extrovert", label: "Extrovert" },
+                    { value: "Ambivert", label: "Ambivert" },
+                  ]}
+                />
+                <InputField
+                  label="Intensitas Gejala (1-10)"
+                  name="symptom_intensity"
+                  type="number"
+                  value={formData.symptom_intensity}
+                  onChange={handleChange}
+                  placeholder="5"
+                  min="1"
+                  max="10"
                 />
               </div>
 
-              {/* ... (Sisa input Background story) ... */}
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="personality-type"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Tipe Kepribadian
-                  </label>
-                  <select
-                    id="personality-type"
-                    value={formData.personality_type}
-                    onChange={(e) =>
-                      handleChange("personality_type", e.target.value)
-                    }
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
-                  >
-                    <option value="">Pilih...</option>
-                    {personalityTypeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="symptom-intensity"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Intensitas Gejala (1-10)
-                  </label>
-                  <input
-                    id="symptom-intensity"
-                    type="number"
-                    value={formData.symptom_intensity}
-                    onChange={(e) =>
-                      handleChange("symptom_intensity", e.target.value)
-                    }
-                    placeholder="5"
-                    min="1"
-                    max="10"
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
-                  />
-                </div>
-              </div>
+              <TextAreaField
+                label="Latar Belakang Cerita"
+                name="background_story"
+                value={formData.background_story}
+                onChange={handleChange}
+                icon={FileText}
+                rows={4}
+                placeholder="Ceritakan latar belakang masalah yang dihadapi pasien ini..."
+                required
+              />
             </div>
 
-            {/* === SECTION 3: TRAITS KEPRIBADIAN (DYNAMIC INPUT) === */}
+            {/* SECTION 3: TRAITS */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Traits Kepribadian - Opsional
+              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Sparkles size={16} className="text-yellow-500" /> Traits
+                  Kepribadian (Opsional)
                 </h3>
-                {/* Tombol tambah trait dinamis */}
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="xs"
                   onClick={addTraitField}
-                  className="text-indigo-600 dark:text-indigo-400"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg transition-colors"
                 >
-                  + Tambah Trait
-                </Button>
+                  <Plus size={14} /> Tambah
+                </button>
               </div>
-              
-              {/* Rendering list input traits */}
-              <div className="space-y-3">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {formData.personality_traits.map((trait, index) => (
-                  <div key={index} className="flex gap-2">
+                  <div key={index} className="flex gap-2 group">
                     <input
                       type="text"
                       value={trait}
                       onChange={(e) => handleTraitChange(index, e.target.value)}
-                      placeholder={`Contoh trait ke-${index + 1}...`}
-                      className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
+                      placeholder={`Trait #${index + 1}`}
+                      className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                     />
-                    {/* Tombol hapus trait, hanya muncul jika ada lebih dari 1 trait */}
                     {formData.personality_traits.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeTraitField(index)}
-                        className="px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                        aria-label="Hapus trait"
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        title="Hapus trait"
                       >
-                        ✕
+                        <Trash2 size={16} />
                       </button>
                     )}
                   </div>
@@ -449,59 +434,44 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
           </div>
         </div>
 
-        {/* === FOOTER / ACTION BUTTONS === */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-          <Button type="button" variant="secondary" onClick={handleCancel}>
+        {/* FOOTER */}
+        <div className="px-6 py-5 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50/50 dark:bg-gray-800/30 rounded-b-3xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
+          >
             Batal
-          </Button>
-          
-          {/* Conditional Rendering tombol berdasarkan Role Admin */}
+          </button>
+
           {user?.is_admin ? (
             <>
-              <Button
+              <button
                 type="button"
-                variant="primary"
-                onClick={() => handleSubmit({ is_global: true })}
+                onClick={() => handleSubmit(true)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg shadow-purple-500/30 transition-all hover:scale-[1.02] active:scale-95"
               >
-                Simpan Pasien Ke Global
-              </Button>
-              <Button
+                <Save size={18} /> Simpan Global
+              </button>
+              <button
                 type="button"
-                variant="primary"
-                onClick={() => handleSubmit({ is_global: false })}
+                onClick={() => handleSubmit(false)}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-95"
               >
-                Simpan Pasien Hanya di Admin
-              </Button>
+                <Save size={18} /> Simpan Admin
+              </button>
             </>
           ) : (
-            <Button
+            <button
               type="button"
-              variant="primary"
-              onClick={() => handleSubmit({ is_global: false })}
+              onClick={() => handleSubmit(false)}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-[1.02] active:scale-95"
             >
-              Simpan Pasien
-            </Button>
+              <Save size={18} /> Simpan Pasien
+            </button>
           )}
         </div>
       </div>
-
-      {/* Inline Styles untuk Animasi */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(1rem) scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
     </div>
   );
 }

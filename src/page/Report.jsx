@@ -1,18 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+// Import Toaster & toast
+import { Toaster, toast } from "react-hot-toast"; 
 import Navbar from "../components/Navbar";
+import { 
+  Heart, 
+  MessageCircleQuestion, 
+  Activity, 
+  Sparkles, 
+  Quote, 
+  Calendar, 
+  Clock,
+  Search 
+} from "lucide-react";
 
 /**
  * ============================================================================
  * HELPER UI COMPONENTS
  * ============================================================================
- * Komponen-komponen kecil (Stateless) untuk menjaga kode utama tetap bersih.
  */
 
-/**
- * Button Component
- * Wrapper tombol standar dengan varian style (primary, secondary, danger).
- */
 function Button({ 
   children, 
   onClick, 
@@ -22,8 +29,8 @@ function Button({
   ...props 
 }) {
   const variants = {
-    primary: 'bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed',
-    secondary: 'bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed',
+    primary: 'bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-teal-500/20',
+    secondary: 'bg-white text-gray-900 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed border border-gray-200',
     danger: 'bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed',
     ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed'
   };
@@ -32,7 +39,7 @@ function Button({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-6 py-2 rounded-full font-medium transition-all ${variants[variant]} ${className}`}
+      className={`px-6 py-2.5 rounded-full font-medium transition-all active:scale-95 ${variants[variant]} ${className}`}
       {...props}
     >
       {children}
@@ -40,31 +47,23 @@ function Button({
   );
 }
 
-/**
- * Card Component
- * Container dengan efek glassmorphism (blur) dan shadow.
- */
 function Card({ children, className = '' }) {
   return (
-    <div className={`backdrop-blur rounded-3xl p-6 shadow-2xl bg-cardBackgroundColor dark:bg-cardBackgroundColorDark ${className}`}>
+    <div className={`backdrop-blur-md rounded-3xl p-6 shadow-xl bg-white/90 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/50 ${className}`}>
       {children}
     </div>
   );
 }
 
-/**
- * CardHeader Component
- * Judul dan Sub-judul standar untuk Card.
- */
 function CardHeader({ title, subtitle, action }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
             {subtitle}
           </p>
         )}
@@ -74,62 +73,63 @@ function CardHeader({ title, subtitle, action }) {
   );
 }
 
-/**
- * ScoreCard Component
- * Menampilkan nilai metrik (Empati/Pertanyaan) dengan progress bar visual.
- */
-function ScoreCard({ label, value, maxValue, color = "bg-teal-500" }) {
-  const percentage = maxValue ? (value / maxValue) * 100 : 0;
+function ScoreCard({ label, value, maxValue, icon: Icon, colorClass, gradient }) {
+  const safeValue = Number(value) || 0;
+  const safeMax = Number(maxValue) || 100;
+  const percentage = (safeValue / safeMax) * 100;
   
   return (
-    <div className="bg-white/20 backdrop-blur rounded-2xl p-4">
-      <h3 className="text-gray-900 dark:text-gray-100 text-center text-sm font-medium mb-2">
+    <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all group">
+      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full opacity-10 ${colorClass} group-hover:scale-110 transition-transform duration-500`}></div>
+      
+      <div className="flex justify-between items-start mb-4">
+        <div className={`p-2.5 rounded-xl ${colorClass} bg-opacity-10 text-white`}>
+          {Icon && <Icon size={20} className={colorClass.replace('bg-', 'text-')} />}
+        </div>
+        <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Skor</span>
+      </div>
+      
+      <h3 className="text-gray-600 dark:text-gray-300 text-sm font-medium mb-1">
         {label}
       </h3>
-      <div className="flex items-end justify-center gap-2 mb-3">
-        <span className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-          {value}
+      
+      <div className="flex items-baseline gap-1 mb-3">
+        <span className="text-3xl font-bold text-gray-900 dark:text-white">
+          {safeValue}
         </span>
-        {maxValue && (
-          <span className="text-lg mb-1 text-gray-600 dark:text-gray-400">
-            / {maxValue}
-          </span>
-        )}
+        <span className="text-sm text-gray-400">
+          / {safeMax}
+        </span>
       </div>
-      {maxValue && (
-        <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-          <div 
-            className={`h-full ${color} transition-all duration-500`}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      )}
+      
+      <div className="h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div 
+          className={`h-full rounded-full ${gradient} shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-all duration-1000 ease-out`}
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
     </div>
   );
 }
 
-/**
- * Modal Component
- * Overlay popup standar.
- */
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-gray-200 dark:border-gray-700 animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-red-100 hover:text-red-500 transition-colors"
           >
             ×
           </button>
         </div>
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        <div className="p-6 overflow-y-auto">
           {children}
         </div>
       </div>
@@ -137,46 +137,25 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
-/**
- * CategoryDetailModal Component
- * Menampilkan detail list pesan berdasarkan kategori (Empati/Pertanyaan).
- */
 function CategoryDetailModal({ category, items, type }) {
-  
   const getCategoryColor = (cat, itemType) => {
     if (itemType === 'question') {
-      const colors = {
-        'Terbuka': 'text-green-600 dark:text-green-400',
-        'Sugestif': 'text-orange-600 dark:text-orange-400',
-        'Tertutup': 'text-blue-600 dark:text-blue-400',
-        'Reflektif': 'text-purple-600 dark:text-purple-400'
-      };
+      const colors = { 'Terbuka': 'text-green-600', 'Sugestif': 'text-orange-600', 'Tertutup': 'text-blue-600', 'Reflektif': 'text-purple-600' };
       return colors[cat] || 'text-gray-600';
     } else {
-      const colors = {
-        'Empatik': 'text-green-600 dark:text-green-400',
-        'Netral': 'text-blue-600 dark:text-blue-400',
-        'Judgemental': 'text-red-600 dark:text-red-400'
-      };
+      const colors = { 'Empatik': 'text-green-600', 'Netral': 'text-blue-600', 'Judgemental': 'text-red-600' };
       return colors[cat] || 'text-gray-600';
-    }
-  };
-
-  const getCategoryIcon = (cat, itemType) => {
-    if (itemType === 'question') {
-      const icons = { 'Terbuka': '🔓', 'Sugestif': '💡', 'Tertutup': '🔒', 'Reflektif': '🪞' };
-      return icons[cat] || '❓';
-    } else {
-      const icons = { 'Empatik': '💚', 'Netral': '💙', 'Judgemental': '⚠️' };
-      return icons[cat] || '💭';
     }
   };
 
   return (
     <div>
-      <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 flex items-center gap-3">
+        <div className="bg-blue-100 dark:bg-blue-800 p-2 rounded-lg text-blue-600 dark:text-blue-200">
+          <Search size={20} />
+        </div>
         <p className="text-sm text-blue-700 dark:text-blue-300">
-          {getCategoryIcon(category, type)} Menampilkan {items.length} pesan dalam kategori <span className="font-bold">{category}</span>
+          Menampilkan {items.length} pesan dalam kategori <span className="font-bold">"{category}"</span>
         </p>
       </div>
 
@@ -187,40 +166,18 @@ function CategoryDetailModal({ category, items, type }) {
       ) : (
         <div className="space-y-3">
           {items.map((item, idx) => (
-            <div 
-              key={idx}
-              className="bg-white/50 dark:bg-gray-700/50 rounded-xl p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-1">
-                  <span className="text-2xl">{idx + 1}</span>
-                </div>
+            <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700 rounded-xl p-4 transition-all hover:bg-white dark:hover:bg-gray-800 hover:shadow-md">
+              <div className="flex items-start gap-4">
+                <span className="text-xs font-bold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-md mt-1 min-w-[2rem] text-center">#{idx + 1}</span>
                 <div className="flex-1">
-                  <p className="text-gray-900 dark:text-gray-100 leading-relaxed mb-3">
-                    "{item.text}"
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
-                      {type === 'question' ? (
-                        <>
-                          <span className={getCategoryColor(item.question_type.label, 'question')}>
-                            ❓ {item.question_type.label}
-                          </span>
-                          <span className="text-gray-500 ml-1">
-                            ({(item.question_type.confidence * 100).toFixed(0)}%)
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className={getCategoryColor(item.empathy_level.label, 'empathy')}>
-                            💭 {item.empathy_level.label}
-                          </span>
-                          <span className="text-gray-500 ml-1">
-                            ({(item.empathy_level.confidence * 100).toFixed(0)}%)
-                          </span>
-                        </>
-                      )}
-                    </div>
+                  <p className="text-gray-800 dark:text-gray-200 mb-2 italic leading-relaxed">"{item.text}"</p>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-bold px-2 py-1 rounded-md bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 ${getCategoryColor(type === 'question' ? item.question_type?.label : item.empathy_level?.label, type)}`}>
+                      {type === 'question' ? item.question_type?.label : item.empathy_level?.label || '-'}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      Confidence: {((type === 'question' ? item.question_type?.confidence : item.empathy_level?.confidence) * 100).toFixed(0)}%
+                    </span>
                   </div>
                 </div>
               </div>
@@ -232,10 +189,6 @@ function CategoryDetailModal({ category, items, type }) {
   );
 }
 
-/**
- * ModelAnalysisStats Component
- * Grid statistik detail (Distribusi Pertanyaan & Empati).
- */
 function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState({ category: '', items: [], type: '' });
@@ -244,17 +197,16 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
 
   const stats = detailedAnalysis.model_statistics;
   const hasQuestions = detailedAnalysis.has_questions !== false;
-  const totalQuestions = detailedAnalysis.total_questions || 0;
 
   const openCategoryModal = (category, type) => {
     let items = [];
     if (type === 'question') {
       items = classificationResults.filter(
-        item => item.question_type.label === category && item.type === 'question'
+        item => item.question_type?.label === category && item.type === 'question'
       );
     } else {
       items = classificationResults.filter(
-        item => item.empathy_level.label === category
+        item => item.empathy_level?.label === category
       );
     }
     setModalData({ category, items, type });
@@ -264,165 +216,152 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   return (
     <>
       <Card className="mb-6">
-        <CardHeader title="📊 Detail Analisis Model AI" />
+        <CardHeader title="📊 Detail Analisis Model AI" subtitle="Statistik mendalam dari performa sesi ini" />
         
-        {/* STATS: Distribusi Pertanyaan */}
-        {hasQuestions && Object.keys(stats.question_distribution).length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-              ❓ Distribusi Tipe Pertanyaan
-              <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
-                (Dari {totalQuestions} pertanyaan - Klik untuk detail)
-              </span>
-            </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Distribusi Pertanyaan */}
+        {hasQuestions && stats.question_distribution && (
+          <div className="mb-8">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 ml-1">Distribusi Pertanyaan</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {Object.entries(stats.question_distribution).map(([type, count]) => (
                 <button
                   key={type}
                   onClick={() => openCategoryModal(type, 'question')}
-                  className="bg-white/10 backdrop-blur rounded-xl p-3 text-center hover:bg-white/20 transition-all hover:shadow-lg cursor-pointer group"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 text-center border border-gray-100 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-500 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
                 >
-                  <div className="text-2xl font-bold text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform">
-                    {count}
-                  </div>
-                  <div className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-medium">
-                    {type}
-                  </div>
+                  <div className="text-3xl font-extrabold text-gray-800 dark:text-white mb-1 group-hover:text-teal-500 transition-colors">{count}</div>
+                  <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{type}</div>
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {/* STATS: Distribusi Empati */}
-        <div className="mb-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-            💙 Distribusi Tingkat Empati
-            <span className="text-xs font-normal text-gray-600 dark:text-gray-400">
-              (Dari semua {detailedAnalysis.total_counselor_messages} pesan)
-            </span>
-          </h3>
-          <div className="grid grid-cols-3 gap-3">
-            {Object.entries(stats.empathy_distribution).map(([level, count]) => {
-              const colors = {
-                'Empatik': 'bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-300 hover:bg-green-500/30',
-                'Netral': 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30',
-                'Judgemental': 'bg-red-500/20 border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-500/30'
-              };
-              return (
-                <button
-                  key={level}
-                  onClick={() => openCategoryModal(level, 'empathy')}
-                  className={`backdrop-blur rounded-xl p-4 text-center border transition-all hover:shadow-lg cursor-pointer group ${colors[level] || ''}`}
-                >
-                  <div className="text-3xl font-bold group-hover:scale-110 transition-transform">
-                    {count}
-                  </div>
-                  <div className="text-sm mt-1 font-medium">
-                    {level}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* STATS: Confidence Score */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-purple-500/10 backdrop-blur rounded-xl p-4 border border-purple-500/20">
-            <div className="text-sm text-purple-700 dark:text-purple-300 mb-1">
-              Confidence Empati
-            </div>
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {(stats.avg_empathy_confidence * 100).toFixed(1)}%
+        {/* Distribusi Empati */}
+        {stats.empathy_distribution && (
+          <div className="mb-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4 ml-1">Tingkat Empati</h3>
+            <div className="grid grid-cols-3 gap-4">
+              {Object.entries(stats.empathy_distribution).map(([level, count]) => {
+                const colors = {
+                  'Empatik': 'hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20',
+                  'Netral': 'hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20',
+                  'Judgemental': 'hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20'
+                };
+                return (
+                  <button
+                    key={level}
+                    onClick={() => openCategoryModal(level, 'empathy')}
+                    className={`bg-white dark:bg-gray-800 rounded-2xl p-4 text-center border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group ${colors[level]}`}
+                  >
+                    <div className="text-3xl font-extrabold text-gray-800 dark:text-white mb-1">{count}</div>
+                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{level}</div>
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
       </Card>
 
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={`Detail Kategori: ${modalData.category}`}
+        title={`Detail: ${modalData.category}`}
       >
-        <CategoryDetailModal
-          category={modalData.category}
-          items={modalData.items}
-          type={modalData.type}
-        />
+        <CategoryDetailModal category={modalData.category} items={modalData.items} type={modalData.type} />
       </Modal>
     </>
   );
 }
 
-/**
- * ChatBubble Component
- * Menampilkan pesan chat (Kiri: AI/Pasien, Kanan: User).
- */
 function ChatBubble({ message, isUser }) {
+  const formatTime = (timeStr) => {
+    try {
+      return new Date(timeStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return ""; }
+  };
+
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div
-        className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-          isUser
-            ? 'bg-teal-500 text-white rounded-br-none'
-            : 'bg-white/20 text-gray-900 dark:text-gray-100 backdrop-blur rounded-bl-none'
-        }`}
-      >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-          {message.text}
-        </p>
-        <span className="text-xs opacity-70 mt-1 block">
-          {new Date(message.timestamp).toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 group`}>
+      <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm transition-all hover:shadow-md ${
+        isUser 
+          ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-br-none' 
+          : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none border border-gray-100 dark:border-gray-700'
+      }`}>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+        <span className={`text-[10px] mt-2 block text-right opacity-70`}>
+          {formatTime(message.timestamp)}
         </span>
       </div>
     </div>
   );
 }
 
-/**
- * SessionCard Component
- * Item list sesi di sidebar.
- */
 function SessionCard({ session, onClick, isSelected }) {
+  const formatDate = (dateStr) => {
+    try {
+      if (!dateStr) return "N/A";
+      // PERBAIKAN: FORMAT TANGGAL LENGKAP (25 Desember 2025)
+      return new Date(dateStr).toLocaleDateString('id-ID', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+    } catch (e) { return "N/A"; }
+  };
+
+  const formatTime = (dateStr) => {
+    try {
+      if (!dateStr) return "";
+      return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return ""; }
+  };
+
+  const dateValue = session.start_time || session.session_date || session.created_at;
+
   return (
     <div
       onClick={onClick}
-      className={`bg-white/10 backdrop-blur rounded-2xl p-3 cursor-pointer hover:bg-white/20 transition-all m-2 ${
-        isSelected ? 'ring-2 ring-purple-500' : ''
+      className={`relative overflow-hidden rounded-xl p-4 cursor-pointer transition-all duration-200 mb-3 border ${
+        isSelected 
+          ? 'bg-teal-50/80 dark:bg-teal-900/20 border-teal-500 border-2 shadow-sm' 
+          : 'bg-white/40 dark:bg-gray-800/40 border-transparent hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm border-2'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-gray-900 dark:text-gray-100 font-medium">
-          Sesi {new Date(session.start_time).toLocaleDateString('id-ID')}
-        </h4>
-        <span className={`text-xs px-3 py-1 rounded-full ${
+      {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>}
+      
+      <div className="flex items-center justify-between mb-2 pl-2">
+        <div className="flex items-center gap-2">
+          <Calendar size={14} className="text-gray-400" />
+          <h4 className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
+            {formatDate(dateValue)}
+          </h4>
+        </div>
+        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
           session.status === 'completed' 
-            ? 'bg-green-500/30 text-green-900 dark:text-green-100' 
-            : 'bg-yellow-500/30 text-yellow-900 dark:text-yellow-100'
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' 
+            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300'
         }`}>
-          {session.status === 'completed' ? 'Selesai' : 'Berlangsung'}
+          {session.status === 'completed' ? 'Selesai' : 'Aktif'}
         </span>
       </div>
-      <p className="text-gray-700 dark:text-gray-300 text-sm">
-        {session.start_time && new Date(session.start_time).toLocaleTimeString('id-ID')}
-      </p>
+      <div className="flex items-center gap-2 pl-2 text-gray-500 dark:text-gray-400 text-xs">
+        <Clock size={12} />
+        <span>{formatTime(dateValue)} WIB</span>
+      </div>
     </div>
   );
 }
 
-// Loading Spinner
-function Loading({ message = "Loading..." }) {
+function Loading({ message = "Memuat data..." }) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 h-full"> {/* Tambahin h-full biar center */}
-      <div className="relative w-12 h-12 mb-3">
-        <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+    <div className="flex flex-col items-center justify-center h-full min-h-[200px] w-full animate-in fade-in duration-300">
+      <div className="relative w-12 h-12 mb-4">
+        <div className="absolute inset-0 border-4 border-gray-100 dark:border-gray-800 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
       </div>
-      <p className="text-gray-600 dark:text-gray-400 text-sm">{message}</p>
+      <p className="text-gray-500 dark:text-gray-400 text-sm font-medium animate-pulse">{message}</p>
     </div>
   );
 }
@@ -431,35 +370,26 @@ function Loading({ message = "Loading..." }) {
  * ============================================================================
  * MAIN PAGE COMPONENT (ReportPage)
  * ============================================================================
- * Halaman utama laporan sesi.
- * @component
  */
 export default function ReportPage() {
   const navigate = useNavigate();
   const { patientId } = useParams();
 
-  // --- STATE MANAGEMENT ---
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
-  
-  // Data
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [transcripts, setTranscripts] = useState([]);
-  
-  // Analisis AI
   const [evaluation, setEvaluation] = useState(null);
   const [detailedAnalysis, setDetailedAnalysis] = useState(null);
   const [classificationResults, setClassificationResults] = useState([]);
   
-  // Loading
   const [loading, setLoading] = useState(true);
   const [loadingTranscripts, setLoadingTranscripts] = useState(false);
   const [loadingEvaluation, setLoadingEvaluation] = useState(false);
   const [analyzingSession, setAnalyzingSession] = useState(false);
   const [error, setError] = useState(null);
 
-  // Auth Check
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
@@ -477,11 +407,13 @@ export default function ReportPage() {
     navigate("/");
   };
 
-  const handleAuthError = () => {
-    handleLogout();
+  const safeJsonParse = (data) => {
+    if (typeof data === 'string') {
+      try { return JSON.parse(data); } catch (e) { return null; }
+    }
+    return data;
   };
 
-  // Fetch Sessions
   const fetchSessions = async () => {
     if (!patientId || !token) return;
     try {
@@ -490,64 +422,62 @@ export default function ReportPage() {
       const res = await fetch(`http://localhost:3000/api/sessions?patient_id=${patientId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.status === 401 || res.status === 403) return handleAuthError();
-      if (!res.ok) throw new Error('Gagal mengambil data sesi');
+      if (res.status === 401) return handleLogout();
       
       const data = await res.json();
-      const sessionsData = data.data || data;
-      const sortedSessions = sessionsData.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
-      setSessions(sortedSessions);
+      const sessionsData = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
+      const sortedSessions = sessionsData.sort((a, b) => {
+        const dateA = new Date(a.start_time || a.created_at || 0);
+        const dateB = new Date(b.start_time || b.created_at || 0);
+        return dateB - dateA;
+      });
       
-      const firstCompleted = sortedSessions.find(s => s.status === 'completed');
-      if (firstCompleted) handleSessionClick(firstCompleted);
+      setSessions(sortedSessions);
+      if (sortedSessions.length > 0) {
+        const firstCompleted = sortedSessions.find(s => s.status === 'completed');
+        handleSessionClick(firstCompleted || sortedSessions[0]);
+      }
     } catch (err) {
       setError(err.message);
+      toast.error("Gagal mengambil data sesi");
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch Transcripts
   const fetchTranscripts = async (session_id) => {
     setLoadingTranscripts(true);
     try {
       const res = await fetch(`http://localhost:3000/api/reports/transcripts/${session_id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.status === 401) return handleAuthError();
       const data = await res.json();
       const transcriptsData = Array.isArray(data) ? data : [];
       setTranscripts(transcriptsData.map(t => ({
         text: t.message_text,
         isUser: t.message_role === 'user',
         timestamp: t.created_at,
-        prosody: t.prosody_data
       })));
     } catch (err) {
       setTranscripts([]);
+      toast.error("Gagal memuat transkrip");
     } finally {
       setLoadingTranscripts(false);
     }
   };
 
-  // Fetch Evaluation
   const fetchEvaluation = async (session_id) => {
     setLoadingEvaluation(true);
     try {
       const res = await fetch(`http://localhost:3000/api/reports/evaluation/${session_id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.status === 401) return handleAuthError();
       const data = await res.json();
+      
       if (data.evaluated) {
         setEvaluation(data);
-        if (data.classification_results) {
-          try {
-            const parsed = typeof data.classification_results === 'string' 
-              ? JSON.parse(data.classification_results) : data.classification_results;
-            setClassificationResults(parsed);
-          } catch (e) { console.error(e); }
-        }
+        setClassificationResults(safeJsonParse(data.classification_results) || []);
+        setDetailedAnalysis(safeJsonParse(data.detailed_analysis));
       } else {
         setEvaluation(null);
         setDetailedAnalysis(null);
@@ -560,8 +490,8 @@ export default function ReportPage() {
     }
   };
 
-  // Handler Session Click
   const handleSessionClick = async (session) => {
+    if (!session) return;
     setSelectedSession(session);
     setTranscripts([]);
     setEvaluation(null);
@@ -573,30 +503,32 @@ export default function ReportPage() {
     ]);
   };
 
-  // Handler Analyze
   const handleAnalyzeSession = async () => {
     if (!selectedSession) return;
     setAnalyzingSession(true);
+    
+    const loadingToast = toast.loading("Sedang menganalisis sesi dengan AI...");
+
     try {
       const response = await fetch(`http://localhost:3000/api/reports/${selectedSession.session_id}/analyze`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
       });
-      if (response.status === 401) return handleAuthError();
       const data = await response.json();
+      
+      toast.dismiss(loadingToast);
+
       if (response.ok && data.success) {
         setEvaluation(data.evaluation);
         setDetailedAnalysis(data.detailed_analysis);
         setClassificationResults(data.classification_results || []);
-        alert("✅ Evaluasi berhasil dibuat!");
+        toast.success("Analisis AI Berhasil Selesai!", { duration: 4000 });
       } else {
-        alert(`❌ ${data.message || 'Gagal'}`);
+        toast.error(`Analisis Gagal: ${data.message || 'Error tidak diketahui'}`);
       }
     } catch (err) {
-      alert("❌ Error analyzing session");
+      toast.dismiss(loadingToast);
+      toast.error("Terjadi kesalahan jaringan saat analisis");
     } finally {
       setAnalyzingSession(false);
     }
@@ -604,124 +536,173 @@ export default function ReportPage() {
 
   useEffect(() => {
     if (patientId && token) fetchSessions();
-    else if (!token) setLoading(false);
-  }, [patientId, token, navigate]);
+  }, [patientId, token]);
 
   const handleBack = () => navigate('/dashboard');
 
-  if (loading) return <div className="h-full w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center"><Loading /></div>;
+  if (loading) return (
+    <div className="h-full w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
+      <Loading message="Menyiapkan Laporan..." />
+    </div>
+  );
 
   return (
-    // FIX SCROLL: Wrapper dengan h-full w-full overflow-y-auto
-    // Ini membuat halaman ini punya scrollbar sendiri, terlepas dari root yang fixed (karena 3D avatar)
     <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
       
-      {/* Navbar: isSimulation=false untuk menyembunyikan tombol merah */}
+      <Toaster position="top-center" reverseOrder={false} />
+
       <Navbar user={user} onLogout={handleLogout} isSimulation={false} />
       
-      {/* Content Wrapper: flex-grow agar konten mengisi layar */}
       <div className="flex-grow pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          {/* Header Area */}
-          <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          
+          <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                Laporan Sesi
-              </h1>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2 tracking-tight">Laporan Sesi</h1>
               <p className="text-white/80 text-lg">
-                Pasien: {sessions.length > 0 ? sessions[0].patient_name : '...'}
+                Pasien: <span className="font-semibold text-white">{sessions.length > 0 ? sessions[0].patient_name : '...'}</span>
               </p>
             </div>
-            <Button variant="secondary" onClick={handleBack}>
+            <Button variant="secondary" onClick={handleBack} className="shadow-lg border-none">
               ← Kembali
             </Button>
           </div>
 
-          {/* Conditional Rendering Content */}
           {error ? (
             <Card className="text-center py-12">
-               <h2 className="text-2xl font-bold text-red-500 mb-2">Error</h2>
+               <h2 className="text-2xl font-bold text-red-500 mb-2">Gagal Memuat Data</h2>
                <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
                <Button onClick={fetchSessions}>Coba Lagi</Button>
             </Card>
           ) : sessions.length === 0 ? (
-            <Card className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
-              <h2 className="text-2xl font-bold mb-2">Belum Ada Sesi</h2>
-              <p className="text-gray-500">Belum ada data sesi untuk pasien ini.</p>
+            <Card className="text-center py-16">
+              <h2 className="text-2xl font-bold mb-2 text-gray-800 dark:text-gray-200">Belum Ada Sesi</h2>
+              <p className="text-gray-500">Anda belum melakukan sesi konseling dengan pasien ini.</p>
             </Card>
           ) : (
             <>
-              {/* SECTION 1: Score & Evaluasi */}
-              <Card className="mb-6">
+              {/* SECTION 1: SCORE & EVALUASI */}
+              <Card className="mb-8 min-h-[300px] flex flex-col justify-center">
                 <CardHeader 
-                  title="Penilaian"
-                  subtitle={selectedSession ? (selectedSession.status === 'completed' ? "Evaluasi tersedia" : "Sesi belum selesai") : "Pilih sesi"}
+                  title="Penilaian & Evaluasi"
+                  subtitle={selectedSession ? (selectedSession.status === 'completed' ? "Hasil analisis AI untuk sesi ini" : "Sesi belum selesai") : "Pilih sesi"}
                   action={
                     selectedSession?.status === 'completed' && !evaluation && !loadingEvaluation && (
                       <Button onClick={handleAnalyzeSession} disabled={analyzingSession}>
-                        {analyzingSession ? 'Menganalisis...' : '🤖 Analisis AI'}
+                        {analyzingSession ? (
+                          <span className="flex items-center gap-2"><Sparkles className="animate-spin" size={16}/> Menganalisis...</span>
+                        ) : (
+                          <span className="flex items-center gap-2"><Sparkles size={16}/> Jalankan Analisis AI</span>
+                        )}
                       </Button>
                     )
                   }
                 />
                 
-                {loadingEvaluation ? <Loading message="Memuat evaluasi..." /> : evaluation ? (
-                  <>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                      <ScoreCard label="Empati" value={evaluation.empathy_score} maxValue={100} color="bg-blue-500" />
-                      <ScoreCard label="Teknik Bertanya" value={evaluation.question_score} maxValue={100} color="bg-green-500" />
-                      <ScoreCard label="Rata-rata" value={Math.round((evaluation.empathy_score + evaluation.question_score)/2)} maxValue={100} color="bg-teal-500" />
+                {loadingEvaluation ? (
+                  <div className="flex-grow flex items-center justify-center">
+                    <Loading message="Sedang memuat hasil evaluasi..." />
+                  </div>
+                ) : evaluation ? (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                      <ScoreCard 
+                        label="Empati" 
+                        value={evaluation.empathy_score} 
+                        maxValue={100} 
+                        icon={Heart}
+                        colorClass="bg-pink-500 text-pink-500"
+                        gradient="bg-gradient-to-r from-pink-400 to-rose-500"
+                      />
+                      <ScoreCard 
+                        label="Teknik Bertanya" 
+                        value={evaluation.question_score} 
+                        maxValue={100} 
+                        icon={MessageCircleQuestion}
+                        colorClass="bg-blue-500 text-blue-500"
+                        gradient="bg-gradient-to-r from-blue-400 to-indigo-500"
+                      />
+                      <ScoreCard 
+                        label="Skor Keseluruhan" 
+                        value={Math.round((evaluation.empathy_score + evaluation.question_score)/2)} 
+                        maxValue={100} 
+                        icon={Activity}
+                        colorClass="bg-teal-500 text-teal-500"
+                        gradient="bg-gradient-to-r from-teal-400 to-emerald-500"
+                      />
                     </div>
+                    
                     {evaluation.feedback_text && (
-                      <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
-                        <h3 className="text-lg font-bold mb-3">💬 Feedback AI</h3>
-                        <p className="leading-relaxed whitespace-pre-wrap">{evaluation.feedback_text}</p>
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                          <Quote size={20} className="fill-current" /> Umpan Balik AI
+                        </h3>
+                        <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-medium">
+                          {evaluation.feedback_text}
+                        </div>
                       </div>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <p>Belum ada data evaluasi untuk sesi ini.</p>
+                  <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 flex-grow flex flex-col justify-center items-center">
+                    <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full mb-3">
+                      <Sparkles size={32} className="text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">
+                      {selectedSession?.status === 'completed' 
+                        ? "Analisis AI belum dijalankan untuk sesi ini." 
+                        : "Sesi ini belum selesai, analisis tidak tersedia."}
+                    </p>
                   </div>
                 )}
               </Card>
 
-              {/* SECTION 2: Detailed Stats (Grafik Empati & Pertanyaan) */}
+              {/* SECTION 2: STATS */}
               {detailedAnalysis && classificationResults.length > 0 && (
                 <ModelAnalysisStats detailedAnalysis={detailedAnalysis} classificationResults={classificationResults} />
               )}
 
-              {/* SECTION 3: Session History & Transcript Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Sidebar Kiri: Riwayat Sesi */}
-                <Card>
-                  <CardHeader title="Riwayat Sesi" subtitle={`${sessions.length} sesi`} />
-                  <div className="mb-5 space-y-4 max-h-[600px] overflow-y-auto pr-2 p-1 pb-4">
-                    {sessions.map(s => (
-                      <SessionCard 
-                        key={s.session_id} 
-                        session={s} 
-                        onClick={() => handleSessionClick(s)} 
-                        isSelected={selectedSession?.session_id === s.session_id} 
-                      />
-                    ))}
-                  </div>
-                </Card>
+              {/* SECTION 3: HISTORY & CHAT */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
+                <div className="lg:col-span-4">
+                  <Card className="h-full max-h-[700px] flex flex-col">
+                    <CardHeader title="Riwayat Sesi" subtitle={`${sessions.length} sesi tercatat`} />
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-1 custom-scrollbar">
+                      {sessions.map(s => (
+                        <SessionCard 
+                          key={s.session_id || s.id} 
+                          session={s} 
+                          onClick={() => handleSessionClick(s)} 
+                          isSelected={selectedSession?.session_id === s.session_id} 
+                        />
+                      ))}
+                    </div>
+                  </Card>
+                </div>
 
-                {/* Panel Kanan: Transkrip Chat */}
-                <Card className="lg:col-span-2">
-                  <CardHeader title="Transkrip Percakapan" />
-                  <div className="bg-white/5 rounded-2xl p-4 h-[550px] overflow-y-auto">
-                    {loadingTranscripts ? <Loading message="Memuat transkrip..." /> : transcripts.length === 0 ? (
-                      <div className="flex items-center justify-center h-full text-gray-500">
-                        <p>Tidak ada transkrip.</p>
-                      </div>
-                    ) : (
-                      transcripts.map((msg, idx) => <ChatBubble key={idx} message={msg} isUser={msg.isUser} />)
-                    )}
-                  </div>
-                </Card>
+                <div className="lg:col-span-8">
+                  <Card className="h-full min-h-[600px] flex flex-col">
+                    <CardHeader 
+                      title="Transkrip Percakapan" 
+                      subtitle={selectedSession ? `Sesi ${new Date(selectedSession.start_time || selectedSession.created_at).toLocaleDateString()}` : ''}
+                    />
+                    <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar">
+                      {loadingTranscripts ? (
+                        <Loading message="Mengambil transkrip..." />
+                      ) : transcripts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                          <p>Tidak ada transkrip.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {transcripts.map((msg, idx) => (
+                            <ChatBubble key={idx} message={msg} isUser={msg.isUser} />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                </div>
               </div>
             </>
           )}
