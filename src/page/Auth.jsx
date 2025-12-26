@@ -126,7 +126,6 @@ export default function Auth() {
     } catch (err) {
       toast.dismiss(loadingToastId); 
       toast.error("Terjadi kesalahan koneksi.");
-      console.error("Sign Up Error:", err);
     }
   }
 

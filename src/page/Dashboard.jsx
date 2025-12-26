@@ -142,7 +142,6 @@ export default function Dashboard() {
         setAvgQuestionScore(data.data.avg_question_score || 0);
       }
     } catch (err) {
-      console.error("❌ Error fetching stats:", err);
       toast.error("Gagal memuat data statistik: " + err.message);
     } finally {
       setLoadingStats(false);
@@ -195,7 +194,6 @@ export default function Dashboard() {
 
       setSessionPatients(uniquePatients);
     } catch (err) {
-      console.error("❌ Error fetching sessions:", err);
       toast.error("Gagal memuat riwayat sesi: " + err.message);
     } finally {
       setLoadingSessions(false);
@@ -336,7 +334,6 @@ export default function Dashboard() {
         throw new Error(result.message || "Gagal menyimpan pasien");
       }
     } catch (error) {
-      console.error("Error:", error);
       toast.error("Gagal menyimpan skenario: " + error.message);
       throw error;
     }

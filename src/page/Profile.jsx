@@ -288,7 +288,6 @@ export default function ProfilePage() {
         alert("Gagal memulai sesi: " + (newSession.message || "Respons tidak valid"));
       }
     } catch (error) {
-      console.error("Error starting session:", error);
       alert("Gagal memulai sesi");
     } finally {
       setIsLoading(false);

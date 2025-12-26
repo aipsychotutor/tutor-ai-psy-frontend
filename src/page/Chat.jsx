@@ -107,7 +107,6 @@ function Chat() {
           setAvatarPath("/models/default.glb"); // Fallback ke default
         }
       } catch (err) {
-        console.error("Error fetching avatar on refresh:", err);
         setAvatarPath("/models/default.glb"); // Fallback jika error
       } finally {
         setIsLoadingAvatar(false);
