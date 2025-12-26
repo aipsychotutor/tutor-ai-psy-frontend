@@ -12,6 +12,7 @@ import {
 
 // Import Custom Components
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
+import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; // <--- IMPORT BARU
 import Button from "../components/Dashboard/ButtonDashboard";
 import { Card, CardHeader } from "../components/Dashboard/Card"; 
 import Navbar from "../components/Dashboard/Navbar"; 
@@ -22,9 +23,6 @@ import PatientList, { SessionPatientList } from "../components/Dashboard/Patient
  * ============================================================================
  * DASHBOARD COMPONENT
  * ============================================================================
- * Halaman utama aplikasi (Home).
- * Menampilkan statistik pengguna, daftar skenario (pasien) yang tersedia,
- * dan riwayat sesi latihan yang pernah dilakukan.
  */
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -32,15 +30,21 @@ export default function Dashboard() {
   // --- STATE: OTENTIKASI & USER ---
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(true); // Loading state saat cek login
+  const [isVerifying, setIsVerifying] = useState(true); 
 
   // --- STATE: DATA PASIEN (SKENARIO) ---
-  const [patients, setPatients] = useState([]); // Daftar semua skenario
+  const [patients, setPatients] = useState([]); 
   const [loadingPatients, setLoadingPatients] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(false); // Modal tambah skenario
+  
+  // State Modal Tambah
+  const [showAddModal, setShowAddModal] = useState(false); 
+
+  // State Modal Edit (BARU)
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null);
   
   // --- STATE: RIWAYAT SESI ---
-  const [sessionPatients, setSessionPatients] = useState([]); // Daftar pasien yang pernah diajak chat
+  const [sessionPatients, setSessionPatients] = useState([]); 
   const [loadingSessions, setLoadingSessions] = useState(true);
 
   // --- STATE: STATISTIK ---
@@ -57,12 +61,10 @@ export default function Dashboard() {
    * ==========================================================================
    * AUTHENTICATION LOGIC
    * ==========================================================================
-   * Memeriksa keberadaan token dan user di localStorage saat halaman dimuat.
-   * Menggunakan event 'pageshow' untuk menangani kasus navigasi Back/Forward cache.
    */
   useEffect(() => {
     let verificationTimer = null;
-    const checkAuth = (event) => {
+    const checkAuth = () => {
       const storedToken = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
 
@@ -71,8 +73,6 @@ export default function Dashboard() {
       } else {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-
-        // Memberi jeda sedikit agar transisi UI lebih halus
         verificationTimer = setTimeout(() => {
           setIsVerifying(false);
         }, 500);
@@ -84,20 +84,16 @@ export default function Dashboard() {
 
     return () => {
       window.removeEventListener("pageshow", checkAuth);
-      if (verificationTimer) {
-        clearTimeout(verificationTimer);
-      }
+      if (verificationTimer) clearTimeout(verificationTimer);
     };
   }, [navigate]);
 
-  // Handler jika token expired atau invalid saat request API
   const handleAuthError = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true });
   };
 
-  // Handler Logout manual
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -112,31 +108,21 @@ export default function Dashboard() {
    * ==========================================================================
    */
 
-  // 1. Fetch Statistics: Mengambil skor rata-rata empati & pertanyaan
+  // 1. Fetch Stats
   const fetchStats = async () => {
     if (!token) {
       setLoadingStats(false);
       return;
     }
-
     setLoadingStats(true);
     try {
       const res = await fetch(`http://localhost:3000/api/reports/stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (res.status === 401 || res.status === 403) {
-        return handleAuthError();
-      }
-
-      if (!res.ok) {
-        throw new Error("Gagal mengambil data statistik");
-      }
-
+      if (res.status === 401 || res.status === 403) return handleAuthError();
+      if (!res.ok) throw new Error("Gagal mengambil data statistik");
+      
       const data = await res.json();
-
       if (data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
         setAvgQuestionScore(data.data.avg_question_score || 0);
@@ -148,7 +134,7 @@ export default function Dashboard() {
     }
   };
 
-  // 2. Fetch Session History: Mengambil riwayat sesi untuk list di sidebar kanan/bawah
+  // 2. Fetch Session History
   const fetchSessionHistory = async () => {
     if (!token) {
       setLoadingSessions(false);
@@ -157,26 +143,15 @@ export default function Dashboard() {
     setLoadingSessions(true);
     try {
       const res = await fetch(`http://localhost:3000/api/sessions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (res.status === 401 || res.status === 403) {
-        return handleAuthError();
-      }
-
-      if (!res.ok) {
-        throw new Error("Gagal mengambil riwayat sesi");
-      }
+      if (res.status === 401 || res.status === 403) return handleAuthError();
+      if (!res.ok) throw new Error("Gagal mengambil riwayat sesi");
 
       const data = await res.json();
       const sessions = data?.data || [];
-
       setTotalSessions(sessions.length);
 
-      // Filter unik: Hanya ambil satu entry per pasien (sesi terakhir)
-      // Menggunakan Map untuk deduping berdasarkan patient_id
       const uniquePatients = Array.from(
         new Map(
           sessions.map((s) => [
@@ -191,7 +166,6 @@ export default function Dashboard() {
           ])
         ).values()
       );
-
       setSessionPatients(uniquePatients);
     } catch (err) {
       toast.error("Gagal memuat riwayat sesi: " + err.message);
@@ -200,40 +174,44 @@ export default function Dashboard() {
     }
   };
 
-  // 3. Fetch Patients (Scenarios): Mengambil daftar semua skenario yang tersedia
-  const fetchPatients = async (user) => {
+  // 3. Fetch Patients
+  const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
       const res = await fetch("http://localhost:3000/api/patients", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401 || res.status === 403) return handleAuthError();
-
       if (!res.ok) throw new Error("Network response was not ok");
+      
       const data = await res.json();
 
-      // Mapping data untuk menambahkan Tagging (Global vs Buatan Sendiri)
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
-        const isCurrentUser = p.user_id === user?.user_id;
+        const isCurrentUser = p.user_id === currentUser?.user_id;
 
         return {
           id: p.patient_id,
           name: p.patient_name,
           image: p.profile_image || null,
           personality_traits: p.personality_traits || [],
-          // Logic penentuan Label Tag
+          // Logic data asli dari DB
+          background_story: p.background_story,
+          personality_type: p.personality_type,
+          symptom_intensity: p.symptom_intensity,
+          age: p.age,
+          gender: p.gender,
+          occupation: p.occupation,
+          marital_status: p.marital_status,
+          
           patient_tag:
-            isCurrentUser && user?.is_admin && isGlobal
+            isCurrentUser && currentUser?.is_admin && isGlobal
               ? "Global"
               : isCurrentUser
               ? "Buatan Sendiri"
               : isGlobal
               ? "Global"
               : p.users?.username,
-          // Logic penentuan Warna Tag
           patient_tag_color: isGlobal
             ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
             : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
@@ -247,7 +225,7 @@ export default function Dashboard() {
     }
   };
 
-  // Effect: Jalankan semua fetch saat token tersedia
+  // Jalankan fetch saat token ready
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
@@ -260,18 +238,14 @@ export default function Dashboard() {
    * ==========================================================================
    * FILTERING LOGIC
    * ==========================================================================
-   * Menggunakan useMemo agar filtering tidak dijalankan ulang jika
-   * data patients, searchTerm, atau selectedTag tidak berubah.
    */
   const filteredPatients = useMemo(() => {
     return patients
       .filter((patient) => {
-        // Filter by Tag
         if (selectedTag === "Semua") return true;
         return patient.patient_tag === selectedTag;
       })
       .filter((patient) => {
-        // Filter by Search Name
         return patient.name.toLowerCase().includes(searchTerm.toLowerCase());
       });
   }, [patients, searchTerm, selectedTag]);
@@ -282,35 +256,18 @@ export default function Dashboard() {
    * ==========================================================================
    */
 
-  // Navigasi ke Halaman Profil (Detail Pasien) dari History
+  // Navigasi
   const handleDetailClick = (patient) => {
-    navigate(`/profile/${patient.id}`, {
-      state: {
-        patient: patient,
-      },
-    });
+    navigate(`/profile/${patient.id}`, { state: { patient: patient } });
   };
-
-  // Navigasi ke Halaman Report
   const handleReportClick = (patient) => {
-    navigate(`/report/${patient.id}`, {
-      state: {
-        patient: patient,
-      },
-    });
+    navigate(`/report/${patient.id}`, { state: { patient: patient } });
   };
-
-  // Navigasi Mulai Sesi (dari Pustaka Skenario)
   const handleStartSession = (patient) => {
-    navigate(`/profile/${patient.id}`, {
-      state: {
-        patientId: patient.id,
-        patient: patient,
-      },
-    });
+    navigate(`/profile/${patient.id}`, { state: { patientId: patient.id, patient: patient } });
   };
 
-  // Simpan Skenario Baru (Callback dari AddScenarioModal)
+  // --- HANDLER TAMBAH SCENARIO ---
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
@@ -323,26 +280,51 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      if (response.status === 401 || response.status === 403)
-        return handleAuthError();
+      if (response.status === 401 || response.status === 403) return handleAuthError();
 
       if (response.ok) {
         toast.success("Skenario berhasil disimpan!");
         setShowAddModal(false);
-        fetchPatients(user); // Refresh list setelah simpan
+        fetchPatients(user); 
       } else {
         throw new Error(result.message || "Gagal menyimpan pasien");
       }
     } catch (error) {
       toast.error("Gagal menyimpan skenario: " + error.message);
-      throw error;
     }
   };
 
-  // Tampilkan null saat masih proses verifikasi token (mencegah kedip)
-  if (isVerifying) {
-    return null;
-  }
+  // --- HANDLER EDIT / UPDATE SCENARIO (BARU) ---
+  
+  // 1. Trigger saat klik "Update Pasien" di PatientList
+  const handleTriggerEdit = (patient) => {
+    setSelectedScenarioToEdit(patient);
+    setShowEditModal(true);
+  };
+
+  // 2. Trigger saat klik "Delete Skenario" di PatientList
+  const handleTriggerDelete = async (patient) => {
+      // Logic Delete bisa ditambahkan disini (fetch API DELETE)
+      if(window.confirm(`Apakah Anda yakin ingin menghapus skenario ${patient.name}?`)) {
+          console.log("Deleting:", patient.id);
+          // Simulasi sukses
+          toast.success("Fitur delete belum tersambung ke API (UI Only)");
+      }
+  };
+
+  // 3. Callback saat form Update disubmit
+  const handleSaveUpdate = async (updatedData) => {
+      // Disini nanti logic fetch API PUT/PATCH ke backend
+      console.log("Updated Data received in Dashboard:", updatedData);
+      
+      // Simulasi sukses
+      toast.success("Berhasil memperbarui data pasien (Simulasi UI)");
+      setShowEditModal(false);
+      // fetchPatients(user); // Uncomment jika backend sudah siap
+  };
+
+
+  if (isVerifying) return null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
@@ -365,7 +347,6 @@ export default function Dashboard() {
             </div>
 
             {/* --- SECTION 1: STAT CARD GRID --- */}
-            {/* Menampilkan ringkasan metrik utama */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
               <StatCard
                 title="Total Sesi"
@@ -394,7 +375,6 @@ export default function Dashboard() {
             </div>
 
             {/* --- SECTION 2: PUSTAKA SKENARIO --- */}
-            {/* Daftar skenario/pasien yang bisa dipilih untuk latihan */}
             <Card span={3} className="sm:p-4 lg:p-5 min-h-[80px] h-[500px]">
               <CardHeader
                 title="Pustaka Skenario"
@@ -415,9 +395,7 @@ export default function Dashboard() {
               {/* Search & Filter Controls */}
               <div className="flex flex-col sm:flex-row gap-3 my-4">
                 <div className="relative flex-grow">
-                  <label htmlFor="search-scenario" className="sr-only">
-                    Cari Skenario
-                  </label>
+                  <label htmlFor="search-scenario" className="sr-only">Cari Skenario</label>
                   <input
                     type="text"
                     id="search-scenario"
@@ -426,16 +404,11 @@ export default function Dashboard() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Search
-                    size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
+                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 <div className="relative sm:min-w-[180px]">
-                  <label htmlFor="filter-tag" className="sr-only">
-                    Filter berdasarkan Tag
-                  </label>
+                  <label htmlFor="filter-tag" className="sr-only">Filter berdasarkan Tag</label>
                   <select
                     id="filter-tag"
                     value={selectedTag}
@@ -446,10 +419,7 @@ export default function Dashboard() {
                     <option value="Global">Global</option>
                     <option value="Buatan Sendiri">Buatan Sendiri</option>
                   </select>
-                  <Filter
-                    size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
+                  <Filter size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
               </div>
 
@@ -462,12 +432,14 @@ export default function Dashboard() {
                 <PatientList
                     patients={filteredPatients}
                     onStartSession={handleStartSession}
+                    // --- MENGIRIM PROPS KE LIST UTAMA ---
+                    onEditScenario={handleTriggerEdit} 
+                    onDeleteScenario={handleTriggerDelete}
                 />
               )}
             </Card>
 
             {/* --- SECTION 3: RIWAYAT SESI --- */}
-            {/* List sesi yang pernah dilakukan sebelumnya */}
             <Card span={3} className="sm:p-4 lg:p-5">
               <CardHeader title="Riwayat Sesi" />
               {loadingSessions ? (
@@ -489,6 +461,8 @@ export default function Dashboard() {
             </Card>
           </div>
 
+          {/* === MODAL AREA (DI LUAR GRID UTAMA) === */}
+          
           {/* Modal Tambah Skenario */}
           <AddScenarioModal
             show={showAddModal}
@@ -496,6 +470,16 @@ export default function Dashboard() {
             onSave={handleSaveScenario}
             user={user}
           />
+
+          {/* Modal Edit Skenario (BARU) */}
+          <EditScenarioModal
+            show={showEditModal}
+            initialData={selectedScenarioToEdit}
+            onClose={() => setShowEditModal(false)}
+            onSave={handleSaveUpdate}
+            user={user}
+          />
+
         </div>
       </main>
     </div>
