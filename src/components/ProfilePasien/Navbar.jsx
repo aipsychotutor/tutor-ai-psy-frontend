@@ -79,7 +79,7 @@ const Navbar = ({ user, onLogout, onEndSession }) => {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 p-2 rounded-lg focus:outline-none"
               >
-                <div className="h-8 w-8 rounded-full bg-ungu text-white flex items-center justify-center font-semibold shadow-sm">
+                <div className="h-8 w-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-semibold shadow-sm">
                   {user.username ? user.username.charAt(0).toUpperCase() : "?"}
                 </div>
                 <span className="hidden sm:inline-block font-medium">

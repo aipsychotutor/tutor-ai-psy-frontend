@@ -2,22 +2,18 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 // Import Icons
-import {
-  Search,
-  Filter,
-  Heart,
-  HelpCircle,
-  Layers,
-} from "lucide-react";
+import { Search, Filter, Heart, HelpCircle, Layers } from "lucide-react";
 
 // Import Custom Components
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
 import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; // <--- IMPORT BARU
 import Button from "../components/Dashboard/ButtonDashboard";
-import { Card, CardHeader } from "../components/Dashboard/Card"; 
-import Navbar from "../components/Dashboard/Navbar"; 
+import { Card, CardHeader } from "../components/Dashboard/Card";
+import Navbar from "../components/Navbar";
 import StatCard from "../components/Dashboard/StatCard";
-import PatientList, { SessionPatientList } from "../components/Dashboard/PatientList";
+import PatientList, {
+  SessionPatientList,
+} from "../components/Dashboard/PatientList";
 
 /**
  * ============================================================================
@@ -26,25 +22,25 @@ import PatientList, { SessionPatientList } from "../components/Dashboard/Patient
  */
 export default function Dashboard() {
   const navigate = useNavigate();
-  
+
   // --- STATE: OTENTIKASI & USER ---
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(true); 
+  const [isVerifying, setIsVerifying] = useState(true);
 
   // --- STATE: DATA PASIEN (SKENARIO) ---
-  const [patients, setPatients] = useState([]); 
+  const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
-  
+
   // State Modal Tambah
-  const [showAddModal, setShowAddModal] = useState(false); 
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // State Modal Edit (BARU)
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null);
-  
+
   // --- STATE: RIWAYAT SESI ---
-  const [sessionPatients, setSessionPatients] = useState([]); 
+  const [sessionPatients, setSessionPatients] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
 
   // --- STATE: STATISTIK ---
@@ -121,7 +117,7 @@ export default function Dashboard() {
       });
       if (res.status === 401 || res.status === 403) return handleAuthError();
       if (!res.ok) throw new Error("Gagal mengambil data statistik");
-      
+
       const data = await res.json();
       if (data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
@@ -183,7 +179,7 @@ export default function Dashboard() {
       });
       if (res.status === 401 || res.status === 403) return handleAuthError();
       if (!res.ok) throw new Error("Network response was not ok");
-      
+
       const data = await res.json();
 
       const mappedPatients = data.map((p) => {
@@ -203,7 +199,7 @@ export default function Dashboard() {
           gender: p.gender,
           occupation: p.occupation,
           marital_status: p.marital_status,
-          
+
           patient_tag:
             isCurrentUser && currentUser?.is_admin && isGlobal
               ? "Global"
@@ -264,7 +260,9 @@ export default function Dashboard() {
     navigate(`/report/${patient.id}`, { state: { patient: patient } });
   };
   const handleStartSession = (patient) => {
-    navigate(`/profile/${patient.id}`, { state: { patientId: patient.id, patient: patient } });
+    navigate(`/profile/${patient.id}`, {
+      state: { patientId: patient.id, patient: patient },
+    });
   };
 
   // --- HANDLER TAMBAH SCENARIO ---
@@ -280,12 +278,13 @@ export default function Dashboard() {
       });
 
       const result = await response.json();
-      if (response.status === 401 || response.status === 403) return handleAuthError();
+      if (response.status === 401 || response.status === 403)
+        return handleAuthError();
 
       if (response.ok) {
         toast.success("Skenario berhasil disimpan!");
         setShowAddModal(false);
-        fetchPatients(user); 
+        fetchPatients(user);
       } else {
         throw new Error(result.message || "Gagal menyimpan pasien");
       }
@@ -295,7 +294,7 @@ export default function Dashboard() {
   };
 
   // --- HANDLER EDIT / UPDATE SCENARIO (BARU) ---
-  
+
   // 1. Trigger saat klik "Update Pasien" di PatientList
   const handleTriggerEdit = (patient) => {
     setSelectedScenarioToEdit(patient);
@@ -304,25 +303,28 @@ export default function Dashboard() {
 
   // 2. Trigger saat klik "Delete Skenario" di PatientList
   const handleTriggerDelete = async (patient) => {
-      // Logic Delete bisa ditambahkan disini (fetch API DELETE)
-      if(window.confirm(`Apakah Anda yakin ingin menghapus skenario ${patient.name}?`)) {
-          console.log("Deleting:", patient.id);
-          // Simulasi sukses
-          toast.success("Fitur delete belum tersambung ke API (UI Only)");
-      }
+    // Logic Delete bisa ditambahkan disini (fetch API DELETE)
+    if (
+      window.confirm(
+        `Apakah Anda yakin ingin menghapus skenario ${patient.name}?`
+      )
+    ) {
+      console.log("Deleting:", patient.id);
+      // Simulasi sukses
+      toast.success("Fitur delete belum tersambung ke API (UI Only)");
+    }
   };
 
   // 3. Callback saat form Update disubmit
   const handleSaveUpdate = async (updatedData) => {
-      // Disini nanti logic fetch API PUT/PATCH ke backend
-      console.log("Updated Data received in Dashboard:", updatedData);
-      
-      // Simulasi sukses
-      toast.success("Berhasil memperbarui data pasien (Simulasi UI)");
-      setShowEditModal(false);
-      // fetchPatients(user); // Uncomment jika backend sudah siap
-  };
+    // Disini nanti logic fetch API PUT/PATCH ke backend
+    console.log("Updated Data received in Dashboard:", updatedData);
 
+    // Simulasi sukses
+    toast.success("Berhasil memperbarui data pasien (Simulasi UI)");
+    setShowEditModal(false);
+    // fetchPatients(user); // Uncomment jika backend sudah siap
+  };
 
   if (isVerifying) return null;
 
@@ -331,11 +333,10 @@ export default function Dashboard() {
       <Toaster position="top-center" reverseOrder={false} />
 
       <Navbar user={user} onLogout={handleLogout} />
-      
+
       <main className="flex-grow">
         <div className="bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8 h-full">
           <div className="mx-auto max-w-screen-2xl space-y-6">
-            
             {/* Header Title */}
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
@@ -395,7 +396,9 @@ export default function Dashboard() {
               {/* Search & Filter Controls */}
               <div className="flex flex-col sm:flex-row gap-3 my-4">
                 <div className="relative flex-grow">
-                  <label htmlFor="search-scenario" className="sr-only">Cari Skenario</label>
+                  <label htmlFor="search-scenario" className="sr-only">
+                    Cari Skenario
+                  </label>
                   <input
                     type="text"
                     id="search-scenario"
@@ -404,11 +407,16 @@ export default function Dashboard() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search
+                    size={18}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                 </div>
 
                 <div className="relative sm:min-w-[180px]">
-                  <label htmlFor="filter-tag" className="sr-only">Filter berdasarkan Tag</label>
+                  <label htmlFor="filter-tag" className="sr-only">
+                    Filter berdasarkan Tag
+                  </label>
                   <select
                     id="filter-tag"
                     value={selectedTag}
@@ -419,22 +427,25 @@ export default function Dashboard() {
                     <option value="Global">Global</option>
                     <option value="Buatan Sendiri">Buatan Sendiri</option>
                   </select>
-                  <Filter size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Filter
+                    size={18}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
                 </div>
               </div>
 
               {/* List Pasien */}
               {loadingPatients ? (
-                 <div className="text-center py-4 text-gray-700 dark:text-gray-300">
-                    Memuat daftar skenario...
+                <div className="text-center py-4 text-gray-700 dark:text-gray-300">
+                  Memuat daftar skenario...
                 </div>
               ) : (
                 <PatientList
-                    patients={filteredPatients}
-                    onStartSession={handleStartSession}
-                    // --- MENGIRIM PROPS KE LIST UTAMA ---
-                    onEditScenario={handleTriggerEdit} 
-                    onDeleteScenario={handleTriggerDelete}
+                  patients={filteredPatients}
+                  onStartSession={handleStartSession}
+                  // --- MENGIRIM PROPS KE LIST UTAMA ---
+                  onEditScenario={handleTriggerEdit}
+                  onDeleteScenario={handleTriggerDelete}
                 />
               )}
             </Card>
@@ -462,7 +473,7 @@ export default function Dashboard() {
           </div>
 
           {/* === MODAL AREA (DI LUAR GRID UTAMA) === */}
-          
+
           {/* Modal Tambah Skenario */}
           <AddScenarioModal
             show={showAddModal}
@@ -479,7 +490,6 @@ export default function Dashboard() {
             onSave={handleSaveUpdate}
             user={user}
           />
-
         </div>
       </main>
     </div>
