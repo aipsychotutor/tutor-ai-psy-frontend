@@ -1,13 +1,53 @@
-import React from "react";
+import React, { useState } from "react"; 
 import Button from "../Dashboard/ButtonDashboard";
 import { AlertTriangle, X } from "lucide-react";
+import { toast } from "react-hot-toast"; 
+import { useNavigate } from "react-router-dom";
 
 /**
  * DeleteAccountModal Component
  * Menampilkan konfirmasi destruktif untuk penghapusan akun.
  */
 export default function DeleteAccountModal({ show, onClose }) {
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   if (!show) return null;
+
+  const handleDeleteAccount = async () => {
+    const token = localStorage.getItem("token");
+    
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/delete-account", {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Akun berhasil dihapus.");
+        
+        // --- PENTING: Bersihkan data sesi ---
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        
+        // Tutup modal dan arahkan ke Landing Page/Login
+        onClose();
+        navigate("/", { replace: true });
+      } else {
+        toast.error(result.message || "Gagal menghapus akun");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan koneksi");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
@@ -46,9 +86,10 @@ export default function DeleteAccountModal({ show, onClose }) {
               variant="primary" 
               className="bg-red-600 hover:bg-red-700 text-white border-none py-3"
               onClick={() => {
-                console.log("Delete account triggered");
+                handleDeleteAccount();
                 onClose();
               }}
+              disabled={loading}
             >
               Ya, Hapus Akun Saya
             </Button>
@@ -56,6 +97,7 @@ export default function DeleteAccountModal({ show, onClose }) {
               variant="secondary" 
               className="py-3"
               onClick={onClose}
+              disabled={loading}
             >
               Batal
             </Button>

@@ -3,26 +3,102 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Button from "../components/Dashboard/ButtonDashboard";
 import { User, Mail, Trash2, ArrowLeft } from "lucide-react"; 
+import { toast, Toaster } from "react-hot-toast";
 import DeleteAccountModal from "../components/ProfilePage/DeleteAccountModal";
 
 export default function ProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
   
-  const user = JSON.parse(localStorage.getItem("user")) || { username: "Jojo", email: "jojo@example.com" };
+  const [passwordData, setPasswordData] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [loading, setLoading] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user")) || { username: "User", email: "" };
+  const token = localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/");
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle Submit ke Backend
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+    
+    if (!passwordRegex.test(passwordData.newPassword)) {
+      return toast.error(
+        "Password baru harus minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka."
+      );
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      return toast.error("Konfirmasi password baru tidak cocok");
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      return toast.error("Password baru minimal 8 karakter");
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/update-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          oldPassword: passwordData.oldPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Password berhasil diperbarui!");
+        
+        console.log("Password berhasil diperbarui");
+        // Reset form setelah berhasil
+        setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        toast.error(result.message || "Gagal memperbarui password");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan koneksi");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     // PERBAIKAN DI SINI:
     // 1. Hapus 'bg-gray-100 dark:bg-gray-950'
     // 2. Gunakan 'bg-transparent' agar background body (gradient ungu) terlihat
+
+    
     <div className="h-full w-full overflow-y-auto bg-transparent">
-      
+      <Toaster 
+        position="top-center" 
+        reverseOrder={false} 
+        toastOptions={{ 
+          className: 'font-medium', 
+          style: { borderRadius: '10px', background: '#333', color: '#fff' } 
+        }}
+      />
+
       <Navbar 
         user={user} 
         onLogout={handleLogout} 
@@ -90,25 +166,40 @@ export default function ProfilePage() {
             {/* Ganti Password */}
             <section className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2 text-gray-900 dark:text-white">Keamanan Password</h3>
-              <div className="space-y-4 max-w-lg">
+              <form onSubmit={handleUpdatePassword} className="space-y-4 max-w-lg">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Lama</label>
-                  <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                  <input type="password"
+                    name="oldPassword"
+                    value={passwordData.oldPassword}
+                    onChange={handleInputChange}
+                    placeholder="••••••••" 
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Baru</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    <input type="password" 
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handleInputChange}
+                    placeholder="••••••••" 
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                     </div>
                     <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Konfirmasi</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    <input type="password" 
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handleInputChange}
+                    placeholder="••••••••" 
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                     </div>
                 </div>
                 <div className="pt-2">
-                    <Button variant="primary">Update Password</Button>
+                    <Button type="submit" variant="primary">Update Password</Button>
                 </div>
-              </div>
+              </form>
             </section>
 
             {/* Danger Zone */}
