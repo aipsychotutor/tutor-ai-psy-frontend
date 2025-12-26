@@ -1,10 +1,30 @@
+/**
+ * ============================================================================
+ * MODUL DASHBOARD UTAMA
+ * ============================================================================
+ * * Deskripsi:
+ * Komponen ini berfungsi sebagai halaman utama (Dashboard) aplikasi. 
+ * Menyediakan ringkasan statistik, manajemen skenario pasien (CRUD), 
+ * dan riwayat sesi latihan pengguna.
+ * * Fitur Utama:
+ * 1. Otentikasi & Verifikasi User: Memastikan pengguna login sebelum mengakses.
+ * 2. Statistik Real-time: Menampilkan total sesi, rata-rata skor empati, dan pertanyaan.
+ * 3. Manajemen Skenario: Menambah, mengedit, menghapus, dan mencari skenario pasien.
+ * 4. Riwayat Sesi: Daftar riwayat latihan yang telah dilakukan.
+ * 5. UI/UX Modern: Menggunakan Glassmorphism, Skeleton Loading, dan Animasi halus.
+ * * Struktur File:
+ * - Imports: React hooks, library eksternal (toast, router), ikon, dan komponen anak.
+ * - Helper Components: Komponen UI kecil (Skeleton, Card, Button, Modal) untuk modularitas.
+ * - Main Component (Dashboard): Logika utama aplikasi.
+ */
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-// Import Icons
+// Import Icons: Menggunakan Lucide React untuk ikon vektor yang ringan dan konsisten.
 import { Search, Filter, Heart, HelpCircle, Layers, Plus, Sparkles, Activity } from "lucide-react";
 
-// Import Custom Components
+// Import Custom Components: Komponen modular untuk fitur spesifik.
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
 import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; 
 import Navbar from "../components/Navbar";
@@ -12,16 +32,28 @@ import PatientList, { SessionPatientList } from "../components/Dashboard/Patient
 
 /**
  * ============================================================================
- * HELPER COMPONENTS (AESTHETIC UPGRADE)
+ * HELPER COMPONENTS (KOMPONEN PENDUKUNG UI)
  * ============================================================================
+ * Bagian ini berisi komponen-komponen presentasional kecil yang digunakan ulang
+ * di dalam Dashboard untuk menjaga kode utama tetap bersih dan konsisten.
  */
 
-// 1. Shimmer / Skeleton Loader
+/**
+ * 1. Skeleton Loader
+ * Menampilkan placeholder animasi berkedip saat data sedang dimuat.
+ * @param {string} className - Kelas CSS tambahan untuk styling (ukuran, margin, dll).
+ */
 const Skeleton = ({ className }) => (
   <div className={`animate-pulse bg-gray-200/50 dark:bg-gray-700/50 rounded-xl ${className}`} />
 );
 
-// 2. Modern Card (Glassmorphism)
+/**
+ * 2. GlassCard (Kartu Glassmorphism)
+ * Kontainer kartu dengan efek blur latar belakang dan border transparan.
+ * @param {ReactNode} children - Konten di dalam kartu.
+ * @param {string} className - Kelas CSS tambahan.
+ * @param {boolean} noPadding - Opsi untuk menghilangkan padding default.
+ */
 const GlassCard = ({ children, className = "", noPadding = false }) => (
   <div className={`backdrop-blur-md bg-white/90 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/50 shadow-xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-white/95 dark:hover:bg-gray-900/90 ${className}`}>
     <div className={noPadding ? "" : "p-6 sm:p-8"}>
@@ -30,8 +62,17 @@ const GlassCard = ({ children, className = "", noPadding = false }) => (
   </div>
 );
 
-// 3. Stat Card yang lebih "Splendid"
+/**
+ * 3. AestheticStatCard
+ * Menampilkan kartu statistik dengan ikon, gradien warna, dan animasi hover.
+ * @param {string} title - Judul statistik (misal: "Total Sesi").
+ * @param {string|number} value - Nilai statistik.
+ * @param {LucideIcon} icon - Ikon representatif.
+ * @param {string} color - Tema warna ('purple', 'green', 'blue').
+ * @param {boolean} loading - Status loading untuk menampilkan skeleton.
+ */
 const AestheticStatCard = ({ title, value, icon: Icon, color, loading }) => {
+  // Mapping tema warna untuk fleksibilitas styling
   const theme = {
     purple: "from-purple-500 to-indigo-600 shadow-purple-500/20 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
     green: "from-emerald-500 to-teal-600 shadow-emerald-500/20 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
@@ -40,6 +81,7 @@ const AestheticStatCard = ({ title, value, icon: Icon, color, loading }) => {
 
   return (
     <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
+      {/* Konten Kartu */}
       <div className="flex items-start justify-between">
         <div className="relative z-10">
           <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{title}</p>
@@ -55,12 +97,16 @@ const AestheticStatCard = ({ title, value, icon: Icon, color, loading }) => {
           <Icon size={24} className={theme.split(" ")[2]} />
         </div>
       </div>
+      {/* Elemen Dekoratif Background */}
       <div className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-5 bg-gradient-to-r ${theme.split(" ")[0]} ${theme.split(" ")[1]}`} />
     </div>
   );
 };
 
-// 4. Button Dashboard Modern
+/**
+ * 4. ActionButton
+ * Tombol aksi utama dengan gaya modern (gradien, shadow, rounded).
+ */
 const ActionButton = ({ onClick, children, icon: Icon }) => (
   <button
     onClick={onClick}
@@ -71,7 +117,11 @@ const ActionButton = ({ onClick, children, icon: Icon }) => (
   </button>
 );
 
-// 5. Aesthetic Delete Modal (BARU & GANTENG)
+/**
+ * 5. DeleteConfirmationModal
+ * Modal konfirmasi khusus untuk aksi penghapusan yang sensitif.
+ * Menampilkan peringatan visual dan tombol konfirmasi/batal.
+ */
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
   if (!isOpen) return null;
 
@@ -79,14 +129,14 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-800 transform transition-all animate-in zoom-in-95 duration-200 scale-100">
         
-        {/* Icon Warning Besar */}
+        {/* Ikon Peringatan */}
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
           <svg className="h-8 w-8 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
           </svg>
         </div>
 
-        {/* Text Content */}
+        {/* Teks Konfirmasi */}
         <div className="text-center space-y-3 mb-8">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
             Hapus Skenario?
@@ -97,18 +147,12 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Tombol Aksi */}
         <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={onClose}
-            className="py-2.5 px-4 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-          >
+          <button onClick={onClose} className="py-2.5 px-4 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
             Batal
           </button>
-          <button
-            onClick={onConfirm}
-            className="py-2.5 px-4 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-95"
-          >
+          <button onClick={onConfirm} className="py-2.5 px-4 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-95">
             Ya, Hapus
           </button>
         </div>
@@ -119,42 +163,42 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
 
 /**
  * ============================================================================
- * DASHBOARD COMPONENT (FULL FIXED & AESTHETIC)
+ * LOGIKA UTAMA DASHBOARD
  * ============================================================================
  */
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // --- STATE ---
+  // --- STATE MANAGEMENT ---
+  // State untuk data pengguna & otentikasi
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isVerifying, setIsVerifying] = useState(true);
 
-  // Data State
+  // State untuk data utama (Skenario & Riwayat Sesi)
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [sessionPatients, setSessionPatients] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   
-  // Stats State
+  // State untuk data statistik
   const [totalSessions, setTotalSessions] = useState(0);
   const [avgEmpathyScore, setAvgEmpathyScore] = useState(0);
   const [avgQuestionScore, setAvgQuestionScore] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Modal State
+  // State untuk kontrol Modal (Visibility & Data)
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null);
-  
-  // STATE BARU: Untuk Delete Modal
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null); // Menyimpan objek skenario yang akan dihapus
 
-  // Filter State
+  // State untuk Filter & Pencarian
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState("Semua");
 
-  // --- AUTH CHECK ---
+  // --- EFFECTS: AUTHENTICATION CHECK ---
+  // Memeriksa token di localStorage saat komponen dimount.
   useEffect(() => {
     let verificationTimer = null;
     const checkAuth = () => {
@@ -166,13 +210,14 @@ export default function Dashboard() {
       } else {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        verificationTimer = setTimeout(() => setIsVerifying(false), 500);
+        verificationTimer = setTimeout(() => setIsVerifying(false), 500); // Simulasi delay verifikasi
       }
     };
     checkAuth();
     return () => clearTimeout(verificationTimer);
   }, [navigate]);
 
+  // Handler Logout & Error Auth
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -183,7 +228,11 @@ export default function Dashboard() {
     handleLogout();
   };
 
-  // --- FETCHING LOGIC ---
+  // --- API FETCHING FUNCTIONS ---
+  
+  /**
+   * Mengambil data statistik performa pengguna.
+   */
   const fetchStats = async () => {
     if (!token) return setLoadingStats(false);
     setLoadingStats(true);
@@ -199,6 +248,10 @@ export default function Dashboard() {
     finally { setLoadingStats(false); }
   };
 
+  /**
+   * Mengambil riwayat sesi latihan pengguna.
+   * Melakukan pemetaan data unik berdasarkan ID Pasien untuk menghindari duplikasi di tampilan list.
+   */
   const fetchSessionHistory = async () => {
     if (!token) return setLoadingSessions(false);
     setLoadingSessions(true);
@@ -208,20 +261,28 @@ export default function Dashboard() {
       const data = await res.json();
       const sessions = data?.data || [];
       setTotalSessions(sessions.length);
+      
+      // Deduplikasi data sesi berdasarkan Patient ID
       const uniquePatients = Array.from(new Map(sessions.map((s) => [s.patient_id, {
         id: s.patient_id, name: s.patient_name, image: s.patient_image, lastSession: s.session_date || s.start_time, status: s.status,
       }])).values());
+      
       setSessionPatients(uniquePatients);
     } catch (err) { toast.error("Gagal memuat riwayat sesi"); } 
     finally { setLoadingSessions(false); }
   };
 
+  /**
+   * Mengambil daftar skenario pasien.
+   * Menentukan tag (Global/Buatan Sendiri) berdasarkan kepemilikan user.
+   */
   const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
       const res = await fetch("http://localhost:3000/api/patients", { headers: { Authorization: `Bearer ${token}` } });
       if (res.status === 401) return handleAuthError();
       const data = await res.json();
+      
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
         const isCurrentUser = p.user_id === currentUser?.user_id;
@@ -229,6 +290,7 @@ export default function Dashboard() {
           id: p.patient_id, name: p.patient_name, image: p.profile_image || null, personality_traits: p.personality_traits || [],
           background_story: p.background_story, personality_type: p.personality_type, symptom_intensity: p.symptom_intensity,
           age: p.age, gender: p.gender, occupation: p.occupation, marital_status: p.marital_status,
+          // Logika penentuan label tag
           patient_tag: isCurrentUser && currentUser?.is_admin && isGlobal ? "Global" : isCurrentUser ? "Buatan Sendiri" : isGlobal ? "Global" : p.users?.username,
           patient_tag_color: isGlobal ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
         };
@@ -238,6 +300,7 @@ export default function Dashboard() {
     finally { setLoadingPatients(false); }
   };
 
+  // Memicu fetch data saat token/user tersedia
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
@@ -246,18 +309,22 @@ export default function Dashboard() {
     }
   }, [token, user]);
 
-  // --- FILTERING ---
+  // --- FILTERING LOGIC ---
+  // Memoized filter untuk performa pencarian yang lebih baik
   const filteredPatients = useMemo(() => {
     return patients
       .filter((p) => selectedTag === "Semua" ? true : p.patient_tag === selectedTag)
       .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [patients, searchTerm, selectedTag]);
 
-  // --- HANDLERS ---
+  // --- EVENT HANDLERS ---
+  
+  // Navigasi
   const handleDetailClick = (p) => navigate(`/profile/${p.id}`, { state: { patient: p } });
   const handleReportClick = (p) => navigate(`/report/${p.id}`, { state: { patient: p } });
   const handleStartSession = (p) => navigate(`/profile/${p.id}`, { state: { patientId: p.id, patient: p }, });
 
+  // CRUD Skenario
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
@@ -267,7 +334,7 @@ export default function Dashboard() {
       if (response.ok) {
         toast.success("Skenario berhasil dibuat!");
         setShowAddModal(false);
-        fetchPatients(user);
+        fetchPatients(user); // Refresh data
       } else { throw new Error("Gagal menyimpan"); }
     } catch (error) { toast.error("Gagal menyimpan skenario"); }
   };
@@ -278,29 +345,22 @@ export default function Dashboard() {
     toast.success("Data berhasil diperbarui (Simulasi UI)"); setShowEditModal(false); 
   };
 
-  // --- DELETE HANDLER BARU (PAKAI MODAL) ---
+  // Delete Handlers
   const handleTriggerDelete = (patient) => { 
     setDeleteTarget(patient); // Buka modal konfirmasi
   };
 
   const executeDelete = async () => {
     if (!deleteTarget) return;
-
-    // TODO: Tambahkan Logic Fetch API Delete disini
-    // const res = await fetch(..., { method: 'DELETE' });
-    
-    // Simulasi Sukses
+    // Logika hapus ke API akan ditambahkan di sini
     toast.success(`Skenario "${deleteTarget.name}" berhasil dihapus!`);
-    
     setDeleteTarget(null); // Tutup modal
-    // fetchPatients(user); // Uncomment ini kalau udah connect API
   };
 
+  // Render null saat verifikasi auth (mencegah flicker halaman)
   if (isVerifying) return null;
 
-  // ==========================================================================
-  // RENDER UI GANTENG
-  // ==========================================================================
+  // --- JSX RENDER ---
   return (
     <div className="h-full w-full flex flex-col overflow-y-auto"> 
       <Toaster position="top-center" reverseOrder={false} toastOptions={{ className: 'font-medium', style: { borderRadius: '10px', background: '#333', color: '#fff' } }}/>
@@ -311,7 +371,7 @@ export default function Dashboard() {
         <div className="w-full h-full py-10 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-screen-2xl space-y-8">
             
-            {/* 1. Header with Gradient Text */}
+            {/* Header Section */}
             <div className="space-y-1 animate-in slide-in-from-top-5 duration-500">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-sm">
                 Halo, <span>{user?.username}!</span>
@@ -321,7 +381,7 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* 2. Stat Cards Grid */}
+            {/* Statistic Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-700 delay-100">
               <AestheticStatCard
                 title="Total Sesi"
@@ -346,9 +406,8 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* 3. Pustaka Skenario (Glassmorphism) */}
+            {/* Main Content Area: Pustaka Skenario */}
             <GlassCard className="min-h-[500px] animate-in slide-in-from-bottom-5 duration-700 delay-200">
-              {/* Card Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -361,7 +420,7 @@ export default function Dashboard() {
                 </ActionButton>
               </div>
 
-              {/* Search & Filter Bar */}
+              {/* Search & Filter Controls */}
               <div className="flex flex-col md:flex-row gap-4 mb-8">
                 <div className="relative flex-grow group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -395,7 +454,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Patient List with Shimmer Loading */}
+              {/* Patient List Grid */}
               {loadingPatients ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {[1, 2, 3].map((i) => (
@@ -422,7 +481,7 @@ export default function Dashboard() {
               )}
             </GlassCard>
 
-            {/* 4. Riwayat Sesi */}
+            {/* Riwayat Sesi Area */}
             <GlassCard className="mb-10 animate-in slide-in-from-bottom-5 duration-700 delay-300">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
@@ -454,7 +513,7 @@ export default function Dashboard() {
 
           </div>
 
-          {/* MODALS */}
+          {/* Modal Popups */}
           <AddScenarioModal
             show={showAddModal}
             onClose={() => setShowAddModal(false)}
@@ -469,7 +528,6 @@ export default function Dashboard() {
             user={user}
           />
           
-          {/* === NEW AESTHETIC DELETE MODAL === */}
           <DeleteConfirmationModal
             isOpen={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}

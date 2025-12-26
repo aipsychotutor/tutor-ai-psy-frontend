@@ -49,21 +49,17 @@ function Chat() {
     navigate("/", { replace: true });
   };
 
-  // --- EFFECT 2: AVATAR FETCHING LOGIC ---
-  // Menangani logika pengambilan model 3D (Avatar)
   useEffect(() => {
-    // KASUS 1: Data avatar sudah ada dari navigasi sebelumnya (Ideal)
+
     if (preloadedAvatarPath) {
       setIsLoadingAvatar(false);
       return;
     }
 
-    // Tunggu sampai token & session_id tersedia
     if (!token || !session_id) {
       return;
     }
 
-    // KASUS 2: Halaman di-refresh (Data state hilang, perlu fetch ulang ke API)
     const fetchAvatarOnRefresh = async () => {
       try {
         // 1. Ambil detail sesi untuk mendapatkan patient_id
@@ -97,17 +93,16 @@ function Chat() {
           return handleAuthError();
         const avatarData = await avatarRes.json();
 
-        // 3. Set path avatar (dengan normalisasi slash)
         if (avatarData?.avatar_path) {
           const normalizedPath = avatarData.avatar_path.startsWith("/")
             ? avatarData.avatar_path
             : `/${avatarData.avatar_path}`;
           setAvatarPath(normalizedPath);
         } else {
-          setAvatarPath("/models/default.glb"); // Fallback ke default
+          setAvatarPath("/models/default.glb"); 
         }
       } catch (err) {
-        setAvatarPath("/models/default.glb"); // Fallback jika error
+        setAvatarPath("/models/default.glb"); 
       } finally {
         setIsLoadingAvatar(false);
       }

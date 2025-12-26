@@ -7,7 +7,7 @@ import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles }
 
 /**
  * ============================================================================
- * HELPER COMPONENTS (AESTHETIC UPGRADE)
+ * HELPER COMPONENTS
  * ============================================================================
  */
 

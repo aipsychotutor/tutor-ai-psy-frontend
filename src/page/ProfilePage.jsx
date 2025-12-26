@@ -7,7 +7,7 @@ import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles }
 
 /**
  * ============================================================================
- * HELPER COMPONENTS (CLEAN & SOLID STYLE)
+ * HELPER COMPONENTS 
  * ============================================================================
  */
 
@@ -218,7 +218,6 @@ export default function ProfilePage() {
             </div>
             
             <div className="flex-1 text-center md:text-left pt-16 md:pt-0 md:pl-8">
-              {/* NAMA SOLID PUTIH, GAK ADA GRADASI */}
               <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
                 {profileData.biodata.nama}
               </h1>
@@ -252,7 +251,6 @@ export default function ProfilePage() {
           {/* Main Card Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-500 delay-100">
             
-            {/* Left Column: Biodata Grid */}
             <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
               <InfoItem label="Pekerjaan" value={profileData.biodata.pekerjaan} icon={Briefcase} />
               <InfoItem label="Status" value={profileData.biodata.status} icon={Heart} />
