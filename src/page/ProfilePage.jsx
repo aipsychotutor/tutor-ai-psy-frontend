@@ -1,294 +1,140 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-// Import Navbar
-import Navbar from "../components/Navbar"; 
-// Import Icons
-import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; 
+import Navbar from "../components/Navbar";
+import Button from "../components/Dashboard/ButtonDashboard";
+import { User, Mail, Trash2, ArrowLeft } from "lucide-react"; 
+import DeleteAccountModal from "../components/ProfilePage/DeleteAccountModal";
 
-/**
- * ============================================================================
- * HELPER COMPONENTS 
- * ============================================================================
- */
-
-const ActionButton = ({ onClick, children, variant = 'primary', icon: Icon, className = '', disabled }) => {
-  const variants = {
-    primary: "bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-900/20 border border-transparent",
-    danger: "bg-red-600/10 hover:bg-red-600/20 text-red-500 border border-red-500/20",
-    secondary: "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${variants[variant]} ${className}`}
-    >
-      {Icon && <Icon size={20} strokeWidth={2.5} />}
-      {children}
-    </button>
-  );
-};
-
-// Avatar Bersih (Tanpa Glow Warna-Warni)
-const AestheticAvatar = ({ src, alt }) => (
-  <div className="relative group">
-    <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full p-1 bg-white/10 backdrop-blur-sm shadow-2xl border border-white/10">
-      <img
-        src={src || "/images/default.png"}
-        alt={alt}
-        className="w-full h-full rounded-full object-cover bg-gray-800"
-        onError={(e) => { e.target.src = "/images/default.png"; }}
-      />
-    </div>
-   
-    <div className="absolute bottom-2 right-2 p-2 bg-indigo-600 rounded-full border-4 border-[#1a1a2e] text-white shadow-md">
-      <User size={18} />
-    </div>
-  </div>
-);
-
-// Info Item (Minimalis)
-const InfoItem = ({ label, value, icon: Icon }) => (
-  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-    <div className="p-3 rounded-xl bg-white/5 text-gray-300">
-      <Icon size={20} />
-    </div>
-    <div>
-      <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
-      <p className="text-lg font-medium text-white">{value}</p>
-    </div>
-  </div>
-);
-
-// Trait Chip (Satu Warna Kalem)
-const TraitChip = ({ label }) => (
-  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-500/10 text-indigo-200 border border-indigo-500/20 text-sm font-medium">
-    <Sparkles size={14} className="text-indigo-400" />
-    {label}
-  </span>
-);
-
-/**
- * ============================================================================
- * MAIN PAGE COMPONENT
- * ============================================================================
- */
 export default function ProfilePage() {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
-  const { patientId } = useParams();
+  
+  const user = JSON.parse(localStorage.getItem("user")) || { username: "Jojo", email: "jojo@example.com" };
 
-  // State
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [profileData, setProfileData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isStartingSession, setIsStartingSession] = useState(false);
-
-  // Auth Check
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-
-    if (!storedToken || !storedUser) {
-      navigate("/", { replace: true });
-    } else {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-  }, [navigate]);
-
-  // Handlers
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/", { replace: true });
+    navigate("/login");
   };
 
-  const handleBack = () => navigate('/dashboard');
-
-  // Start Session Logic
-  const handleStartSession = async () => {
-    setIsStartingSession(true);
-    try {
-      // 1. Set Persona
-      const personaRes = await fetch("http://localhost:3000/api/chat/set-persona-from-patient", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ patient_id: patientId }),
-      });
-      if (!personaRes.ok) throw new Error("Gagal set persona");
-
-      // 2. Create Session
-      const sessionRes = await fetch("http://localhost:3000/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ patient_id: patientId }),
-      });
-      const sessionData = await sessionRes.json();
-
-      if (sessionRes.ok && sessionData.data) {
-        navigate(`/chat/${sessionData.data.session_id}`, {
-          state: { patient: profileData, avatarPath: profileData.avatarPath },
-        });
-      } else {
-        throw new Error(sessionData.message || "Gagal membuat sesi");
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
-      setIsStartingSession(false);
-    }
-  };
-
-  // Fetch Data
-  useEffect(() => {
-    if (!token || !patientId) return;
-    const fetchPatientData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/patients/${patientId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.status === 401) return handleLogout();
-        if (!response.ok) throw new Error("Gagal mengambil data");
-
-        const data = await response.json();
-        setProfileData({
-          biodata: {
-            nama: data.patient_name,
-            usia: data.age ? `${data.age} Tahun` : "-",
-            jenisKelamin: data.gender || "-",
-            pekerjaan: data.occupation || "-",
-            status: data.marital_status || "-",
-          },
-          latarBelakang: {
-            cerita: data.background_story || "Tidak ada informasi.",
-          },
-          kepribadian: Array.isArray(data.personality_traits) ? data.personality_traits : [],
-          profileImage: data.profile_image,
-          avatarPath: data.avatar_path,
-        });
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPatientData();
-  }, [patientId, token]);
-
-  // Render Loading / Error
-  if (loading) return (
-    <div className="h-full w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
-        <p className="text-white/60 font-medium">Memuat data...</p>
-      </div>
-    </div>
-  );
-
-  if (error || !profileData) return (
-    <div className="h-full w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex flex-col items-center justify-center gap-6 px-4">
-      <div className="p-4 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-        <Activity size={48} />
-      </div>
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Gagal Memuat Data</h2>
-        <p className="text-white/50">{error || "Data pasien tidak ditemukan."}</p>
-      </div>
-      <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft}>Kembali ke Dashboard</ActionButton>
-    </div>
-  );
-
-  // Main Render
   return (
-    <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
+    // PERBAIKAN DI SINI:
+    // 1. Hapus 'bg-gray-100 dark:bg-gray-950'
+    // 2. Gunakan 'bg-transparent' agar background body (gradient ungu) terlihat
+    <div className="h-full w-full overflow-y-auto bg-transparent">
       
-      <Navbar user={user} onLogout={handleLogout} isSimulation={false} />
+      <Navbar 
+        user={user} 
+        onLogout={handleLogout} 
+        isSimulation={false} 
+      />
 
-      <div className="flex-grow pt-8 pb-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl">
+      <main className="max-w-4xl mx-auto py-10 px-4">
+        
+        {/* Header Page */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-12 animate-in slide-in-from-top-5 duration-500">
-            <div className="relative z-10 -mb-16 md:mb-0 md:-mr-12">
-              <AestheticAvatar src={profileData.profileImage} alt={profileData.biodata.nama} />
-            </div>
-            
-            <div className="flex-1 text-center md:text-left pt-16 md:pt-0 md:pl-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-3">
-                {profileData.biodata.nama}
-              </h1>
-              
-              <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                <span className="px-3 py-1 rounded-md bg-white/10 text-gray-200 text-sm font-medium border border-white/10">
-                  {profileData.biodata.usia}
-                </span>
-                <span className="px-3 py-1 rounded-md bg-white/10 text-gray-200 text-sm font-medium border border-white/10">
-                  {profileData.biodata.jenisKelamin}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex gap-3 w-full md:w-auto">
-              <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft} className="flex-1 md:flex-none">
-                Kembali
-              </ActionButton>
-              <ActionButton 
-                onClick={handleStartSession} 
-                variant="primary" 
-                icon={isStartingSession ? Activity : Play} 
-                className="flex-1 md:flex-none"
-                disabled={isStartingSession}
-              >
-                {isStartingSession ? "Memulai..." : "Mulai Sesi"}
-              </ActionButton>
-            </div>
+          <div>
+            {/* Tambahkan text-white agar tulisan kontras dengan background gelap */}
+            <h1 className="text-3xl font-bold text-white">
+              Profil Pengguna
+            </h1>
           </div>
 
-          {/* Main Card Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-500 delay-100">
-            
-            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InfoItem label="Pekerjaan" value={profileData.biodata.pekerjaan} icon={Briefcase} />
-              <InfoItem label="Status" value={profileData.biodata.status} icon={Heart} />
-              <InfoItem label="Usia" value={profileData.biodata.usia} icon={User} />
-            </div>
-
-            {/* Bottom Row: Story & Traits */}
-            <div className="lg:col-span-2 backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <FileText className="text-indigo-400" /> Latar Belakang Cerita
-              </h2>
-              <div className="prose prose-invert max-w-none">
-                <p className="text-gray-300 leading-relaxed text-lg">
-                  {profileData.latarBelakang.cerita}
-                </p>
-              </div>
-            </div>
-
-            <div className="lg:col-span-1 backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-8 shadow-2xl">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Activity className="text-indigo-400" /> Kepribadian
-              </h2>
-              
-              {profileData.kepribadian.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {profileData.kepribadian.map((trait, idx) => (
-                    <TraitChip key={idx} label={trait} />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-white/40 italic">Tidak ada data kepribadian.</p>
-              )}
-            </div>
-
-          </div>
-
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center justify-center gap-2 bg-white text-gray-700 px-5 py-2.5 rounded-full shadow-sm hover:bg-gray-100 transition-all font-medium text-sm w-fit"
+          >
+            <ArrowLeft size={18} />
+            Kembali
+          </button>
         </div>
-      </div>
+
+        {/* KARTU KONTEN UTAMA */}
+        {/* Background kartu tetap putih/gelap agar konten terbaca jelas */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden">
+          
+          {/* HEADER DALAM */}
+          <div className="p-8 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center sm:flex-row sm:items-start gap-6 bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="w-24 h-24 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-indigo-50 dark:border-indigo-900/30 shadow-sm">
+              <User size={48} className="text-indigo-500 dark:text-indigo-400" />
+            </div>
+            <div className="text-center sm:text-left space-y-1 pt-2">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{user.username}</h2>
+              <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
+            </div>
+          </div>
+
+          <div className="p-8 space-y-10">
+            {/* Detail Akun */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2 text-gray-900 dark:text-white">Detail Lengkap</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500 uppercase font-bold tracking-wider">Username</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-gray-700 dark:text-gray-300">
+                    <User size={18} className="text-gray-400" /> 
+                    <span className="font-medium">{user.username}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500 uppercase font-bold tracking-wider">Email</label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg text-gray-700 dark:text-gray-300">
+                    <Mail size={18} className="text-gray-400" /> 
+                    <span className="font-medium">{user.email}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Ganti Password */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-semibold border-b pb-2 text-gray-900 dark:text-white">Keamanan Password</h3>
+              <div className="space-y-4 max-w-lg">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Lama</label>
+                  <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password Baru</label>
+                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                    <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Konfirmasi</label>
+                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:bg-gray-900 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                    </div>
+                </div>
+                <div className="pt-2">
+                    <Button variant="primary">Update Password</Button>
+                </div>
+              </div>
+            </section>
+
+            {/* Danger Zone */}
+            <section className="pt-6 border-t border-red-100 dark:border-red-900/30">
+              <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4 border border-red-100 dark:border-red-900/20">
+                <div className="space-y-1 text-center sm:text-left">
+                  <h4 className="text-red-700 dark:text-red-400 font-bold text-lg">Zona Berbahaya</h4>
+                  <p className="text-sm text-red-600/80 dark:text-red-400/60">Menghapus akun akan menghilangkan semua data secara permanen.</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  className="bg-white text-red-600 border border-red-200 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors px-6 shadow-sm"
+                  onClick={() => setShowDeleteModal(true)}
+                >
+                  <Trash2 size={18} className="mr-2" /> Hapus Akun
+                </Button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <DeleteAccountModal 
+        show={showDeleteModal} 
+        onClose={() => setShowDeleteModal(false)} 
+      />
     </div>
   );
 }
