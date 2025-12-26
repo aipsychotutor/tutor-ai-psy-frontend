@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, User, Briefcase, Heart, Activity, FileText, Sparkles, Plus, Trash2 } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 
 /**
  * ============================================================================
@@ -152,17 +153,78 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
   };
 
   // Handler Submit
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e) => {
+    console.log("Submit diklik!")
+    e.preventDefault(); // Mencegah reload halaman
     
-    // Bersihkan traits kosong sebelum simpan
+    // Daftar field yang wajib diisi (Validasi Mandatory)
+    const requiredFields = [
+      { key: "patient_name", label: "Nama Karakter" },
+      { key: "age", label: "Usia" },
+      { key: "gender", label: "Jenis Kelamin" },
+      { key: "marital_status", label: "Status Pernikahan" },
+      { key: "occupation", label: "Pekerjaan" },
+      { key: "background_story", label: "Latar Belakang Cerita" },
+      { key: "personality_type", label: "Tipe Kepribadian" },
+      { key: "symptom_intensity", label: "Intensitas Gejala" },
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field.key] || formData[field.key].toString().trim() === "") {
+        toast.error(`Mohon lengkapi field: ${field.label}`);
+        return;
+      }
+    }
+
+    // Validasi Logika Angka
+    if (parseInt(formData.age) <= 0) {
+      toast.error("Usia harus berupa angka positif");
+      return;
+    }
+
+    if (parseInt(formData.symptom_intensity) < 1 || parseInt(formData.symptom_intensity) > 10) {
+      toast.error("Intensitas gejala harus antara 1 sampai 10");
+      return;
+    }
+
+    // Bersihkan traits kosong sebelum kirim
     const cleanedTraits = formData.personality_traits.filter(t => t.trim() !== "");
-    
-    onSave({ 
-      ...initialData, 
-      ...formData, 
-      personality_traits: cleanedTraits.length > 0 ? cleanedTraits : null
-    }); 
+    const dataToSubmit = { ...formData, personality_traits: cleanedTraits };
+
+    const token = localStorage.getItem("token");
+
+    try {
+      // Tampilkan loading karena proses Embedding RAG membutuhkan waktu
+      const loadingToast = toast.loading("Sedang memperbarui data AI...");
+
+      // initialData.id diambil dari Dashboard mapping
+      const response = await fetch(`http://localhost:3000/api/patients/${initialData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(dataToSubmit),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.dismiss(loadingToast);
+        toast.success("Data pasien berhasil diperbarui!");
+        
+        // Kirim data terbaru ke parent (Dashboard) agar UI terupdate
+        if (onSave) onSave(result.data); 
+        
+        onClose(); // Tutup modal
+      } else {
+        toast.dismiss(loadingToast);
+        throw new Error(result.message || "Gagal mengupdate data");
+      }
+    } catch (error) {
+      console.error("Update Error:", error);
+      toast.error(error.message || "Terjadi kesalahan koneksi");
+    }
   };
 
   if (!show) return null;
@@ -246,10 +308,17 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                   onChange={handleChange}
                   icon={Heart}
                   options={[
-                    { value: "Belum Menikah", label: "Belum Menikah" },
-                    { value: "Menikah", label: "Menikah" },
-                    { value: "Cerai", label: "Cerai" },
-                    { value: "Janda/Duda", label: "Janda/Duda" }
+                    { value: "Belum Kawin", label: "Belum Kawin" },
+                    { value: "Kawin Tercatat", label: "Kawin Tercatat" },
+                    {
+                      value: "Kawin Belum Tercatat",
+                      label: "Kawin Belum Tercatat",
+                    },
+                    {
+                      value: "Cerai Hidup Tercatat",
+                      label: "Cerai Hidup Tercatat",
+                    },
+                    { value: "Cerai Mati", label: "Cerai Mati" },
                   ]}
                 />
               </div>

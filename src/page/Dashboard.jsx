@@ -341,8 +341,22 @@ export default function Dashboard() {
 
   const handleTriggerEdit = (p) => { setSelectedScenarioToEdit(p); setShowEditModal(true); };
   
-  const handleSaveUpdate = async () => { 
-    toast.success("Data berhasil diperbarui (Simulasi UI)"); setShowEditModal(false); 
+  const handleSaveUpdate = (updatedPatientFromAPI) => {
+    setPatients((prevPatients) =>
+      prevPatients.map((p) =>
+        p.id === updatedPatientFromAPI.patient_id || p.id === updatedPatientFromAPI.id
+          ? {
+              ...p, 
+              ...updatedPatientFromAPI,
+              name: updatedPatientFromAPI.patient_name || updatedPatientFromAPI.name,
+              id: updatedPatientFromAPI.patient_id || updatedPatientFromAPI.id,
+            }
+          : p
+      )
+    );
+    
+    // Tutup modal
+    setShowEditModal(false);
   };
 
   // Delete Handlers
@@ -350,11 +364,35 @@ export default function Dashboard() {
     setDeleteTarget(patient); // Buka modal konfirmasi
   };
 
-  const executeDelete = async () => {
+  const executeDelete = async (e) => {
+    // Mencegah reload halaman total
+    if (e && e.preventDefault) e.preventDefault();
+
     if (!deleteTarget) return;
-    // Logika hapus ke API akan ditambahkan di sini
-    toast.success(`Skenario "${deleteTarget.name}" berhasil dihapus!`);
-    setDeleteTarget(null); // Tutup modal
+
+    const targetId = deleteTarget.id;
+    const loadingToastId = toast.loading(`Berhasil menghapus ${deleteTarget.name}...`);
+
+    try {
+      const res = await fetch(`http://localhost:3000/api/patients/${targetId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("Gagal menghapus di server.");
+
+      // Hilangkan data dari state pasien tanpa reload
+      setPatients((prev) => prev.filter((p) => p.id !== targetId));
+      setSessionPatients((prev) => prev.filter((s) => s.id !== targetId));
+
+      toast.success("Skenario berhasil dihapus.");
+      setDeleteTarget(null); // Tutup modal konfirmasi
+
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      toast.dismiss(loadingToastId);
+    }
   };
 
   // Render null saat verifikasi auth (mencegah flicker halaman)
