@@ -416,7 +416,8 @@ export default function Dashboard() {
                   patients={filteredPatients}
                   onStartSession={handleStartSession}
                   onEditScenario={handleTriggerEdit}
-                  onDeleteScenario={handleTriggerDelete} // Ini sekarang buka Modal Baru
+                  onDeleteScenario={handleTriggerDelete}
+                  user={user}  
                 />
               )}
             </GlassCard>
