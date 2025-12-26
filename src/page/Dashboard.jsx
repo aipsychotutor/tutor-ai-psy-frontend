@@ -6,7 +6,7 @@ import { Search, Filter, Heart, HelpCircle, Layers } from "lucide-react";
 
 // Import Custom Components
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
-import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; // <--- IMPORT BARU
+import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; 
 import Button from "../components/Dashboard/ButtonDashboard";
 import { Card, CardHeader } from "../components/Dashboard/Card";
 import Navbar from "../components/Navbar";
@@ -19,44 +19,59 @@ import PatientList, {
  * ============================================================================
  * DASHBOARD COMPONENT
  * ============================================================================
+ * * Halaman utama aplikasi yang berfungsi sebagai pusat kontrol pengguna.
+ * * Fitur Utama:
+ * 1. Otentikasi: Memeriksa token & user session saat halaman dimuat.
+ * 2. Statistik: Menampilkan ringkasan performa (Total Sesi, Skor Empati, dll).
+ * 3. Manajemen Skenario: Melihat, Mencari, Memfilter, Menambah, Mengedit, dan Menghapus skenario.
+ * 4. Riwayat Sesi: Menampilkan daftar sesi latihan yang telah diselesaikan.
+ * * Layout Note:
+ * Menggunakan struktur flexbox dengan `flex-grow` dan `overflow-y-auto` internal
+ * untuk mengatasi masalah background gradient yang terpotong pada konten panjang/pendek.
+ * * @component
  */
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  // --- STATE: OTENTIKASI & USER ---
+  // ==========================================================================
+  // 1. STATE MANAGEMENT
+  // ==========================================================================
+
+  // --- Auth State ---
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isVerifying, setIsVerifying] = useState(true);
+  const [isVerifying, setIsVerifying] = useState(true); // Loading state saat cek localStorage
 
-  // --- STATE: DATA PASIEN (SKENARIO) ---
+  // --- Data Skenario State ---
   const [patients, setPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
 
-  // State Modal Tambah
+  // --- Modal Visibility State ---
   const [showAddModal, setShowAddModal] = useState(false);
-
-  // State Modal Edit (BARU)
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null);
+  const [selectedScenarioToEdit, setSelectedScenarioToEdit] = useState(null); // Data sementara untuk diedit
 
-  // --- STATE: RIWAYAT SESI ---
+  // --- Data Riwayat Sesi State ---
   const [sessionPatients, setSessionPatients] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
 
-  // --- STATE: STATISTIK ---
+  // --- Statistik State ---
   const [totalSessions, setTotalSessions] = useState(0);
   const [avgEmpathyScore, setAvgEmpathyScore] = useState(0);
   const [avgQuestionScore, setAvgQuestionScore] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // --- STATE: FILTER & PENCARIAN ---
+  // --- Filter & Search State ---
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTag, setSelectedTag] = useState("Semua");
+  const [selectedTag, setSelectedTag] = useState("Semua"); // Opsi: "Semua", "Global", "Buatan Sendiri"
+
+  // ==========================================================================
+  // 2. AUTHENTICATION & INITIALIZATION
+  // ==========================================================================
 
   /**
-   * ==========================================================================
-   * AUTHENTICATION LOGIC
-   * ==========================================================================
+   * Mengecek keberadaan token dan user data di localStorage saat komponen dimount.
+   * Jika tidak ada, redirect ke halaman Login.
    */
   useEffect(() => {
     let verificationTimer = null;
@@ -69,6 +84,7 @@ export default function Dashboard() {
       } else {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
+        // Memberi sedikit delay agar transisi tidak flicker
         verificationTimer = setTimeout(() => {
           setIsVerifying(false);
         }, 500);
@@ -84,12 +100,18 @@ export default function Dashboard() {
     };
   }, [navigate]);
 
+  /**
+   * Menghapus sesi lokal dan mengarahkan kembali ke login jika token expired/invalid.
+   */
   const handleAuthError = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/", { replace: true });
   };
 
+  /**
+   * Handler logout manual oleh user.
+   */
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -98,13 +120,13 @@ export default function Dashboard() {
     navigate("/", { replace: true });
   };
 
-  /**
-   * ==========================================================================
-   * DATA FETCHING FUNCTIONS
-   * ==========================================================================
-   */
+  // ==========================================================================
+  // 3. DATA FETCHING (API CALLS)
+  // ==========================================================================
 
-  // 1. Fetch Stats
+  /**
+   * Mengambil data statistik ringkasan user (Skor rata-rata).
+   */
   const fetchStats = async () => {
     if (!token) {
       setLoadingStats(false);
@@ -130,7 +152,10 @@ export default function Dashboard() {
     }
   };
 
-  // 2. Fetch Session History
+  /**
+   * Mengambil riwayat sesi latihan user.
+   * Melakukan deduplikasi data pasien berdasarkan patient_id agar list terlihat rapi.
+   */
   const fetchSessionHistory = async () => {
     if (!token) {
       setLoadingSessions(false);
@@ -148,6 +173,7 @@ export default function Dashboard() {
       const sessions = data?.data || [];
       setTotalSessions(sessions.length);
 
+      // Map untuk mengambil data pasien unik dari sesi-sesi yang ada
       const uniquePatients = Array.from(
         new Map(
           sessions.map((s) => [
@@ -170,7 +196,10 @@ export default function Dashboard() {
     }
   };
 
-  // 3. Fetch Patients
+  /**
+   * Mengambil daftar seluruh pasien (Global & Buatan User).
+   * Melakukan mapping data untuk menentukan Tag (Label) dan Warna Tag.
+   */
   const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
@@ -186,12 +215,12 @@ export default function Dashboard() {
         const isGlobal = p.is_global || p.user_id === null;
         const isCurrentUser = p.user_id === currentUser?.user_id;
 
+        // Logika penentuan Tag (Global vs Buatan Sendiri)
         return {
           id: p.patient_id,
           name: p.patient_name,
           image: p.profile_image || null,
           personality_traits: p.personality_traits || [],
-          // Logic data asli dari DB
           background_story: p.background_story,
           personality_type: p.personality_type,
           symptom_intensity: p.symptom_intensity,
@@ -221,7 +250,7 @@ export default function Dashboard() {
     }
   };
 
-  // Jalankan fetch saat token ready
+  // Memicu fetch data ketika token atau user tersedia
   useEffect(() => {
     if (token) {
       fetchSessionHistory();
@@ -230,10 +259,15 @@ export default function Dashboard() {
     }
   }, [token, user]);
 
+  // ==========================================================================
+  // 4. COMPUTED LOGIC (FILTERING)
+  // ==========================================================================
+
   /**
-   * ==========================================================================
-   * FILTERING LOGIC
-   * ==========================================================================
+   * useMemo untuk memfilter daftar pasien secara real-time.
+   * Filter berdasarkan:
+   * 1. Dropdown Tag (Semua / Global / Buatan Sendiri)
+   * 2. Input Pencarian (Nama pasien)
    */
   const filteredPatients = useMemo(() => {
     return patients
@@ -242,30 +276,21 @@ export default function Dashboard() {
         return patient.patient_tag === selectedTag;
       })
       .filter((patient) => {
-        return patient.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return patient.name?.toLowerCase().includes(searchTerm.toLowerCase());
       });
   }, [patients, searchTerm, selectedTag]);
 
+  // ==========================================================================
+  // 5. EVENT HANDLERS (NAVIGATION & MODALS)
+  // ==========================================================================
+
+  const handleDetailClick = (patient) => navigate(`/profile/${patient.id}`, { state: { patient: patient } });
+  const handleReportClick = (patient) => navigate(`/report/${patient.id}`, { state: { patient: patient } });
+  const handleStartSession = (patient) => navigate(`/profile/${patient.id}`, { state: { patientId: patient.id, patient: patient }, });
+
   /**
-   * ==========================================================================
-   * EVENT HANDLERS
-   * ==========================================================================
+   * Menyimpan Skenario Baru ke Database.
    */
-
-  // Navigasi
-  const handleDetailClick = (patient) => {
-    navigate(`/profile/${patient.id}`, { state: { patient: patient } });
-  };
-  const handleReportClick = (patient) => {
-    navigate(`/report/${patient.id}`, { state: { patient: patient } });
-  };
-  const handleStartSession = (patient) => {
-    navigate(`/profile/${patient.id}`, {
-      state: { patientId: patient.id, patient: patient },
-    });
-  };
-
-  // --- HANDLER TAMBAH SCENARIO ---
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
@@ -284,7 +309,7 @@ export default function Dashboard() {
       if (response.ok) {
         toast.success("Skenario berhasil disimpan!");
         setShowAddModal(false);
-        fetchPatients(user);
+        fetchPatients(user); // Refresh data
       } else {
         throw new Error(result.message || "Gagal menyimpan pasien");
       }
@@ -293,62 +318,60 @@ export default function Dashboard() {
     }
   };
 
-  // --- HANDLER EDIT / UPDATE SCENARIO (BARU) ---
-
-  // 1. Trigger saat klik "Update Pasien" di PatientList
-  const handleTriggerEdit = (patient) => {
-    setSelectedScenarioToEdit(patient);
-    setShowEditModal(true);
-  };
-
-  // 2. Trigger saat klik "Delete Skenario" di PatientList
+  /**
+   * Memicu modal edit dengan data pasien yang dipilih.
+   */
+  const handleTriggerEdit = (patient) => { setSelectedScenarioToEdit(patient); setShowEditModal(true); };
+  
+  /**
+   * Menghapus skenario (Saat ini masih simulasi UI).
+   */
   const handleTriggerDelete = async (patient) => {
-    // Logic Delete bisa ditambahkan disini (fetch API DELETE)
-    if (
-      window.confirm(
-        `Apakah Anda yakin ingin menghapus skenario ${patient.name}?`
-      )
-    ) {
-      console.log("Deleting:", patient.id);
-      // Simulasi sukses
-      toast.success("Fitur delete belum tersambung ke API (UI Only)");
+    if (window.confirm(`Apakah Anda yakin ingin menghapus skenario ${patient.name}?`)) {
+        // TODO: Sambungkan ke endpoint DELETE API
+        toast.success("Fitur delete belum tersambung ke API (UI Only)");
     }
   };
 
-  // 3. Callback saat form Update disubmit
+  /**
+   * Menyimpan perubahan edit skenario (Saat ini masih simulasi UI).
+   */
   const handleSaveUpdate = async (updatedData) => {
-    // Disini nanti logic fetch API PUT/PATCH ke backend
-    console.log("Updated Data received in Dashboard:", updatedData);
-
-    // Simulasi sukses
+    // TODO: Sambungkan ke endpoint PUT/PATCH API
     toast.success("Berhasil memperbarui data pasien (Simulasi UI)");
     setShowEditModal(false);
-    // fetchPatients(user); // Uncomment jika backend sudah siap
   };
 
   if (isVerifying) return null;
 
+  // ==========================================================================
+  // 6. RENDER UI
+  // ==========================================================================
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-950">
+    <div className="h-full w-full flex flex-col overflow-y-auto"> 
       <Toaster position="top-center" reverseOrder={false} />
 
       <Navbar user={user} onLogout={handleLogout} />
 
-      <main className="flex-grow">
-        <div className="bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd py-10 px-4 sm:px-6 lg:px-8 h-full">
+      {/* Main Content: flex-grow mengisi sisa layar, bg-gradient memberikan visual */}
+      <main className="flex-grow w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
+        
+        {/* Container: min-h-full memastikan gradient merentang ke bawah jika konten sedikit */}
+        <div className="w-full h-full py-10 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-screen-2xl space-y-6">
+            
             {/* Header Title */}
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                 Selamat Datang, {user?.username}!
               </h1>
-              <h2 className="text-white text-xl">
+              <h2 className="text-white text-xl opacity-90">
                 Berikut adalah ringkasan aktivitas sesi latihan Anda hari ini
               </h2>
             </div>
 
             {/* --- SECTION 1: STAT CARD GRID --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5 items-start">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5 items-stretch">
               <StatCard
                 title="Total Sesi"
                 value={totalSessions}
@@ -376,7 +399,7 @@ export default function Dashboard() {
             </div>
 
             {/* --- SECTION 2: PUSTAKA SKENARIO --- */}
-            <Card span={3} className="sm:p-4 lg:p-5 min-h-[80px] h-[500px]">
+            <Card span={3} className="sm:p-4 lg:p-5 min-h-[400px]">
               <CardHeader
                 title="Pustaka Skenario"
                 action={
@@ -389,61 +412,48 @@ export default function Dashboard() {
                   </Button>
                 }
               />
-              <p className="text-sm mb-2 text-gray-700 dark:text-gray-300">
+              <p className="text-sm mb-4 text-gray-600 dark:text-gray-400">
                 Pilih skenario untuk memulai latihan
               </p>
 
-              {/* Search & Filter Controls */}
-              <div className="flex flex-col sm:flex-row gap-3 my-4">
+              {/* Controls: Search Bar & Filter Dropdown */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <div className="relative flex-grow">
-                  <label htmlFor="search-scenario" className="sr-only">
-                    Cari Skenario
-                  </label>
+                  <label htmlFor="search-scenario" className="sr-only">Cari Skenario</label>
                   <input
                     type="text"
                     id="search-scenario"
                     placeholder="Cari berdasarkan nama..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
                   />
-                  <Search
-                    size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
+                  <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
 
                 <div className="relative sm:min-w-[180px]">
-                  <label htmlFor="filter-tag" className="sr-only">
-                    Filter berdasarkan Tag
-                  </label>
+                  <label htmlFor="filter-tag" className="sr-only">Filter Tag</label>
                   <select
                     id="filter-tag"
                     value={selectedTag}
                     onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                   >
                     <option value="Semua">Semua Tag</option>
                     <option value="Global">Global</option>
                     <option value="Buatan Sendiri">Buatan Sendiri</option>
                   </select>
-                  <Filter
-                    size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
+                  <Filter size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 </div>
               </div>
 
-              {/* List Pasien */}
+              {/* List Component */}
               {loadingPatients ? (
-                <div className="text-center py-4 text-gray-700 dark:text-gray-300">
-                  Memuat daftar skenario...
-                </div>
+                <div className="text-center py-10 text-gray-500">Memuat daftar skenario...</div>
               ) : (
                 <PatientList
                   patients={filteredPatients}
                   onStartSession={handleStartSession}
-                  // --- MENGIRIM PROPS KE LIST UTAMA ---
                   onEditScenario={handleTriggerEdit}
                   onDeleteScenario={handleTriggerDelete}
                 />
@@ -451,16 +461,14 @@ export default function Dashboard() {
             </Card>
 
             {/* --- SECTION 3: RIWAYAT SESI --- */}
-            <Card span={3} className="sm:p-4 lg:p-5">
+            <Card span={3} className="sm:p-4 lg:p-5 mb-10">
               <CardHeader title="Riwayat Sesi" />
               {loadingSessions ? (
-                <div className="text-center py-4 text-gray-700 dark:text-gray-300">
-                  Memuat riwayat sesi...
-                </div>
+                <div className="text-center py-4 text-gray-500">Memuat riwayat sesi...</div>
               ) : sessionPatients.length === 0 ? (
-                <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                  Belum ada riwayat sesi. <br />
-                  Mulai sebuah sesi dan laporannya akan muncul di sini.
+                <div className="text-center text-gray-500 py-10 bg-gray-50 dark:bg-gray-900/50 rounded-lg mt-2 border border-dashed border-gray-300 dark:border-gray-700">
+                  <p className="font-medium">Belum ada riwayat sesi.</p>
+                  <p className="text-sm mt-1">Mulai sebuah sesi dan laporannya akan muncul di sini.</p>
                 </div>
               ) : (
                 <SessionPatientList
@@ -472,17 +480,13 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* === MODAL AREA (DI LUAR GRID UTAMA) === */}
-
-          {/* Modal Tambah Skenario */}
+          {/* === MODAL AREA === */}
           <AddScenarioModal
             show={showAddModal}
             onClose={() => setShowAddModal(false)}
             onSave={handleSaveScenario}
             user={user}
           />
-
-          {/* Modal Edit Skenario (BARU) */}
           <EditScenarioModal
             show={showEditModal}
             initialData={selectedScenarioToEdit}

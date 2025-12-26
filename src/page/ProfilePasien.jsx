@@ -248,7 +248,7 @@ export default function ProfilePage() {
   // --- RENDER UTAMA ---
   return (
     // Hapus pt-20 di sini agar Navbar menempel di atas
-    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd pb-8">
+    <div className="h-full w-full overflow-y-auto bg-transparent flex flex-col">
       
       {/* 2. PASANG NAVBAR DISINI */}
       {/* onEndSession diarahkan ke handleBack karena belum masuk sesi chat */}

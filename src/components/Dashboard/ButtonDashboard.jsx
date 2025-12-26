@@ -30,10 +30,10 @@ export default function ButtonDashboard({
   
   // 2. Variants: Definisi tema warna (Background, Text, Hover, & Dark Mode)
   const variants = {
-    primary: 'bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus-visible:ring-indigo-500',
+    primary: 'bg-ungu text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 focus-visible:ring-indigo-500',
     secondary: 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 focus-visible:ring-gray-500',
     ghost: 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 focus-visible:ring-indigo-500',
-    link: 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 focus-visible:ring-indigo-500'
+    link: 'text-ungu dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 focus-visible:ring-indigo-500'
   };
   
   // 3. Sizes: Pengaturan dimensi (Padding & Font Size)

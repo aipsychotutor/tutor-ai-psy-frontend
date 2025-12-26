@@ -179,14 +179,14 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
   const genderOptions = [
     { value: "Laki-laki", label: "Laki-laki" },
     { value: "Perempuan", label: "Perempuan" },
-    { value: "Lainnya", label: "Lainnya" },
   ];
 
   const maritalStatusOptions = [
-    { value: "Belum Menikah", label: "Belum Menikah" },
-    { value: "Menikah", label: "Menikah" },
-    { value: "Cerai", label: "Cerai" },
-    { value: "Duda/Janda", label: "Duda/Janda" },
+    { value: "Belum Kawin", label: "Belum Kawin" },
+    { value: "Kawin Tercatat", label: "Kawin Tercatat" },
+    { value: "Kawin Belum Tercatat", label: "Kawin Belum Tercatat" },
+    { value: "Cerai Hidup Tercatat", label: "Cerai Hidup Tercatat" },
+    { value: "Cerai Mati", label: "Cerai Mati" },
   ];
 
   // Early return jika modal tidak ditampilkan
@@ -238,7 +238,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   value={formData.patient_name}
                   onChange={(e) => handleChange("patient_name", e.target.value)}
                   placeholder="Nama lengkap pasien"
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                 />
               </div>
 
@@ -259,7 +259,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     placeholder="25"
                     min="1"
                     max="120"
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   />
                 </div>
                 
@@ -272,7 +272,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     id="gender"
                     value={formData.gender}
                     onChange={(e) => handleChange("gender", e.target.value)}
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
                     {genderOptions.map((option) => (
@@ -297,7 +297,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     onChange={(e) =>
                       handleChange("marital_status", e.target.value)
                     }
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
                     {maritalStatusOptions.map((option) => (
@@ -322,7 +322,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   value={formData.occupation}
                   onChange={(e) => handleChange("occupation", e.target.value)}
                   placeholder="Contoh: Software Engineer"
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                 />
               </div>
             </div>
@@ -349,7 +349,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   }
                   placeholder="Jelaskan latar belakang pasien..."
                   rows={5}
-                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 resize-none"
+                  className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400 resize-none"
                 />
               </div>
 
@@ -368,7 +368,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     onChange={(e) =>
                       handleChange("personality_type", e.target.value)
                     }
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   >
                     <option value="">Pilih...</option>
                     {personalityTypeOptions.map((option) => (
@@ -396,7 +396,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     placeholder="5"
                     min="1"
                     max="10"
-                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                    className="block w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                   />
                 </div>
               </div>
@@ -429,7 +429,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                       value={trait}
                       onChange={(e) => handleTraitChange(index, e.target.value)}
                       placeholder={`Contoh trait ke-${index + 1}...`}
-                      className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                      className="flex-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ungu dark:focus:ring-indigo-400"
                     />
                     {/* Tombol hapus trait, hanya muncul jika ada lebih dari 1 trait */}
                     {formData.personality_traits.length > 1 && (

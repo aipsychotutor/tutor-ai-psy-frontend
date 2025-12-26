@@ -6,11 +6,13 @@ import Navbar from "../components/Navbar";
  * ============================================================================
  * HELPER UI COMPONENTS
  * ============================================================================
- * Komponen-komponen kecil yang bersifat 'stateless' atau presentational
- * untuk menjaga kode utama tetap bersih.
+ * Komponen-komponen kecil (Stateless) untuk menjaga kode utama tetap bersih.
  */
 
-// Button Component: Wrapper tombol standar dengan varian style
+/**
+ * Button Component
+ * Wrapper tombol standar dengan varian style (primary, secondary, danger).
+ */
 function Button({ 
   children, 
   onClick, 
@@ -38,7 +40,10 @@ function Button({
   );
 }
 
-// Card Component: Container dasar dengan efek glassmorphism/blur
+/**
+ * Card Component
+ * Container dengan efek glassmorphism (blur) dan shadow.
+ */
 function Card({ children, className = '' }) {
   return (
     <div className={`backdrop-blur rounded-3xl p-6 shadow-2xl bg-cardBackgroundColor dark:bg-cardBackgroundColorDark ${className}`}>
@@ -47,7 +52,10 @@ function Card({ children, className = '' }) {
   );
 }
 
-// CardHeader: Judul standar untuk setiap kartu
+/**
+ * CardHeader Component
+ * Judul dan Sub-judul standar untuk Card.
+ */
 function CardHeader({ title, subtitle, action }) {
   return (
     <div className="flex items-center justify-between mb-4">
@@ -66,7 +74,10 @@ function CardHeader({ title, subtitle, action }) {
   );
 }
 
-// ScoreCard: Menampilkan nilai metrik (Empati, Pertanyaan) dengan progress bar
+/**
+ * ScoreCard Component
+ * Menampilkan nilai metrik (Empati/Pertanyaan) dengan progress bar visual.
+ */
 function ScoreCard({ label, value, maxValue, color = "bg-teal-500" }) {
   const percentage = maxValue ? (value / maxValue) * 100 : 0;
   
@@ -97,7 +108,10 @@ function ScoreCard({ label, value, maxValue, color = "bg-teal-500" }) {
   );
 }
 
-// Modal Component: Overlay popup standar
+/**
+ * Modal Component
+ * Overlay popup standar.
+ */
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
@@ -123,10 +137,12 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
-// CategoryDetailModal: Menampilkan list percakapan berdasarkan filter kategori (misal: Pertanyaan Terbuka)
+/**
+ * CategoryDetailModal Component
+ * Menampilkan detail list pesan berdasarkan kategori (Empati/Pertanyaan).
+ */
 function CategoryDetailModal({ category, items, type }) {
   
-  // Helper: Menentukan warna teks berdasarkan tipe kategori
   const getCategoryColor = (cat, itemType) => {
     if (itemType === 'question') {
       const colors = {
@@ -146,22 +162,12 @@ function CategoryDetailModal({ category, items, type }) {
     }
   };
 
-  // Helper: Menentukan ikon emotikon berdasarkan tipe kategori
   const getCategoryIcon = (cat, itemType) => {
     if (itemType === 'question') {
-      const icons = {
-        'Terbuka': '🔓',
-        'Sugestif': '💡',
-        'Tertutup': '🔒',
-        'Reflektif': '🪞'
-      };
+      const icons = { 'Terbuka': '🔓', 'Sugestif': '💡', 'Tertutup': '🔒', 'Reflektif': '🪞' };
       return icons[cat] || '❓';
     } else {
-      const icons = {
-        'Empatik': '💚',
-        'Netral': '💙',
-        'Judgemental': '⚠️'
-      };
+      const icons = { 'Empatik': '💚', 'Netral': '💙', 'Judgemental': '⚠️' };
       return icons[cat] || '💭';
     }
   };
@@ -194,7 +200,6 @@ function CategoryDetailModal({ category, items, type }) {
                     "{item.text}"
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {/* Menampilkan Badge dengan confidence score */}
                     <div className="flex items-center gap-1 bg-white dark:bg-gray-800 px-3 py-1 rounded-full text-xs">
                       {type === 'question' ? (
                         <>
@@ -229,10 +234,7 @@ function CategoryDetailModal({ category, items, type }) {
 
 /**
  * ModelAnalysisStats Component
- * Menampilkan grid statistik detail dari hasil analisis AI.
- * - Distribusi Tipe Pertanyaan
- * - Distribusi Tingkat Empati
- * - Confidence Level
+ * Grid statistik detail (Distribusi Pertanyaan & Empati).
  */
 function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   const [modalOpen, setModalOpen] = useState(false);
@@ -244,7 +246,6 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   const hasQuestions = detailedAnalysis.has_questions !== false;
   const totalQuestions = detailedAnalysis.total_questions || 0;
 
-  // Handler saat user mengklik salah satu kotak statistik untuk melihat detail
   const openCategoryModal = (category, type) => {
     let items = [];
     if (type === 'question') {
@@ -265,7 +266,7 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
       <Card className="mb-6">
         <CardHeader title="📊 Detail Analisis Model AI" />
         
-        {/* STATS: Distribusi Pertanyaan (Hanya muncul jika ada pertanyaan) */}
+        {/* STATS: Distribusi Pertanyaan */}
         {hasQuestions && Object.keys(stats.question_distribution).length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
@@ -303,7 +304,6 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
           </h3>
           <div className="grid grid-cols-3 gap-3">
             {Object.entries(stats.empathy_distribution).map(([level, count]) => {
-              // Styling dinamis berdasarkan level empati
               const colors = {
                 'Empatik': 'bg-green-500/20 border-green-500/40 text-green-700 dark:text-green-300 hover:bg-green-500/30',
                 'Netral': 'bg-blue-500/20 border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/30',
@@ -340,7 +340,6 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
         </div>
       </Card>
 
-      {/* Modal Detail Statistik */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -356,7 +355,10 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   );
 }
 
-// ChatBubble: Menampilkan satu pesan chat (User atau AI/Patient)
+/**
+ * ChatBubble Component
+ * Menampilkan pesan chat (Kiri: AI/Pasien, Kanan: User).
+ */
 function ChatBubble({ message, isUser }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -381,7 +383,10 @@ function ChatBubble({ message, isUser }) {
   );
 }
 
-// SessionCard: Item list untuk sidebar riwayat sesi
+/**
+ * SessionCard Component
+ * Item list sesi di sidebar.
+ */
 function SessionCard({ session, onClick, isSelected }) {
   return (
     <div
@@ -409,10 +414,10 @@ function SessionCard({ session, onClick, isSelected }) {
   );
 }
 
-// Loading Spinner Component
+// Loading Spinner
 function Loading({ message = "Loading..." }) {
   return (
-    <div className="flex flex-col items-center justify-center p-8">
+    <div className="flex flex-col items-center justify-center p-8 h-full"> {/* Tambahin h-full biar center */}
       <div className="relative w-12 h-12 mb-3">
         <div className="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
         <div className="absolute inset-0 border-4 border-teal-500 rounded-full border-t-transparent animate-spin"></div>
@@ -426,8 +431,8 @@ function Loading({ message = "Loading..." }) {
  * ============================================================================
  * MAIN PAGE COMPONENT (ReportPage)
  * ============================================================================
- * Halaman utama untuk menampilkan laporan sesi konseling.
- * Menggabungkan semua komponen di atas dan menangani state aplikasi.
+ * Halaman utama laporan sesi.
+ * @component
  */
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -437,29 +442,29 @@ export default function ReportPage() {
   const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   
-  // Data utama
-  const [sessions, setSessions] = useState([]); // List semua sesi pasien
-  const [selectedSession, setSelectedSession] = useState(null); // Sesi yang sedang dilihat
-  const [transcripts, setTranscripts] = useState([]); // Chat history
+  // Data
+  const [sessions, setSessions] = useState([]);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [transcripts, setTranscripts] = useState([]);
   
-  // Data hasil analisis AI
-  const [evaluation, setEvaluation] = useState(null); // Skor & Feedback
-  const [detailedAnalysis, setDetailedAnalysis] = useState(null); // Stats mendalam
-  const [classificationResults, setClassificationResults] = useState([]); // Array detail tiap pesan
+  // Analisis AI
+  const [evaluation, setEvaluation] = useState(null);
+  const [detailedAnalysis, setDetailedAnalysis] = useState(null);
+  const [classificationResults, setClassificationResults] = useState([]);
   
-  // Loading States
-  const [loading, setLoading] = useState(true); // Loading halaman awal
+  // Loading
+  const [loading, setLoading] = useState(true);
   const [loadingTranscripts, setLoadingTranscripts] = useState(false);
   const [loadingEvaluation, setLoadingEvaluation] = useState(false);
-  const [analyzingSession, setAnalyzingSession] = useState(false); // Proses trigger analisis AI
+  const [analyzingSession, setAnalyzingSession] = useState(false);
   const [error, setError] = useState(null);
 
-  // --- EFFECT: AUTH CHECK ---
+  // Auth Check
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     if (!storedToken || !storedUser) {
-      navigate("/"); // Redirect ke login jika tidak ada token
+      navigate("/");
     } else {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
@@ -476,7 +481,7 @@ export default function ReportPage() {
     handleLogout();
   };
 
-  // --- API CALL: FETCH SESSIONS ---
+  // Fetch Sessions
   const fetchSessions = async () => {
     if (!patientId || !token) return;
     try {
@@ -490,11 +495,9 @@ export default function ReportPage() {
       
       const data = await res.json();
       const sessionsData = data.data || data;
-      // Urutkan sesi dari yang terbaru
       const sortedSessions = sessionsData.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
       setSessions(sortedSessions);
       
-      // Otomatis pilih sesi 'completed' pertama jika ada
       const firstCompleted = sortedSessions.find(s => s.status === 'completed');
       if (firstCompleted) handleSessionClick(firstCompleted);
     } catch (err) {
@@ -504,7 +507,7 @@ export default function ReportPage() {
     }
   };
 
-  // --- API CALL: FETCH TRANSCRIPTS ---
+  // Fetch Transcripts
   const fetchTranscripts = async (session_id) => {
     setLoadingTranscripts(true);
     try {
@@ -527,8 +530,7 @@ export default function ReportPage() {
     }
   };
 
-  // --- API CALL: FETCH EVALUATION ---
-  // Mengambil data evaluasi yang sudah tersimpan (jika sudah pernah dianalisis)
+  // Fetch Evaluation
   const fetchEvaluation = async (session_id) => {
     setLoadingEvaluation(true);
     try {
@@ -541,14 +543,12 @@ export default function ReportPage() {
         setEvaluation(data);
         if (data.classification_results) {
           try {
-            // Parsing JSON string jika data tersimpan sebagai string di DB
             const parsed = typeof data.classification_results === 'string' 
               ? JSON.parse(data.classification_results) : data.classification_results;
             setClassificationResults(parsed);
           } catch (e) { console.error(e); }
         }
       } else {
-        // Reset jika belum ada evaluasi
         setEvaluation(null);
         setDetailedAnalysis(null);
         setClassificationResults([]);
@@ -560,21 +560,20 @@ export default function ReportPage() {
     }
   };
 
-  // Handler: Saat user memilih sesi dari sidebar
+  // Handler Session Click
   const handleSessionClick = async (session) => {
     setSelectedSession(session);
     setTranscripts([]);
     setEvaluation(null);
     setDetailedAnalysis(null);
     setClassificationResults([]);
-    // Fetch transkrip dan evaluasi secara paralel
     await Promise.all([
       fetchTranscripts(session.session_id),
       fetchEvaluation(session.session_id)
     ]);
   };
 
-  // Handler: Memicu proses analisis AI baru
+  // Handler Analyze
   const handleAnalyzeSession = async () => {
     if (!selectedSession) return;
     setAnalyzingSession(true);
@@ -603,7 +602,6 @@ export default function ReportPage() {
     }
   };
 
-  // Effect Initial Load: Mengambil daftar sesi saat halaman dimuat
   useEffect(() => {
     if (patientId && token) fetchSessions();
     else if (!token) setLoading(false);
@@ -611,13 +609,18 @@ export default function ReportPage() {
 
   const handleBack = () => navigate('/dashboard');
 
-  if (loading) return <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center"><Loading /></div>;
+  if (loading) return <div className="h-full w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center"><Loading /></div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
-      <Navbar user={user} onLogout={handleLogout} />
+    // FIX SCROLL: Wrapper dengan h-full w-full overflow-y-auto
+    // Ini membuat halaman ini punya scrollbar sendiri, terlepas dari root yang fixed (karena 3D avatar)
+    <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
       
-      <div className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
+      {/* Navbar: isSimulation=false untuk menyembunyikan tombol merah */}
+      <Navbar user={user} onLogout={handleLogout} isSimulation={false} />
+      
+      {/* Content Wrapper: flex-grow agar konten mengisi layar */}
+      <div className="flex-grow pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {/* Header Area */}
           <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
