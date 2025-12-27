@@ -98,7 +98,6 @@ const getProsodyTheme = (type, status) => {
 };
 
 function VocalAnalysisCard({ label, status, insight, average, unit, icon: Icon, colorTheme }) {
-  // Mapping tema warna (tetap sama seperti sebelumnya)
   const themes = {
     success: { 
       bgIcon: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400', 
@@ -211,8 +210,7 @@ function AnalysisPointCard({ type, items }) {
   const isStrength = type === 'strength';
   const title = isStrength ? "Kekuatan Teridentifikasi" : "Area Pengembangan";
   const Icon = isStrength ? TrendingUp : Lightbulb;
-  
-  // Styling conditional
+
   const styles = isStrength ? {
     bg: "bg-emerald-50 dark:bg-emerald-900/10",
     border: "border-emerald-100 dark:border-emerald-800",
@@ -227,7 +225,6 @@ function AnalysisPointCard({ type, items }) {
     bullet: "bg-amber-500"
   };
 
-  // Pastikan items adalah array
   const listItems = Array.isArray(items) ? items : [];
   
   if (listItems.length === 0) return null;
@@ -611,23 +608,20 @@ export default function ReportPage() {
   };
 
   const prosodyAverages = React.useMemo(() => {
-    // 1. Ambil hanya pesan User yang punya data prosody
     const userMessages = transcripts.filter(t => t.isUser && t.prosody);
     
     if (userMessages.length === 0) return null;
 
-    // 2. Jumlahkan semua
     const total = userMessages.reduce((acc, curr) => ({
       speaking_rate: acc.speaking_rate + Number(curr.prosody.speaking_rate || 0),
       energy_std: acc.energy_std + Number(curr.prosody.energy_std || 0),
       silence_ratio: acc.silence_ratio + Number(curr.prosody.silence_ratio || 0)
     }), { speaking_rate: 0, energy_std: 0, silence_ratio: 0 });
 
-    // 3. Bagi dengan jumlah pesan & format
     return {
-      avg_rate: (total.speaking_rate / userMessages.length).toFixed(1), // misal: 14.2
-      avg_energy: (total.energy_std / userMessages.length).toFixed(3),  // misal: 0.052
-      avg_silence: ((total.silence_ratio / userMessages.length) * 100).toFixed(1) // misal: 20.5 (persen)
+      avg_rate: (total.speaking_rate / userMessages.length).toFixed(1), 
+      avg_energy: (total.energy_std / userMessages.length).toFixed(3),  
+      avg_silence: ((total.silence_ratio / userMessages.length) * 100).toFixed(1) 
     };
   }, [transcripts]);
 
@@ -683,10 +677,6 @@ const fetchTranscripts = async (session_id) => {
         text: t.message_text,
         isUser: t.message_role === 'user',
         timestamp: t.created_at,
-        // --- TAMBAHAN BARU ---
-        // Pastikan backend mengirim kolom 'prosody_data'
-        // Jika prosody_data disimpan sebagai string JSON di DB, gunakan safeJsonParse
-        // Jika backend sudah mengirim sebagai object, gunakan langsung t.prosody_data
         prosody: typeof t.prosody_data === 'string' ? safeJsonParse(t.prosody_data) : t.prosody_data
       })));
     } catch (err) {
