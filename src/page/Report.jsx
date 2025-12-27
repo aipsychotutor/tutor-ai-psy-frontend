@@ -960,7 +960,7 @@ const fetchEvaluation = async (session_id) => {
                     )}
 
                     {evaluation && (evaluation.strengths || evaluation.improvements) && (
-                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                  <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
                     <AnalysisPointCard 
                       type="strength" 
                       items={evaluation.strengths} 
