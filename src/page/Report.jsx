@@ -10,7 +10,10 @@ import {
   Quote, 
   Calendar, 
   Clock,
-  Search 
+  Search,
+  Mic, 
+  Zap, 
+  PauseCircle
 } from "lucide-react";
 
 /**
@@ -68,6 +71,88 @@ function CardHeader({ title, subtitle, action }) {
         )}
       </div>
       {action && <div>{action}</div>}
+    </div>
+  );
+}
+
+const getProsodyTheme = (type, status) => {
+  const s = status?.toLowerCase() || "";
+  
+  if (type === 'intonation') {
+    if (s.includes("monoton") || s.includes("datar")) return "warning";
+    if (s.includes("ekspresif") || s.includes("dinamis")) return "neutral"; 
+    return "success"; 
+  }
+  if (type === 'speed') {
+    if (s.includes("tergesa")) return "danger";
+    if (s.includes("lambat")) return "warning";
+    return "success"; 
+  }
+  if (type === 'confidence') {
+    if (s.includes("ragu") || s.includes("jeda")) return "danger";
+    return "success"; 
+  }
+  return "neutral";
+};
+
+function VocalAnalysisCard({ label, status, insight, icon: Icon, colorTheme }) {
+  // Mapping tema warna berdasarkan status/kategori
+  const themes = {
+    success: { 
+      bgIcon: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400', 
+      textStatus: 'text-green-700 dark:text-green-400',
+      border: 'border-green-200 dark:border-green-800',
+      gradient: 'from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10'
+    },
+    warning: { 
+      bgIcon: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400', 
+      textStatus: 'text-yellow-700 dark:text-yellow-400',
+      border: 'border-yellow-200 dark:border-yellow-800',
+      gradient: 'from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10'
+    },
+    danger: { 
+      bgIcon: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400', 
+      textStatus: 'text-red-700 dark:text-red-400',
+      border: 'border-red-200 dark:border-red-800',
+      gradient: 'from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10'
+    },
+    neutral: { 
+      bgIcon: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400', 
+      textStatus: 'text-blue-700 dark:text-blue-400',
+      border: 'border-blue-200 dark:border-blue-800',
+      gradient: 'from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10'
+    }
+  };
+
+  const theme = themes[colorTheme] || themes.neutral;
+
+  return (
+    <div className={`relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${theme.border}`}>
+       {/* Background Gradient Halus */}
+       <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50`}></div>
+       
+       <div className="relative z-10">
+          <div className="flex justify-between items-start mb-3">
+            <div className={`p-2.5 rounded-xl ${theme.bgIcon}`}>
+              {Icon && <Icon size={20} />}
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Analisis Vokal</span>
+          </div>
+
+          <h3 className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">
+            {label}
+          </h3>
+          
+          <div className={`text-lg font-bold mb-3 ${theme.textStatus}`}>
+            {status}
+          </div>
+
+          <div className="bg-white/60 dark:bg-gray-900/40 p-3 rounded-xl border border-white/50 dark:border-gray-700/50 backdrop-blur-sm">
+            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+              {insight}
+            </p>
+          </div>
+       </div>
     </div>
   );
 }
@@ -382,7 +467,7 @@ export default function ReportPage() {
   const [evaluation, setEvaluation] = useState(null);
   const [detailedAnalysis, setDetailedAnalysis] = useState(null);
   const [classificationResults, setClassificationResults] = useState([]);
-  
+  const [prosodyData, setProsodyData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingTranscripts, setLoadingTranscripts] = useState(false);
   const [loadingEvaluation, setLoadingEvaluation] = useState(false);
@@ -482,20 +567,10 @@ const fetchEvaluation = async (session_id) => {
       }
 
       const data = await res.json();
-      
-      // --- PERBAIKAN LOGIKA DISINI ---
-      
-      // 1. Coba parse statistik dulu
-      // Backend Anda menyimpannya di kolom 'model_statistics'
       const parsedStats = safeJsonParse(data.model_statistics);
       
-      // 2. Cek apakah statistik VALID?
-      // Kita hanya set 'evaluation' JIKA parsedStats tidak null.
-      // Jika parsedStats null (karena parsing gagal atau kolom kosong), 
-      // kita anggap evaluasi BELUM ADA supaya tombol muncul lagi.
-      
       if (data && parsedStats) { 
-        setEvaluation(data); // State utama diset (Tombol Analisis akan HILANG)
+        setEvaluation(data);
         
         const parsedClassification = safeJsonParse(data.classification_results);
         
@@ -504,23 +579,23 @@ const fetchEvaluation = async (session_id) => {
         
         setClassificationResults(Array.isArray(parsedClassification) ? parsedClassification : []);
         setDetailedAnalysis(formattedAnalysis);
+        const parsedProsody = safeJsonParse(data.prosody_summary);
+        setProsodyData(parsedProsody);
       } else {
-        // Jika data ada tapi statistiknya kosong/rusak -> Anggap belum dievaluasi
-        // State evaluation null -> Tombol Analisis akan MUNCUL
         setEvaluation(null); 
         setDetailedAnalysis(null);
         setClassificationResults([]);
+        setProsodyData(null);
       }
       
     } catch (err) {
       console.error("Fetch Error:", err);
-      // Jika error, pastikan tombol muncul
       setEvaluation(null); 
     } finally {
       setLoadingEvaluation(false);
     }
   };
-  
+
   const handleSessionClick = async (session) => {
     if (!session) return;
     setSelectedSession(session);
@@ -662,9 +737,59 @@ const fetchEvaluation = async (session_id) => {
                         gradient="bg-gradient-to-r from-teal-400 to-emerald-500"
                       />
                     </div>
-                    
+
+                    {/* === SECTION BARU: ANALISIS VOKAL (PROSODY) === */}
+                    {prosodyData && prosodyData.has_data && (
+                      <div className="mt-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="h-6 w-1 bg-teal-500 rounded-full"></div>
+                          <h3 className="text-lg font-bold text-gray-800 dark:text-white">Analisis Suara</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                          {/* 1. Intonasi */}
+                          <VocalAnalysisCard 
+                            label="Gaya Intonasi"
+                            status={prosodyData.details.intonation}
+                            insight={
+                                prosodyData.details.intonation.includes("Datar") ? "Variasi nada rendah, berisiko terdengar seperti robot." :
+                                prosodyData.details.intonation.includes("Dinamis") ? "Variasi nada tinggi, menunjukkan emosi aktif." :
+                                "Variasi nada cukup baik dan terkontrol."
+                            }
+                            icon={Mic}
+                            colorTheme={getProsodyTheme('intonation', prosodyData.details.intonation)}
+                          />
+
+                          {/* 2. Kecepatan */}
+                          <VocalAnalysisCard 
+                            label="Kecepatan Bicara"
+                            status={prosodyData.details.speed}
+                            insight={
+                                prosodyData.details.speed.includes("Tergesa") ? "Kecepatan tinggi, pasien mungkin merasa diburu-buru." :
+                                prosodyData.details.speed.includes("Lambat") ? "Tempo sangat lambat, mungkin terlalu hati-hati." :
+                                "Tempo bicara pas dan tenang."
+                            }
+                            icon={Zap}
+                            colorTheme={getProsodyTheme('speed', prosodyData.details.speed)}
+                          />
+
+                          {/* 3. Keyakinan */}
+                          <VocalAnalysisCard 
+                            label="Kelancaran & Keyakinan"
+                            status={prosodyData.details.confidence}
+                            insight={
+                                prosodyData.details.confidence.includes("Ragu") ? "Terdeteksi banyak jeda hening (silence) yang lama." :
+                                "Alur bicara lancar dengan jeda yang wajar."
+                            }
+                            icon={PauseCircle}
+                            colorTheme={getProsodyTheme('confidence', prosodyData.details.confidence)}
+                          />
+                        </div>
+                      </div>
+                    )}    
+                                        
                     {evaluation.feedback_text && (
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner mt-5">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
                           <Quote size={20} className="fill-current" /> Umpan Balik AI
                         </h3>
