@@ -764,9 +764,16 @@ const fetchEvaluation = async (session_id) => {
       toast.dismiss(loadingToast);
 
       if (response.ok && data.success) {
+        const evaluationData = {
+           ...data.evaluation,
+           strengths: typeof data.evaluation.strengths === 'string' ? safeJsonParse(data.evaluation.strengths) : data.evaluation.strengths,
+           improvements: typeof data.evaluation.improvements === 'string' ? safeJsonParse(data.evaluation.improvements) : data.evaluation.improvements
+        };
         setEvaluation(data.evaluation);
         setDetailedAnalysis(data.detailed_analysis);
         setClassificationResults(data.classification_results || []);
+        const parsedProsody = safeJsonParse(data.evaluation.prosody_summary);
+        setProsodyData(parsedProsody);
         toast.success("Analisis AI Berhasil Selesai!", { duration: 4000 });
       } else {
         toast.error(`Analisis Gagal: ${data.message || 'Error tidak diketahui'}`);
