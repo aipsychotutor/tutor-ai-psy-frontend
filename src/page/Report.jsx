@@ -842,7 +842,7 @@ const fetchEvaluation = async (session_id) => {
               <Card className="mb-8 min-h-[300px] flex flex-col justify-center">
                 <CardHeader 
                   title="Penilaian & Evaluasi"
-                  subtitle={selectedSession ? (selectedSession.status === 'completed' ? "Hasil analisis AI untuk sesi ini" : "Sesi belum selesai") : "Pilih sesi"}
+                  subtitle={selectedSession ? (selectedSession.status === 'completed' ? "Hasil analisis untuk sesi ini" : "Sesi belum selesai") : "Pilih sesi"}
                   action={
                     selectedSession?.status === 'completed' && !evaluation && !loadingEvaluation && (
                       <Button onClick={handleAnalyzeSession} disabled={analyzingSession}>
