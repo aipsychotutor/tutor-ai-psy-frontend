@@ -127,7 +127,6 @@ export default function Auth() {
       // ERROR JARINGAN
       toast.dismiss(loadingToastId); 
       toast.error("Terjadi kesalahan koneksi ke server.");
-      console.error("Login Error:", err);
     }
   };
 
@@ -173,7 +172,6 @@ export default function Auth() {
       // ERROR JARINGAN
       toast.dismiss(loadingToastId); 
       toast.error("Terjadi kesalahan koneksi ke server.");
-      console.error("Register Error:", err);
     }
   }
 

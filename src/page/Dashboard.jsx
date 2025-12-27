@@ -296,8 +296,9 @@ export default function Dashboard() {
         };
       });
       setPatients(mappedPatients);
-    } catch (err) { console.error(err); } 
-    finally { setLoadingPatients(false); }
+    } catch (err) { 
+      toast.error("Gagal memuat data skenario");
+    } finally { setLoadingPatients(false); }
   };
 
   // Memicu fetch data saat token/user tersedia
