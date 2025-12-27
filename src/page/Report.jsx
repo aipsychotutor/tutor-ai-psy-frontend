@@ -838,7 +838,7 @@ const fetchEvaluation = async (session_id) => {
             </Card>
           ) : (
             <>
-              {/* SECTION 1: SCORE & EVALUASI */}
+              {/* SECTION 1: SCORE EMPATI & TEKNIK BERTANYA*/}
               <Card className="mb-8 min-h-[300px] flex flex-col justify-center">
                 <CardHeader 
                   title="Penilaian & Evaluasi"
@@ -889,6 +889,7 @@ const fetchEvaluation = async (session_id) => {
                       />
                     </div>
 
+                    {/* SECTION 2: ANALISIS VOKAL */}
                     {prosodyData && prosodyData.has_data && (
                       <div className="mt-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
                         <div className="flex items-center gap-2 mb-4">
@@ -902,7 +903,6 @@ const fetchEvaluation = async (session_id) => {
                           <VocalAnalysisCard 
                             label="Gaya Intonasi"
                             status={prosodyData.details.intonation}
-                            // TAMBAHAN: AVERAGE
                             average={prosodyAverages?.avg_energy}
                             unit="Variasi"
                             insight={
@@ -947,7 +947,8 @@ const fetchEvaluation = async (session_id) => {
                         </div>
                       </div>
                     )}
-                                        
+
+                    {/* SECTION 3: FEEDBACK GEMINI */}       
                     {evaluation.feedback_text && (
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner mt-5">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
@@ -986,12 +987,12 @@ const fetchEvaluation = async (session_id) => {
                 )}
               </Card>
 
-              {/* SECTION 2: STATS */}
+              {/* SECTION 4: HASIL KLASIFIKASI */}
               {detailedAnalysis && classificationResults.length > 0 && (
                 <ModelAnalysisStats detailedAnalysis={detailedAnalysis} classificationResults={classificationResults} />
               )}
 
-              {/* SECTION 3: HISTORY & CHAT */}
+              {/* SECTION 5: HISTORY & CHAT */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
                 <div className="lg:col-span-4">
                   <Card className="h-full max-h-[700px] flex flex-col">
