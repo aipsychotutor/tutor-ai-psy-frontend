@@ -465,30 +465,62 @@ export default function ReportPage() {
     }
   };
 
-  const fetchEvaluation = async (session_id) => {
+const fetchEvaluation = async (session_id) => {
     setLoadingEvaluation(true);
     try {
       const res = await fetch(`http://localhost:3000/api/reports/evaluation/${session_id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      // Handle jika backend return 404 (belum ada evaluasi)
+      if (!res.ok) {
+         setEvaluation(null);
+         setDetailedAnalysis(null);
+         setClassificationResults([]);
+         setLoadingEvaluation(false);
+         return;
+      }
+
       const data = await res.json();
       
-      if (data.evaluated) {
-        setEvaluation(data);
-        setClassificationResults(safeJsonParse(data.classification_results) || []);
-        setDetailedAnalysis(safeJsonParse(data.detailed_analysis));
+      // --- PERBAIKAN LOGIKA DISINI ---
+      
+      // 1. Coba parse statistik dulu
+      // Backend Anda menyimpannya di kolom 'model_statistics'
+      const parsedStats = safeJsonParse(data.model_statistics);
+      
+      // 2. Cek apakah statistik VALID?
+      // Kita hanya set 'evaluation' JIKA parsedStats tidak null.
+      // Jika parsedStats null (karena parsing gagal atau kolom kosong), 
+      // kita anggap evaluasi BELUM ADA supaya tombol muncul lagi.
+      
+      if (data && parsedStats) { 
+        setEvaluation(data); // State utama diset (Tombol Analisis akan HILANG)
+        
+        const parsedClassification = safeJsonParse(data.classification_results);
+        
+        // Format agar sesuai UI
+        const formattedAnalysis = { model_statistics: parsedStats };
+        
+        setClassificationResults(Array.isArray(parsedClassification) ? parsedClassification : []);
+        setDetailedAnalysis(formattedAnalysis);
       } else {
-        setEvaluation(null);
+        // Jika data ada tapi statistiknya kosong/rusak -> Anggap belum dievaluasi
+        // State evaluation null -> Tombol Analisis akan MUNCUL
+        setEvaluation(null); 
         setDetailedAnalysis(null);
         setClassificationResults([]);
       }
+      
     } catch (err) {
-      setEvaluation(null);
+      console.error("Fetch Error:", err);
+      // Jika error, pastikan tombol muncul
+      setEvaluation(null); 
     } finally {
       setLoadingEvaluation(false);
     }
   };
-
+  
   const handleSessionClick = async (session) => {
     if (!session) return;
     setSelectedSession(session);
