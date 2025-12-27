@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-// Import Toaster & toast
 import { Toaster, toast } from "react-hot-toast"; 
 import Navbar from "../components/Navbar";
 import { 

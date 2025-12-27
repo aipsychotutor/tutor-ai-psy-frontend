@@ -4,7 +4,7 @@ import { Toaster, toast } from "react-hot-toast";
 
 /**
  * ============================================================================
- * HELPER COMPONENTS (AESTHETIC INPUTS)
+ * HELPER COMPONENTS 
  * ============================================================================
  */
 
@@ -35,10 +35,12 @@ const InputField = ({ label, name, value, onChange, type = "text", placeholder, 
   </div>
 );
 
-// Select Field Modern
-const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
+// Select Field Modern (UPDATE: Ditambah support 'required')
+const SelectField = ({ label, name, value, onChange, options, icon: Icon, required }) => (
   <div className="space-y-1.5">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{label}</label>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
     <div className="relative group">
       {Icon && (
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
@@ -49,6 +51,7 @@ const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
         name={name}
         value={value}
         onChange={onChange}
+        required={required}
         className={`block w-full ${Icon ? 'pl-10' : 'pl-4'} pr-8 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer`}
       >
         {options.map((opt) => (
@@ -62,10 +65,12 @@ const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
   </div>
 );
 
-// Text Area Modern
-const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3, icon: Icon }) => (
+// Text Area Modern (UPDATE: Ditambah support 'required')
+const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3, icon: Icon, required }) => (
   <div className="space-y-1.5">
-    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">{label}</label>
+    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
     <div className="relative group">
       {Icon && (
         <div className="absolute top-3 left-3 pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
@@ -78,6 +83,7 @@ const TextAreaField = ({ label, name, value, onChange, placeholder, rows = 3, ic
         onChange={onChange}
         placeholder={placeholder}
         rows={rows}
+        required={required}
         className={`block w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none`}
       />
     </div>
@@ -296,6 +302,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                   name="gender" 
                   value={formData.gender} 
                   onChange={handleChange}
+                  required
                   options={[
                     { value: "Laki-laki", label: "Laki-laki" },
                     { value: "Perempuan", label: "Perempuan" }
@@ -307,6 +314,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                   value={formData.marital_status} 
                   onChange={handleChange}
                   icon={Heart}
+                  required
                   options={[
                     { value: "Belum Kawin", label: "Belum Kawin" },
                     { value: "Kawin Tercatat", label: "Kawin Tercatat" },
@@ -330,6 +338,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                 onChange={handleChange} 
                 icon={Briefcase} 
                 placeholder="Contoh: Guru SD" 
+                required
               />
             </div>
 
@@ -345,6 +354,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                   name="personality_type" 
                   value={formData.personality_type} 
                   onChange={handleChange}
+                  required
                   options={[
                     { value: "Introvert", label: "Introvert (Tertutup)" },
                     { value: "Ekstrovert", label: "Ekstrovert (Terbuka)" },
@@ -359,6 +369,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                   onChange={handleChange}
                   min="1"
                   max="10"
+                  required
                 />
               </div>
 
@@ -370,6 +381,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
                 icon={FileText}
                 rows={4}
                 placeholder="Ceritakan latar belakang masalah yang dihadapi karakter ini..." 
+                required
               />
             </div>
 

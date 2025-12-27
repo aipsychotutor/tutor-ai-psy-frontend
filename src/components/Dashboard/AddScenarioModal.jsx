@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import {
   X,
@@ -15,7 +15,7 @@ import {
 
 /**
  * ============================================================================
- * HELPER COMPONENTS (AESTHETIC INPUTS)
+ * HELPER COMPONENTS
  * ============================================================================
  */
 
@@ -61,10 +61,10 @@ const InputField = ({
 );
 
 // Select Field Modern
-const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
+const SelectField = ({ label, name, value, onChange, options, icon: Icon, required }) => (
   <div className="space-y-1.5">
     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
-      {label}
+      {label} {required && <span className="text-red-500">*</span>}
     </label>
     <div className="relative group">
       {Icon && (
@@ -76,6 +76,7 @@ const SelectField = ({ label, name, value, onChange, options, icon: Icon }) => (
         name={name}
         value={value}
         onChange={onChange}
+        required={required}
         className={`block w-full ${
           Icon ? "pl-10" : "pl-4"
         } pr-8 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer`}
@@ -133,6 +134,7 @@ const TextAreaField = ({
         onChange={onChange}
         placeholder={placeholder}
         rows={rows}
+        required={required}
         className={`block w-full ${
           Icon ? "pl-10" : "pl-4"
         } pr-4 py-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 resize-none`}
@@ -193,18 +195,41 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
 
   // Submit Handler
   const handleSubmit = async (is_global) => {
-    // 1. Validasi
-    if (!formData.patient_name || !formData.background_story) {
-      toast.error("Mohon lengkapi Nama dan Latar Belakang!");
+    // 1. Validasi Wajib Isi (Kecuali Traits)
+    const requiredFields = [
+      { key: 'patient_name', label: 'Nama Pasien' },
+      { key: 'age', label: 'Usia' },
+      { key: 'gender', label: 'Jenis Kelamin' },
+      { key: 'marital_status', label: 'Status Pernikahan' },
+      { key: 'occupation', label: 'Pekerjaan' },
+      { key: 'personality_type', label: 'Tipe Kepribadian' },
+      { key: 'symptom_intensity', label: 'Intensitas Gejala' },
+      { key: 'background_story', label: 'Latar Belakang Cerita' }
+    ];
+
+    for (const field of requiredFields) {
+      if (!formData[field.key] || formData[field.key].toString().trim() === "") {
+        toast.error(`Mohon lengkapi: ${field.label}`);
+        return;
+      }
+    }
+
+    // 2. Validasi Angka
+    if (parseInt(formData.age) <= 0) {
+      toast.error("Usia harus berupa angka positif");
+      return;
+    }
+    if (parseInt(formData.symptom_intensity) < 1 || parseInt(formData.symptom_intensity) > 10) {
+      toast.error("Intensitas gejala harus antara 1 sampai 10");
       return;
     }
 
-    // 2. Bersihkan Traits
+    // 3. Bersihkan Traits
     const filteredTraits = formData.personality_traits.filter(
       (t) => t.trim() !== ""
     );
 
-    // 3. Format Data
+    // 4. Format Data
     const dataToSave = {
       ...formData,
       age: formData.age ? parseInt(formData.age) : null,
@@ -303,6 +328,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                     placeholder="25"
                     min="1"
                     max="120"
+                    required
                   />
                 </div>
               </div>
@@ -313,6 +339,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
+                  required
                   options={[
                     { value: "Laki-laki", label: "Laki-laki" },
                     { value: "Perempuan", label: "Perempuan" },
@@ -323,6 +350,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   name="marital_status"
                   value={formData.marital_status}
                   onChange={handleChange}
+                  required
                   options={[
                     { value: "Belum Kawin", label: "Belum Kawin" },
                     { value: "Kawin Tercatat", label: "Kawin Tercatat" },
@@ -344,6 +372,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   onChange={handleChange}
                   icon={Briefcase}
                   placeholder="Software Engineer"
+                  required
                 />
               </div>
             </div>
@@ -361,6 +390,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   name="personality_type"
                   value={formData.personality_type}
                   onChange={handleChange}
+                  required
                   options={[
                     { value: "Introvert", label: "Introvert" },
                     { value: "Extrovert", label: "Extrovert" },
@@ -376,6 +406,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
                   placeholder="5"
                   min="1"
                   max="10"
+                  required
                 />
               </div>
 
