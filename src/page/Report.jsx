@@ -13,7 +13,9 @@ import {
   Search,
   Mic, 
   Zap, 
-  PauseCircle
+  PauseCircle,
+  TrendingUp,
+  Lightbulb
 } from "lucide-react";
 
 /**
@@ -95,8 +97,8 @@ const getProsodyTheme = (type, status) => {
   return "neutral";
 };
 
-function VocalAnalysisCard({ label, status, insight, icon: Icon, colorTheme }) {
-  // Mapping tema warna berdasarkan status/kategori
+function VocalAnalysisCard({ label, status, insight, average, unit, icon: Icon, colorTheme }) {
+  // Mapping tema warna (tetap sama seperti sebelumnya)
   const themes = {
     success: { 
       bgIcon: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400', 
@@ -128,7 +130,6 @@ function VocalAnalysisCard({ label, status, insight, icon: Icon, colorTheme }) {
 
   return (
     <div className={`relative overflow-hidden bg-white dark:bg-gray-800 rounded-2xl p-5 border shadow-sm hover:shadow-md transition-all group ${theme.border}`}>
-       {/* Background Gradient Halus */}
        <div className={`absolute inset-0 bg-gradient-to-br ${theme.gradient} opacity-50`}></div>
        
        <div className="relative z-10">
@@ -136,7 +137,17 @@ function VocalAnalysisCard({ label, status, insight, icon: Icon, colorTheme }) {
             <div className={`p-2.5 rounded-xl ${theme.bgIcon}`}>
               {Icon && <Icon size={20} />}
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Analisis Vokal</span>
+            {/* Menampilkan Rata-rata di pojok kanan atas */}
+            {average && (
+              <div className="text-right">
+                <span className="block text-lg font-bold text-gray-700 dark:text-gray-200 font-mono tracking-tight">
+                  {average}
+                </span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold">
+                  {unit}
+                </span>
+              </div>
+            )}
           </div>
 
           <h3 className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">
@@ -192,6 +203,56 @@ function ScoreCard({ label, value, maxValue, icon: Icon, colorClass, gradient })
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+function AnalysisPointCard({ type, items }) {
+  const isStrength = type === 'strength';
+  const title = isStrength ? "Kekuatan Teridentifikasi" : "Area Pengembangan";
+  const Icon = isStrength ? TrendingUp : Lightbulb;
+  
+  // Styling conditional
+  const styles = isStrength ? {
+    bg: "bg-emerald-50 dark:bg-emerald-900/10",
+    border: "border-emerald-100 dark:border-emerald-800",
+    iconBg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+    title: "text-emerald-800 dark:text-emerald-200",
+    bullet: "bg-emerald-500"
+  } : {
+    bg: "bg-amber-50 dark:bg-amber-900/10",
+    border: "border-amber-100 dark:border-amber-800",
+    iconBg: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    title: "text-amber-800 dark:text-amber-200",
+    bullet: "bg-amber-500"
+  };
+
+  // Pastikan items adalah array
+  const listItems = Array.isArray(items) ? items : [];
+  
+  if (listItems.length === 0) return null;
+
+  return (
+    <div className={`rounded-2xl p-6 border ${styles.bg} ${styles.border} h-full transition-all hover:shadow-md`}>
+      <div className="flex items-center gap-3 mb-5">
+        <div className={`p-2.5 rounded-xl shadow-sm ${styles.iconBg}`}>
+          <Icon size={20} />
+        </div>
+        <h3 className={`font-bold text-lg tracking-tight ${styles.title}`}>
+          {title}
+        </h3>
+      </div>
+      
+      <ul className="space-y-3">
+        {listItems.map((item, idx) => (
+          <li key={idx} className="flex items-start gap-3">
+            <span className={`mt-2 w-1.5 h-1.5 rounded-full flex-shrink-0 ${styles.bullet}`} />
+            <span className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed font-medium">
+              {item}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -366,14 +427,72 @@ function ChatBubble({ message, isUser }) {
     } catch (e) { return ""; }
   };
 
+  const fmt = (val) => {
+    const num = Number(val);
+    return !isNaN(num) ? num.toFixed(2) : '-';
+  };
+
+  const fmtPercent = (val) => {
+    const num = Number(val);
+    return !isNaN(num) ? (num * 100).toFixed(1) : '-';
+  };
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4 group`}>
-      <div className={`max-w-[80%] rounded-2xl px-5 py-3.5 shadow-sm transition-all hover:shadow-md ${
+      <div className={`max-w-[85%] sm:max-w-[75%] rounded-2xl px-5 py-3.5 shadow-sm transition-all hover:shadow-md ${
         isUser 
           ? 'bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-br-none' 
           : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-none border border-gray-100 dark:border-gray-700'
       }`}>
         <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+        
+        {message.prosody && isUser && (
+          <div className={`mt-3 pt-2 border-t flex flex-wrap gap-4 ${
+            isUser ? 'border-white/20' : 'border-gray-100 dark:border-gray-700'
+          }`}>
+            
+            {/* 1. Kecepatan Bicara (speaking_rate) */}
+            <div className="flex items-center gap-1.5" title="Kecepatan Bicara">
+              <Zap size={13} className={isUser ? "text-teal-100" : "text-gray-400"} />
+              <div className="flex flex-col leading-none">
+                <span className={`text-[10px] font-bold ${isUser ? 'text-teal-50' : 'text-gray-600'}`}>
+                  {fmt(message.prosody.speaking_rate)}
+                </span>
+                <span className={`text-[8px] uppercase ${isUser ? 'text-teal-200' : 'text-gray-400'}`}>
+                  Kecepatan Bicara
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Intonasi (energy_std) */}
+            <div className="flex items-center gap-1.5" title="Variasi Intonasi (Energy Std)">
+              <Mic size={13} className={isUser ? "text-teal-100" : "text-gray-400"} />
+              <div className="flex flex-col leading-none">
+                <span className={`text-[10px] font-bold ${isUser ? 'text-teal-50' : 'text-gray-600'}`}>
+                  {fmt(message.prosody.energy_std)}
+                </span>
+                <span className={`text-[8px] uppercase ${isUser ? 'text-teal-200' : 'text-gray-400'}`}>
+                  Intonasi
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Jeda/Hening (silence_ratio) */}
+            <div className="flex items-center gap-1.5" title={`Hening: ${fmtPercent(message.prosody.silence_ratio)}% (${message.prosody.num_pauses} jeda)`}>
+              <PauseCircle size={13} className={isUser ? "text-teal-100" : "text-gray-400"} />
+              <div className="flex flex-col leading-none">
+                <span className={`text-[10px] font-bold ${isUser ? 'text-teal-50' : 'text-gray-600'}`}>
+                  {fmtPercent(message.prosody.silence_ratio)}%
+                </span>
+                <span className={`text-[8px] uppercase ${isUser ? 'text-teal-200' : 'text-gray-400'}`}>
+                  Hening
+                </span>
+              </div>
+            </div>
+
+          </div>
+        )}
+
         <span className={`text-[10px] mt-2 block text-right opacity-70`}>
           {formatTime(message.timestamp)}
         </span>
@@ -491,6 +610,28 @@ export default function ReportPage() {
     navigate("/");
   };
 
+  const prosodyAverages = React.useMemo(() => {
+    // 1. Ambil hanya pesan User yang punya data prosody
+    const userMessages = transcripts.filter(t => t.isUser && t.prosody);
+    
+    if (userMessages.length === 0) return null;
+
+    // 2. Jumlahkan semua
+    const total = userMessages.reduce((acc, curr) => ({
+      speaking_rate: acc.speaking_rate + Number(curr.prosody.speaking_rate || 0),
+      energy_std: acc.energy_std + Number(curr.prosody.energy_std || 0),
+      silence_ratio: acc.silence_ratio + Number(curr.prosody.silence_ratio || 0)
+    }), { speaking_rate: 0, energy_std: 0, silence_ratio: 0 });
+
+    // 3. Bagi dengan jumlah pesan & format
+    return {
+      avg_rate: (total.speaking_rate / userMessages.length).toFixed(1), // misal: 14.2
+      avg_energy: (total.energy_std / userMessages.length).toFixed(3),  // misal: 0.052
+      avg_silence: ((total.silence_ratio / userMessages.length) * 100).toFixed(1) // misal: 20.5 (persen)
+    };
+  }, [transcripts]);
+
+
   const safeJsonParse = (data) => {
     if (typeof data === 'string') {
       try { return JSON.parse(data); } catch (e) { return null; }
@@ -529,7 +670,7 @@ export default function ReportPage() {
     }
   };
 
-  const fetchTranscripts = async (session_id) => {
+const fetchTranscripts = async (session_id) => {
     setLoadingTranscripts(true);
     try {
       const res = await fetch(`http://localhost:3000/api/reports/transcripts/${session_id}`, {
@@ -537,12 +678,19 @@ export default function ReportPage() {
       });
       const data = await res.json();
       const transcriptsData = Array.isArray(data) ? data : [];
+      
       setTranscripts(transcriptsData.map(t => ({
         text: t.message_text,
         isUser: t.message_role === 'user',
         timestamp: t.created_at,
+        // --- TAMBAHAN BARU ---
+        // Pastikan backend mengirim kolom 'prosody_data'
+        // Jika prosody_data disimpan sebagai string JSON di DB, gunakan safeJsonParse
+        // Jika backend sudah mengirim sebagai object, gunakan langsung t.prosody_data
+        prosody: typeof t.prosody_data === 'string' ? safeJsonParse(t.prosody_data) : t.prosody_data
       })));
     } catch (err) {
+      console.error(err);
       setTranscripts([]);
       toast.error("Gagal memuat transkrip");
     } finally {
@@ -573,14 +721,17 @@ const fetchEvaluation = async (session_id) => {
         setEvaluation(data);
         
         const parsedClassification = safeJsonParse(data.classification_results);
-        
-        // Format agar sesuai UI
-        const formattedAnalysis = { model_statistics: parsedStats };
-        
+        const formattedAnalysis = { model_statistics: parsedStats };       
         setClassificationResults(Array.isArray(parsedClassification) ? parsedClassification : []);
         setDetailedAnalysis(formattedAnalysis);
         const parsedProsody = safeJsonParse(data.prosody_summary);
         setProsodyData(parsedProsody);
+        const evaluationData = {
+            ...data,
+            strengths: typeof data.strengths === 'string' ? safeJsonParse(data.strengths) : data.strengths,
+            improvements: typeof data.improvements === 'string' ? safeJsonParse(data.improvements) : data.improvements
+        };
+        setEvaluation(evaluationData);
       } else {
         setEvaluation(null); 
         setDetailedAnalysis(null);
@@ -738,7 +889,6 @@ const fetchEvaluation = async (session_id) => {
                       />
                     </div>
 
-                    {/* === SECTION BARU: ANALISIS VOKAL (PROSODY) === */}
                     {prosodyData && prosodyData.has_data && (
                       <div className="mt-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
                         <div className="flex items-center gap-2 mb-4">
@@ -747,10 +897,14 @@ const fetchEvaluation = async (session_id) => {
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                          
                           {/* 1. Intonasi */}
                           <VocalAnalysisCard 
                             label="Gaya Intonasi"
                             status={prosodyData.details.intonation}
+                            // TAMBAHAN: AVERAGE
+                            average={prosodyAverages?.avg_energy}
+                            unit="Variasi"
                             insight={
                                 prosodyData.details.intonation.includes("Datar") ? "Variasi nada rendah, berisiko terdengar seperti robot." :
                                 prosodyData.details.intonation.includes("Dinamis") ? "Variasi nada tinggi, menunjukkan emosi aktif." :
@@ -764,6 +918,9 @@ const fetchEvaluation = async (session_id) => {
                           <VocalAnalysisCard 
                             label="Kecepatan Bicara"
                             status={prosodyData.details.speed}
+                            // TAMBAHAN: AVERAGE
+                            average={prosodyAverages?.avg_rate}
+                            unit="Kata/Detik"
                             insight={
                                 prosodyData.details.speed.includes("Tergesa") ? "Kecepatan tinggi, pasien mungkin merasa diburu-buru." :
                                 prosodyData.details.speed.includes("Lambat") ? "Tempo sangat lambat, mungkin terlalu hati-hati." :
@@ -777,6 +934,9 @@ const fetchEvaluation = async (session_id) => {
                           <VocalAnalysisCard 
                             label="Kelancaran & Keyakinan"
                             status={prosodyData.details.confidence}
+                            // TAMBAHAN: AVERAGE
+                            average={prosodyAverages?.avg_silence}
+                            unit="% Hening"
                             insight={
                                 prosodyData.details.confidence.includes("Ragu") ? "Terdeteksi banyak jeda hening (silence) yang lama." :
                                 "Alur bicara lancar dengan jeda yang wajar."
@@ -786,7 +946,7 @@ const fetchEvaluation = async (session_id) => {
                           />
                         </div>
                       </div>
-                    )}    
+                    )}
                                         
                     {evaluation.feedback_text && (
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner mt-5">
@@ -798,6 +958,19 @@ const fetchEvaluation = async (session_id) => {
                         </div>
                       </div>
                     )}
+
+                    {evaluation && (evaluation.strengths || evaluation.improvements) && (
+                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                    <AnalysisPointCard 
+                      type="strength" 
+                      items={evaluation.strengths} 
+                    />
+                    <AnalysisPointCard 
+                      type="improvement" 
+                      items={evaluation.improvements} 
+                    />
+                  </div>
+                )}
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 flex-grow flex flex-col justify-center items-center">
