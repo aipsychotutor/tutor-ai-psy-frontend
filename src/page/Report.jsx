@@ -690,7 +690,6 @@ const fetchTranscripts = async (session_id) => {
         prosody: typeof t.prosody_data === 'string' ? safeJsonParse(t.prosody_data) : t.prosody_data
       })));
     } catch (err) {
-      console.error(err);
       setTranscripts([]);
       toast.error("Gagal memuat transkrip");
     } finally {
@@ -740,7 +739,6 @@ const fetchEvaluation = async (session_id) => {
       }
       
     } catch (err) {
-      console.error("Fetch Error:", err);
       setEvaluation(null); 
     } finally {
       setLoadingEvaluation(false);

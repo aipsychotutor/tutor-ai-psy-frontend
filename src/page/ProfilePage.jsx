@@ -69,8 +69,6 @@ export default function ProfilePage() {
 
       if (response.ok) {
         toast.success("Password berhasil diperbarui!");
-        
-        console.log("Password berhasil diperbarui");
         // Reset form setelah berhasil
         setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
       } else {
