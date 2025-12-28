@@ -26,6 +26,7 @@
     "react-speech-recognition": "^4.0.1",
     "recharts": "^3.3.0",
     "three": "0.153.0"
+    
   },
   "devDependencies": {
     "@types/react": "^18.0.27",
