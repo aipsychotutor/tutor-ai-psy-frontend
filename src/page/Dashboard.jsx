@@ -3,8 +3,8 @@
  * MODUL DASHBOARD UTAMA
  * ============================================================================
  * * Deskripsi:
- * Komponen ini berfungsi sebagai halaman utama (Dashboard) aplikasi. 
- * Menyediakan ringkasan statistik, manajemen skenario pasien (CRUD), 
+ * Komponen ini berfungsi sebagai halaman utama (Dashboard) aplikasi.
+ * Menyediakan ringkasan statistik, manajemen skenario pasien (CRUD),
  * dan riwayat sesi latihan pengguna.
  * * Fitur Utama:
  * 1. Otentikasi & Verifikasi User: Memastikan pengguna login sebelum mengakses.
@@ -22,13 +22,24 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 // Import Icons: Menggunakan Lucide React untuk ikon vektor yang ringan dan konsisten.
-import { Search, Filter, Heart, HelpCircle, Layers, Plus, Sparkles, Activity } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Heart,
+  HelpCircle,
+  Layers,
+  Plus,
+  Sparkles,
+  Activity,
+} from "lucide-react";
 
 // Import Custom Components: Komponen modular untuk fitur spesifik.
 import AddScenarioModal from "../components/Dashboard/AddScenarioModal";
-import EditScenarioModal from "../components/Dashboard/EditScenarioModal"; 
+import EditScenarioModal from "../components/Dashboard/EditScenarioModal";
 import Navbar from "../components/Navbar";
-import PatientList, { SessionPatientList } from "../components/Dashboard/PatientList";
+import PatientList, {
+  SessionPatientList,
+} from "../components/Dashboard/PatientList";
 
 /**
  * ============================================================================
@@ -44,7 +55,9 @@ import PatientList, { SessionPatientList } from "../components/Dashboard/Patient
  * @param {string} className - Kelas CSS tambahan untuk styling (ukuran, margin, dll).
  */
 const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200/50 dark:bg-gray-700/50 rounded-xl ${className}`} />
+  <div
+    className={`animate-pulse bg-gray-200/50 dark:bg-gray-700/50 rounded-xl ${className}`}
+  />
 );
 
 /**
@@ -55,10 +68,10 @@ const Skeleton = ({ className }) => (
  * @param {boolean} noPadding - Opsi untuk menghilangkan padding default.
  */
 const GlassCard = ({ children, className = "", noPadding = false }) => (
-  <div className={`backdrop-blur-md bg-white/90 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/50 shadow-xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-white/95 dark:hover:bg-gray-900/90 ${className}`}>
-    <div className={noPadding ? "" : "p-6 sm:p-8"}>
-      {children}
-    </div>
+  <div
+    className={`backdrop-blur-md bg-white/90 dark:bg-gray-900/80 border border-white/20 dark:border-gray-700/50 shadow-xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-white/95 dark:hover:bg-gray-900/90 ${className}`}
+  >
+    <div className={noPadding ? "" : "p-6 sm:p-8"}>{children}</div>
   </div>
 );
 
@@ -73,32 +86,52 @@ const GlassCard = ({ children, className = "", noPadding = false }) => (
  */
 const AestheticStatCard = ({ title, value, icon: Icon, color, loading }) => {
   // Mapping tema warna untuk fleksibilitas styling
-  const theme = {
-    purple: "from-purple-500 to-indigo-600 shadow-purple-500/20 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
-    green: "from-emerald-500 to-teal-600 shadow-emerald-500/20 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
-    blue: "from-blue-500 to-cyan-600 shadow-blue-500/20 text-blue-600 bg-blue-50 dark:bg-blue-900/20",
-  }[color] || "from-gray-500 to-gray-600";
+  const theme =
+    {
+      purple:
+        "from-purple-500 to-indigo-600 shadow-purple-500/20 text-purple-600 bg-purple-50 dark:bg-purple-900/20",
+      green:
+        "from-emerald-500 to-teal-600 shadow-emerald-500/20 text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
+      blue: "from-blue-500 to-cyan-600 shadow-blue-500/20 text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+    }[color] || "from-gray-500 to-gray-600";
 
   return (
     <div className="relative overflow-hidden bg-white dark:bg-gray-800 rounded-3xl p-6 border border-gray-100 dark:border-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-1">
       {/* Konten Kartu */}
       <div className="flex items-start justify-between">
         <div className="relative z-10">
-          <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{title}</p>
+          <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+            {title}
+          </p>
           {loading ? (
             <Skeleton className="h-10 w-24 mt-2" />
           ) : (
-            <h3 className={`text-4xl font-extrabold bg-gradient-to-r ${theme.split(" ")[0]} ${theme.split(" ")[1]} bg-clip-text text-transparent`}>
+            <h3
+              className={`text-4xl font-extrabold bg-gradient-to-r ${
+                theme.split(" ")[0]
+              } ${theme.split(" ")[1]} bg-clip-text text-transparent`}
+            >
               {value}
             </h3>
           )}
         </div>
-        <div className={`p-3 rounded-2xl ${theme.split(" ").slice(2).join(" ")} group-hover:scale-110 transition-transform duration-300`}>
+        <div
+          className={`p-3 rounded-2xl ${theme
+            .split(" ")
+            .slice(2)
+            .join(
+              " "
+            )} group-hover:scale-110 transition-transform duration-300`}
+        >
           <Icon size={24} className={theme.split(" ")[2]} />
         </div>
       </div>
       {/* Elemen Dekoratif Background */}
-      <div className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-5 bg-gradient-to-r ${theme.split(" ")[0]} ${theme.split(" ")[1]}`} />
+      <div
+        className={`absolute -bottom-4 -right-4 w-24 h-24 rounded-full opacity-5 bg-gradient-to-r ${
+          theme.split(" ")[0]
+        } ${theme.split(" ")[1]}`}
+      />
     </div>
   );
 };
@@ -128,11 +161,20 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-gray-100 dark:border-gray-800 transform transition-all animate-in zoom-in-95 duration-200 scale-100">
-        
         {/* Ikon Peringatan */}
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-6">
-          <svg className="h-8 w-8 text-red-600 dark:text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          <svg
+            className="h-8 w-8 text-red-600 dark:text-red-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+            />
           </svg>
         </div>
 
@@ -142,17 +184,26 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName }) => {
             Hapus Skenario?
           </h3>
           <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
-            Anda yakin ingin menghapus skenario <span className="font-bold text-gray-800 dark:text-gray-200">"{itemName}"</span>? 
-            Tindakan ini tidak dapat dibatalkan.
+            Anda yakin ingin menghapus skenario{" "}
+            <span className="font-bold text-gray-800 dark:text-gray-200">
+              "{itemName}"
+            </span>
+            ? Tindakan ini tidak dapat dibatalkan.
           </p>
         </div>
 
         {/* Tombol Aksi */}
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={onClose} className="py-2.5 px-4 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+          <button
+            onClick={onClose}
+            className="py-2.5 px-4 rounded-xl font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
             Batal
           </button>
-          <button onClick={onConfirm} className="py-2.5 px-4 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-95">
+          <button
+            onClick={onConfirm}
+            className="py-2.5 px-4 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-[1.02] active:scale-95"
+          >
             Ya, Hapus
           </button>
         </div>
@@ -180,7 +231,7 @@ export default function Dashboard() {
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [sessionPatients, setSessionPatients] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
-  
+
   // State untuk data statistik
   const [totalSessions, setTotalSessions] = useState(0);
   const [avgEmpathyScore, setAvgEmpathyScore] = useState(0);
@@ -229,7 +280,7 @@ export default function Dashboard() {
   };
 
   // --- API FETCHING FUNCTIONS ---
-  
+
   /**
    * Mengambil data statistik performa pengguna.
    */
@@ -237,15 +288,20 @@ export default function Dashboard() {
     if (!token) return setLoadingStats(false);
     setLoadingStats(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/reports/stats`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`http://localhost:3000/api/reports/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.status === 401) return handleAuthError();
       const data = await res.json();
       if (data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
         setAvgQuestionScore(data.data.avg_question_score || 0);
       }
-    } catch (err) { toast.error("Gagal memuat statistik"); } 
-    finally { setLoadingStats(false); }
+    } catch (err) {
+      toast.error("Gagal memuat statistik");
+    } finally {
+      setLoadingStats(false);
+    }
   };
 
   /**
@@ -256,20 +312,37 @@ export default function Dashboard() {
     if (!token) return setLoadingSessions(false);
     setLoadingSessions(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/sessions`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`http://localhost:3000/api/sessions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.status === 401) return handleAuthError();
       const data = await res.json();
       const sessions = data?.data || [];
       setTotalSessions(sessions.length);
-      
+
       // Deduplikasi data sesi berdasarkan Patient ID
-      const uniquePatients = Array.from(new Map(sessions.map((s) => [s.patient_id, {
-        id: s.patient_id, name: s.patient_name, image: s.patient_image, lastSession: s.session_date || s.start_time, status: s.status,
-      }])).values());
-      
+      const uniquePatients = Array.from(
+        new Map(
+          sessions.map((s) => [
+            s.patient_id,
+            {
+              id: s.patient_id,
+              name: s.patient_name,
+              image: s.patient_image,
+              lastSession: s.session_date || s.start_time,
+              status: s.status,
+              symptom_intensity: s.symptom_intensity,
+            },
+          ])
+        ).values()
+      );
+
       setSessionPatients(uniquePatients);
-    } catch (err) { toast.error("Gagal memuat riwayat sesi"); } 
-    finally { setLoadingSessions(false); }
+    } catch (err) {
+      toast.error("Gagal memuat riwayat sesi");
+    } finally {
+      setLoadingSessions(false);
+    }
   };
 
   /**
@@ -279,26 +352,71 @@ export default function Dashboard() {
   const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
-      const res = await fetch("http://localhost:3000/api/patients", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("http://localhost:3000/api/patients", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.status === 401) return handleAuthError();
       const data = await res.json();
-      
+
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
         const isCurrentUser = p.user_id === currentUser?.user_id;
+
+        // ========== SYMPTOM INTENSITY CATEGORIZATION ==========
+        const symptomIntensity = parseInt(p.symptom_intensity) || 0;
+
+        let symptom_intensity_tag = "";
+        let symptom_intensity_tag_color = "";
+
+        if (symptomIntensity <= 3) {
+          symptom_intensity_tag = "Mild";
+          symptom_intensity_tag_color = "bg-green-100 text-green-800";
+        } else if (symptomIntensity <= 6) {
+          symptom_intensity_tag = "Moderate";
+          symptom_intensity_tag_color = "bg-yellow-100 text-yellow-800";
+        } else if (symptomIntensity <= 8) {
+          symptom_intensity_tag = "Mod-Severe";
+          symptom_intensity_tag_color = "bg-orange-100 text-orange-800";
+        } else {
+          symptom_intensity_tag = "Severe";
+          symptom_intensity_tag_color = "bg-red-100 text-red-800";
+        }
         return {
-          id: p.patient_id, name: p.patient_name, image: p.profile_image || null, personality_traits: p.personality_traits || [],
-          background_story: p.background_story, personality_type: p.personality_type, symptom_intensity: p.symptom_intensity,
-          age: p.age, gender: p.gender, occupation: p.occupation, marital_status: p.marital_status,
+          id: p.patient_id,
+          name: p.patient_name,
+          image: p.profile_image || null,
+          personality_traits: p.personality_traits || [],
+          background_story: p.background_story,
+          personality_type: p.personality_type,
+          symptom_intensity: p.symptom_intensity,
+          age: p.age,
+          gender: p.gender,
+          occupation: p.occupation,
+          marital_status: p.marital_status,
           // Logika penentuan label tag
-          patient_tag: isCurrentUser && currentUser?.is_admin && isGlobal ? "Global" : isCurrentUser ? "Buatan Sendiri" : isGlobal ? "Global" : p.users?.username,
-          patient_tag_color: isGlobal ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800",
+          patient_tag:
+            isCurrentUser && currentUser?.is_admin && isGlobal
+              ? "Global"
+              : isCurrentUser
+              ? "Buatan Sendiri"
+              : isGlobal
+              ? "Global"
+              : p.users?.username,
+          patient_tag_color: isGlobal
+            ? "bg-blue-100 text-blue-800"
+            : "bg-green-100 text-green-800",
+          // ========== SYMPTOM TAG (BARU - SIMPLE) ==========
+          symptom_intensity_tag: symptom_intensity_tag,
+          symptom_intensity_tag_color: symptom_intensity_tag_color,
+          // ===============================================
         };
       });
       setPatients(mappedPatients);
-    } catch (err) { 
+    } catch (err) {
       toast.error("Gagal memuat data skenario");
-    } finally { setLoadingPatients(false); }
+    } finally {
+      setLoadingPatients(false);
+    }
   };
 
   // Memicu fetch data saat token/user tersedia
@@ -314,54 +432,73 @@ export default function Dashboard() {
   // Memoized filter untuk performa pencarian yang lebih baik
   const filteredPatients = useMemo(() => {
     return patients
-      .filter((p) => selectedTag === "Semua" ? true : p.patient_tag === selectedTag)
+      .filter((p) =>
+        selectedTag === "Semua" ? true : p.patient_tag === selectedTag
+      )
       .filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [patients, searchTerm, selectedTag]);
 
   // --- EVENT HANDLERS ---
-  
+
   // Navigasi
-  const handleDetailClick = (p) => navigate(`/profile/${p.id}`, { state: { patient: p } });
-  const handleReportClick = (p) => navigate(`/report/${p.id}`, { state: { patient: p } });
-  const handleStartSession = (p) => navigate(`/profile/${p.id}`, { state: { patientId: p.id, patient: p }, });
+  const handleDetailClick = (p) =>
+    navigate(`/profile/${p.id}`, { state: { patient: p } });
+  const handleReportClick = (p) =>
+    navigate(`/report/${p.id}`, { state: { patient: p } });
+  const handleStartSession = (p) =>
+    navigate(`/profile/${p.id}`, { state: { patientId: p.id, patient: p } });
 
   // CRUD Skenario
   const handleSaveScenario = async (patientData) => {
     try {
       const response = await fetch("http://localhost:3000/api/patients", {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(patientData),
       });
       if (response.ok) {
         toast.success("Skenario berhasil dibuat!");
         setShowAddModal(false);
         fetchPatients(user); // Refresh data
-      } else { throw new Error("Gagal menyimpan"); }
-    } catch (error) { toast.error("Gagal menyimpan skenario"); }
+      } else {
+        throw new Error("Gagal menyimpan");
+      }
+    } catch (error) {
+      toast.error("Gagal menyimpan skenario");
+    }
   };
 
-  const handleTriggerEdit = (p) => { setSelectedScenarioToEdit(p); setShowEditModal(true); };
-  
+  const handleTriggerEdit = (p) => {
+    setSelectedScenarioToEdit(p);
+    setShowEditModal(true);
+  };
+
   const handleSaveUpdate = (updatedPatientFromAPI) => {
     setPatients((prevPatients) =>
       prevPatients.map((p) =>
-        p.id === updatedPatientFromAPI.patient_id || p.id === updatedPatientFromAPI.id
+        p.id === updatedPatientFromAPI.patient_id ||
+        p.id === updatedPatientFromAPI.id
           ? {
-              ...p, 
+              ...p,
               ...updatedPatientFromAPI,
-              name: updatedPatientFromAPI.patient_name || updatedPatientFromAPI.name,
+              name:
+                updatedPatientFromAPI.patient_name ||
+                updatedPatientFromAPI.name,
               id: updatedPatientFromAPI.patient_id || updatedPatientFromAPI.id,
             }
           : p
       )
     );
-    
+
     // Tutup modal
     setShowEditModal(false);
   };
 
   // Delete Handlers
-  const handleTriggerDelete = (patient) => { 
+  const handleTriggerDelete = (patient) => {
     setDeleteTarget(patient); // Buka modal konfirmasi
   };
 
@@ -372,13 +509,18 @@ export default function Dashboard() {
     if (!deleteTarget) return;
 
     const targetId = deleteTarget.id;
-    const loadingToastId = toast.loading(`Berhasil menghapus ${deleteTarget.name}...`);
+    const loadingToastId = toast.loading(
+      `Berhasil menghapus ${deleteTarget.name}...`
+    );
 
     try {
-      const res = await fetch(`http://localhost:3000/api/patients/${targetId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `http://localhost:3000/api/patients/${targetId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (!res.ok) throw new Error("Gagal menghapus di server.");
 
@@ -388,7 +530,6 @@ export default function Dashboard() {
 
       toast.success("Skenario berhasil dihapus.");
       setDeleteTarget(null); // Tutup modal konfirmasi
-
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -401,22 +542,29 @@ export default function Dashboard() {
 
   // --- JSX RENDER ---
   return (
-    <div className="h-full w-full flex flex-col overflow-y-auto"> 
-      <Toaster position="top-center" reverseOrder={false} toastOptions={{ className: 'font-medium', style: { borderRadius: '10px', background: '#333', color: '#fff' } }}/>
+    <div className="h-full w-full flex flex-col overflow-y-auto">
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          className: "font-medium",
+          style: { borderRadius: "10px", background: "#333", color: "#fff" },
+        }}
+      />
 
       <Navbar user={user} onLogout={handleLogout} />
 
       <main className="flex-grow w-full bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
         <div className="w-full h-full py-10 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-screen-2xl space-y-8">
-            
             {/* Header Section */}
             <div className="space-y-1 animate-in slide-in-from-top-5 duration-500">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white drop-shadow-sm">
                 Halo, <span>{user?.username}!</span>
               </h1>
               <p className="text-white/80 text-lg sm:text-xl font-medium max-w-2xl">
-                Siap meningkatkan kemampuan komunikasimu hari ini? Berikut ringkasan progresmu.
+                Siap meningkatkan kemampuan komunikasimu hari ini? Berikut
+                ringkasan progresmu.
               </p>
             </div>
 
@@ -450,9 +598,16 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Sparkles className="text-yellow-500" size={24} fill="currentColor" /> Pustaka Skenario
+                    <Sparkles
+                      className="text-yellow-500"
+                      size={24}
+                      fill="currentColor"
+                    />{" "}
+                    Pustaka Skenario
                   </h2>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">Pilih karakter simulasi untuk memulai latihan.</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">
+                    Pilih karakter simulasi untuk memulai latihan.
+                  </p>
                 </div>
                 <ActionButton onClick={() => setShowAddModal(true)} icon={Plus}>
                   Skenario Baru
@@ -488,7 +643,19 @@ export default function Dashboard() {
                     <option value="Buatan Sendiri">Buatan Saya</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    <svg
+                      className="h-4 w-4 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -497,7 +664,10 @@ export default function Dashboard() {
               {loadingPatients ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                    <div
+                      key={i}
+                      className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm"
+                    >
                       <div className="flex items-center gap-4 mb-4">
                         <Skeleton className="w-16 h-16 rounded-full" />
                         <div className="space-y-2">
@@ -515,7 +685,7 @@ export default function Dashboard() {
                   onStartSession={handleStartSession}
                   onEditScenario={handleTriggerEdit}
                   onDeleteScenario={handleTriggerDelete}
-                  user={user}  
+                  user={user}
                 />
               )}
             </GlassCard>
@@ -526,20 +696,28 @@ export default function Dashboard() {
                 <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
                   <Activity size={24} />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Sesi Terakhir</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Riwayat Sesi Terakhir
+                </h2>
               </div>
 
               {loadingSessions ? (
                 <div className="space-y-4">
-                  {[1, 2].map((i) => <Skeleton key={i} className="h-20 w-full" />)}
+                  {[1, 2].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full" />
+                  ))}
                 </div>
               ) : sessionPatients.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                   <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                     <Layers className="text-gray-400" size={32} />
                   </div>
-                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">Belum ada riwayat sesi</p>
-                  <p className="text-sm text-gray-500">Mulai latihan pertamamu sekarang!</p>
+                  <p className="text-lg font-semibold text-gray-600 dark:text-gray-300">
+                    Belum ada riwayat sesi
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Mulai latihan pertamamu sekarang!
+                  </p>
                 </div>
               ) : (
                 <SessionPatientList
@@ -549,7 +727,6 @@ export default function Dashboard() {
                 />
               )}
             </GlassCard>
-
           </div>
 
           {/* Modal Popups */}
@@ -566,14 +743,13 @@ export default function Dashboard() {
             onSave={handleSaveUpdate}
             user={user}
           />
-          
+
           <DeleteConfirmationModal
             isOpen={!!deleteTarget}
             onClose={() => setDeleteTarget(null)}
             onConfirm={executeDelete}
             itemName={deleteTarget?.name}
           />
-
         </div>
       </main>
     </div>

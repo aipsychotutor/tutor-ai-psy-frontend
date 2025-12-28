@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast"; // Pastikan ini diimport buat alert
-import Button from "./ButtonDashboard"; 
-import Avatar2 from "./Avatar2"; 
-import { formatTraits } from "../../utils/formatters"; 
+import Button from "./ButtonDashboard";
+import Avatar2 from "./Avatar2";
+import { formatTraits } from "../../utils/formatters";
 
 /**
  * ============================================================================
@@ -26,15 +26,42 @@ import { formatTraits } from "../../utils/formatters";
  * @param {function} props.onDetailClick - Callback saat tombol "Detail" diklik
  * @param {function} props.onReportClick - Callback saat tombol "Laporan" diklik
  */
-export function SessionPatientListItem({ patient, onDetailClick, onReportClick }) {
+export function SessionPatientListItem({
+  patient,
+  onDetailClick,
+  onReportClick,
+}) {
+  // ========== SYMPTOM INTENSITY CATEGORIZATION ==========
+  const symptomIntensity = parseInt(patient.symptom_intensity) || 0;
+  let symptom_intensity_tag = "";
+  let symptom_intensity_tag_color = "";
+
+  if (symptomIntensity <= 3) {
+    symptom_intensity_tag = "Mild";
+    symptom_intensity_tag_color = "bg-green-100 text-green-800";
+  } else if (symptomIntensity <= 6) {
+    symptom_intensity_tag = "Moderate";
+    symptom_intensity_tag_color = "bg-yellow-100 text-yellow-800";
+  } else if (symptomIntensity <= 8) {
+    symptom_intensity_tag = "Mod-Severe";
+    symptom_intensity_tag_color = "bg-orange-100 text-orange-800";
+  } else {
+    symptom_intensity_tag = "Severe";
+    symptom_intensity_tag_color = "bg-red-100 text-red-800";
+  }
+  // ===============================================
   return (
     <div className="flex items-center justify-between bg-white dark:bg-gray-950 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors">
-      
       {/* --- KOLOM KIRI: Identitas Pasien (Avatar & Nama) --- */}
       <div className="flex items-center gap-3">
         <Avatar2 src={patient.image} alt="" />
         <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
           {patient.name}
+        </span>
+        <span
+          className={`inline-block ${symptom_intensity_tag_color} text-xs font-semibold px-2.5 py-0.5 rounded-full`}
+        >
+          {symptom_intensity_tag}
         </span>
       </div>
 
@@ -103,8 +130,13 @@ export function SessionPatientList({ patients, onDetailClick, onReportClick }) {
  * @param {function} props.onDeleteScenario - Callback konfirmasi Hapus (diterima dari Dashboard)
  * @param {object} props.user - Data user yang sedang login (UNTUK CEK ROLE) -> WAJIB ADA
  */
-export default function PatientList({ patients, onStartSession, onEditScenario, onDeleteScenario, user }) {
-  
+export default function PatientList({
+  patients,
+  onStartSession,
+  onEditScenario,
+  onDeleteScenario,
+  user,
+}) {
   // --- STATE MANAGEMENT ---
   // Menyimpan ID pasien yang menu dropdown-nya sedang aktif/terbuka.
   // Jika null, berarti tidak ada menu yang terbuka.
@@ -118,24 +150,27 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
    */
   const toggleDropdown = (pasien, e) => {
     e.stopPropagation(); // PENTING: Mencegah trigger event klik pada parent card (jika ada)
-    
+
     // --- LOGIC SATPAM: CEK AKSES ---
     // 1. Cek apakah ini skenario Global? (Biasanya ditandai string 'Global' di patient_tag)
     //    Sesuaikan logic ini dengan data backend kamu kalau beda field.
     const isGlobalScenario = pasien.patient_tag === "Global";
-    
+
     // 2. Cek apakah user adalah Admin?
     const isAdmin = user?.is_admin === true;
 
     // 3. Jika Global DAN Bukan Admin => BLOKIR!
     if (isGlobalScenario && !isAdmin) {
-      toast.error("AKSES DITOLAK: Anda tidak dapat mengubah atau menghapus Skenario Global!", {
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
-      });
+      toast.error(
+        "AKSES DITOLAK: Anda tidak dapat mengubah atau menghapus Skenario Global!",
+        {
+          style: {
+            borderRadius: "10px",
+            background: "#333",
+            color: "#fff",
+          },
+        }
+      );
       return; // Stop disini, menu gak bakal kebuka
     }
 
@@ -150,12 +185,12 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
    */
   useEffect(() => {
     const handleClickOutside = () => setActiveDropdownId(null);
-    
+
     // Pasang event listener pada window
-    document.addEventListener('click', handleClickOutside);
-    
+    document.addEventListener("click", handleClickOutside);
+
     // Cleanup event listener saat komponen unmount
-    return () => document.removeEventListener('click', handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   /**
@@ -163,7 +198,7 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
    * Dipanggil saat user memilih opsi "Update Pasien" dari dropdown.
    */
   const handleEditClick = (patient, e) => {
-    e.stopPropagation();      // Cegah bubbling event
+    e.stopPropagation(); // Cegah bubbling event
     setActiveDropdownId(null); // Tutup menu dropdown segera
     if (onEditScenario) {
       onEditScenario(patient); // Eksekusi fungsi dari parent
@@ -175,7 +210,7 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
    * Dipanggil saat user memilih opsi "Delete Skenario" dari dropdown.
    */
   const handleDeleteClick = (patient, e) => {
-    e.stopPropagation();      // Cegah bubbling event
+    e.stopPropagation(); // Cegah bubbling event
     setActiveDropdownId(null); // Tutup menu dropdown segera
     if (onDeleteScenario) {
       onDeleteScenario(patient); // Eksekusi fungsi dari parent
@@ -204,12 +239,10 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
           // 'overflow-visible': Agar dropdown menu bisa muncul keluar batas kartu (pop-out)
           className="relative flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-visible transition-transform hover:scale-[1.02]"
         >
-          
           {/* ============================================================== */}
           {/* BAGIAN 1: MENU OPSI (KEBAB MENU / TITIK TIGA) */}
           {/* ============================================================== */}
           <div className="absolute top-3 right-3 z-10">
-            
             {/* Tombol Trigger (Titik Tiga) */}
             <button
               // UPDATE: Sekarang kirim object 'pasien' utuh, bukan cuma ID
@@ -218,8 +251,19 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
               aria-label="Opsi lainnya"
             >
               {/* SVG Icon: Ellipsis Vertical */}
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                />
               </svg>
             </button>
 
@@ -227,7 +271,6 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
             {activeDropdownId === pasien.id && (
               <div className="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-700 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-20 overflow-hidden animate-[fadeIn_0.1s_ease-out]">
                 <div className="py-1">
-                  
                   {/* Opsi 1: Update */}
                   <button
                     onClick={(e) => handleEditClick(pasien, e)}
@@ -235,7 +278,7 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
                   >
                     Update Pasien
                   </button>
-                  
+
                   {/* Opsi 2: Delete (Warna Merah) */}
                   <button
                     onClick={(e) => handleDeleteClick(pasien, e)}
@@ -243,7 +286,6 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
                   >
                     Delete Skenario
                   </button>
-
                 </div>
               </div>
             )}
@@ -252,8 +294,9 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
           {/* ============================================================== */}
           {/* BAGIAN 2: KONTEN KARTU UTAMA */}
           {/* ============================================================== */}
-          <div className="p-4 flex-grow pt-8"> {/* Padding-top besar agar teks tidak tertabrak tombol menu */}
-            
+          <div className="p-4 flex-grow pt-8">
+            {" "}
+            {/* Padding-top besar agar teks tidak tertabrak tombol menu */}
             {/* Header: Avatar & Nama */}
             <div className="flex items-center gap-3 mb-3">
               <Avatar2 src={pasien.image} alt={pasien.name} size="md" />
@@ -261,16 +304,19 @@ export default function PatientList({ patients, onStartSession, onEditScenario, 
                 {pasien.name}
               </h3>
             </div>
-
             {/* Badge/Tag Kategori */}
-            <div className="mb-2">
+            <div className="flex gap-2 mb-2">
               <span
                 className={`inline-block ${pasien.patient_tag_color} text-xs font-semibold px-2.5 py-0.5 rounded-full`}
               >
                 {pasien.patient_tag}
               </span>
+              <span
+                className={`inline-block ${pasien.symptom_intensity_tag_color} text-xs font-semibold px-2.5 py-0.5 rounded-full`}
+              >
+                {pasien.symptom_intensity_tag}
+              </span>
             </div>
-
             {/* Deskripsi Traits (Dibatasi 2 baris) */}
             <p className="text-xs text-gray-600 dark:text-gray-400 h-10 line-clamp-2">
               {formatTraits(pasien.personality_traits)}

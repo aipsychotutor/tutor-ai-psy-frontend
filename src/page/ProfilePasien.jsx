@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 // Import Navbar
-import Navbar from "../components/Navbar"; 
+import Navbar from "../components/Navbar";
 // Import Icons
-import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles } from "lucide-react";
+import {
+  User,
+  Briefcase,
+  Heart,
+  Activity,
+  FileText,
+  ArrowLeft,
+  Play,
+  Sparkles,
+} from "lucide-react";
 
 /**
  * ============================================================================
@@ -12,11 +21,21 @@ import { User, Briefcase, Heart, Activity, FileText, ArrowLeft, Play, Sparkles }
  */
 
 // Modern Button
-const ActionButton = ({ onClick, children, variant = 'primary', icon: Icon, className = '', disabled }) => {
+const ActionButton = ({
+  onClick,
+  children,
+  variant = "primary",
+  icon: Icon,
+  className = "",
+  disabled,
+}) => {
   const variants = {
-    primary: "bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg shadow-teal-500/30",
-    danger: "bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur-sm",
-    secondary: "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+    primary:
+      "bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white shadow-lg shadow-teal-500/30",
+    danger:
+      "bg-white/10 text-white hover:bg-white/20 border border-white/20 backdrop-blur-sm",
+    secondary:
+      "bg-white text-gray-900 hover:bg-gray-100 border border-gray-200",
   };
 
   return (
@@ -40,7 +59,9 @@ const AestheticAvatar = ({ src, alt }) => (
         src={src || "/images/default.png"}
         alt={alt}
         className="w-full h-full rounded-full object-cover border-4 border-white dark:border-gray-800 bg-gray-100"
-        onError={(e) => { e.target.src = "/images/default.png"; }}
+        onError={(e) => {
+          e.target.src = "/images/default.png";
+        }}
       />
     </div>
     <div className="absolute bottom-2 right-2 p-2 bg-teal-500 rounded-full border-4 border-white dark:border-gray-900 text-white shadow-lg">
@@ -56,7 +77,9 @@ const InfoItem = ({ label, value, icon: Icon }) => (
       <Icon size={20} />
     </div>
     <div>
-      <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-0.5">{label}</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-white/60 mb-0.5">
+        {label}
+      </p>
       <p className="text-lg font-semibold text-white">{value}</p>
     </div>
   </div>
@@ -107,24 +130,33 @@ export default function ProfilePage() {
     navigate("/", { replace: true });
   };
 
-  const handleBack = () => navigate('/dashboard');
+  const handleBack = () => navigate("/dashboard");
 
   // Start Session Logic
   const handleStartSession = async () => {
     setIsStartingSession(true);
     try {
       // 1. Set Persona
-      const personaRes = await fetch("http://localhost:3000/api/chat/set-persona-from-patient", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ patient_id: patientId }),
-      });
+      const personaRes = await fetch(
+        "http://localhost:3000/api/chat/set-persona-from-patient",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ patient_id: patientId }),
+        }
+      );
       if (!personaRes.ok) throw new Error("Gagal set persona");
 
       // 2. Create Session
       const sessionRes = await fetch("http://localhost:3000/api/sessions", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ patient_id: patientId }),
       });
       const sessionData = await sessionRes.json();
@@ -149,9 +181,12 @@ export default function ProfilePage() {
     const fetchPatientData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:3000/api/patients/${patientId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(
+          `http://localhost:3000/api/patients/${patientId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         if (response.status === 401) return handleLogout();
         if (!response.ok) throw new Error("Gagal mengambil data");
 
@@ -163,11 +198,14 @@ export default function ProfilePage() {
             jenisKelamin: data.gender || "-",
             pekerjaan: data.occupation || "-",
             status: data.marital_status || "-",
+            symptom_intensity: data.symptom_intensity || 0,
           },
           latarBelakang: {
             cerita: data.background_story || "Tidak ada informasi.",
           },
-          kepribadian: Array.isArray(data.personality_traits) ? data.personality_traits : [],
+          kepribadian: Array.isArray(data.personality_traits)
+            ? data.personality_traits
+            : [],
           profileImage: data.profile_image,
           avatarPath: data.avatar_path,
         });
@@ -181,43 +219,66 @@ export default function ProfilePage() {
   }, [patientId, token]);
 
   // Render Loading / Error
-  if (loading) return (
-    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-4 border-white/20 border-t-teal-400 rounded-full animate-spin"></div>
-        <p className="text-white/80 font-medium animate-pulse">Memuat profil pasien...</p>
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-white/20 border-t-teal-400 rounded-full animate-spin"></div>
+          <p className="text-white/80 font-medium animate-pulse">
+            Memuat profil pasien...
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
 
-  if (error || !profileData) return (
-    <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex flex-col items-center justify-center gap-6 px-4">
-      <div className="p-4 rounded-full bg-red-500/20 text-red-200">
-        <Activity size={48} />
+  if (error || !profileData)
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd flex flex-col items-center justify-center gap-6 px-4">
+        <div className="p-4 rounded-full bg-red-500/20 text-red-200">
+          <Activity size={48} />
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">
+            Gagal Memuat Data
+          </h2>
+          <p className="text-white/60">
+            {error || "Data pasien tidak ditemukan."}
+          </p>
+        </div>
+        <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft}>
+          Kembali ke Dashboard
+        </ActionButton>
       </div>
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-2">Gagal Memuat Data</h2>
-        <p className="text-white/60">{error || "Data pasien tidak ditemukan."}</p>
-      </div>
-      <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft}>Kembali ke Dashboard</ActionButton>
-    </div>
-  );
+    );
+  // ========== SYMPTOM INTENSITY CATEGORIZATION ==========
+  const symptomIntensity = parseInt(profileData.biodata.symptom_intensity) || 0;
+  let symptom_intensity_tag = "";
 
+  if (symptomIntensity <= 3) {
+    symptom_intensity_tag = "Mild";
+  } else if (symptomIntensity <= 6) {
+    symptom_intensity_tag = "Moderate";
+  } else if (symptomIntensity <= 8) {
+    symptom_intensity_tag = "Mod-Severe";
+  } else {
+    symptom_intensity_tag = "Severe";
+  }
   // Main Render
   return (
     <div className="h-full w-full flex flex-col overflow-y-auto bg-gradient-to-b from-dashboardStart via-dashboardMid to-dashboardEnd">
-      
       <Navbar user={user} onLogout={handleLogout} isSimulation={false} />
 
       <div className="flex-grow pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          
           {/* Header Section */}
           <div className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 mb-12 animate-in slide-in-from-top-5 duration-700">
             <div className="relative z-10 -mb-16 md:mb-0 md:-mr-12">
-              <AestheticAvatar src={profileData.profileImage} alt={profileData.biodata.nama} />
+              <AestheticAvatar
+                src={profileData.profileImage}
+                alt={profileData.biodata.nama}
+              />
             </div>
-            
+
             <div className="flex-1 text-center md:text-left pt-16 md:pt-0 md:pl-8">
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg mb-2">
                 {profileData.biodata.nama}
@@ -229,17 +290,25 @@ export default function ProfilePage() {
                 <span className="px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium border border-white/20 backdrop-blur-sm">
                   {profileData.biodata.jenisKelamin}
                 </span>
+                <span className="px-3 py-1 rounded-full bg-white/10 text-white/90 text-sm font-medium border border-white/20 backdrop-blur-sm">
+                  {symptom_intensity_tag}
+                </span>
               </div>
             </div>
 
             <div className="flex gap-3 w-full md:w-auto">
-              <ActionButton onClick={handleBack} variant="danger" icon={ArrowLeft} className="flex-1 md:flex-none">
+              <ActionButton
+                onClick={handleBack}
+                variant="danger"
+                icon={ArrowLeft}
+                className="flex-1 md:flex-none"
+              >
                 Kembali
               </ActionButton>
-              <ActionButton 
-                onClick={handleStartSession} 
-                variant="primary" 
-                icon={isStartingSession ? Activity : Play} 
+              <ActionButton
+                onClick={handleStartSession}
+                variant="primary"
+                icon={isStartingSession ? Activity : Play}
                 className="flex-1 md:flex-none"
                 disabled={isStartingSession}
               >
@@ -250,12 +319,23 @@ export default function ProfilePage() {
 
           {/* Main Card Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-5 duration-700 delay-200">
-            
             {/* Left Column: Biodata Grid */}
             <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <InfoItem label="Pekerjaan" value={profileData.biodata.pekerjaan} icon={Briefcase} />
-              <InfoItem label="Status" value={profileData.biodata.status} icon={Heart} />
-              <InfoItem label="Usia" value={profileData.biodata.usia} icon={User} />
+              <InfoItem
+                label="Pekerjaan"
+                value={profileData.biodata.pekerjaan}
+                icon={Briefcase}
+              />
+              <InfoItem
+                label="Status"
+                value={profileData.biodata.status}
+                icon={Heart}
+              />
+              <InfoItem
+                label="Usia"
+                value={profileData.biodata.usia}
+                icon={User}
+              />
             </div>
 
             {/* Bottom Row: Story & Traits */}
@@ -274,7 +354,7 @@ export default function ProfilePage() {
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Activity className="text-purple-300" /> Kepribadian
               </h2>
-              
+
               {profileData.kepribadian.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {profileData.kepribadian.map((trait, idx) => (
@@ -282,12 +362,12 @@ export default function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-white/50 italic">Tidak ada data kepribadian.</p>
+                <p className="text-white/50 italic">
+                  Tidak ada data kepribadian.
+                </p>
               )}
             </div>
-
           </div>
-
         </div>
       </div>
     </div>
