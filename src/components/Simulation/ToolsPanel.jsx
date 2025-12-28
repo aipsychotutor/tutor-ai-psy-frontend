@@ -1,4 +1,4 @@
-import React from "react";
+import {forwardRef} from "react";
 import CameraToModelWS from "./CameraToModelWS";
 
 /**
@@ -7,21 +7,15 @@ import CameraToModelWS from "./CameraToModelWS";
  * Displays a set of floating action buttons for simulation controls:
  * 1. Toggle Camera Zoom
  * 2. Toggle Green Screen (Chroma Key) background
- * 3. Toggle Camera Analysis Widget
+ * 3. Camera Analysis Widget for capturing expression data
  *
  * @component
  * @param {object} props - Component props.
  * @param {boolean} props.cameraZoomed - Current zoom state.
  * @param {function} props.setCameraZoomed - State setter for zoom.
- * @param {boolean} props.showCameraWidget - Current visibility of the camera widget.
- * @param {function} props.setShowCameraWidget - State setter for camera widget visibility.
  */
-const ToolsPanel = ({
-  cameraZoomed,
-  setCameraZoomed,
-  showCameraWidget,
-  setShowCameraWidget,
-}) => {
+const ToolsPanel = forwardRef(
+  ({ cameraZoomed, setCameraZoomed }, ref) => {
   // Handler to toggle a CSS class on the body for green screen effect
   const toggleGreenScreen = () => {
     const body = document.querySelector("body");
@@ -91,37 +85,15 @@ const ToolsPanel = ({
           />
         </svg>
       </button>
-
-      {/* Camera Widget Toggle Button */}
-      <button
-        onClick={() => setShowCameraWidget((prev) => !prev)}
-        className="bg-white hover:bg-gray-100 text-black border border-gray-200 p-3 rounded-full shadow-md backdrop-blur-sm transition-all"
-        title="Show Camera Analysis"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={2}
-          stroke="currentColor"
-          className="w-6 h-6"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 7.5l2.49-2.49A2.25 2.25 0 018.835 4.5h6.33a2.25 2.25 0 011.596.66l2.49 2.49M4.5 7.5h15a1.5 1.5 0 011.5 1.5v7.5A2.25 2.25 0 0119.25 19.5h-14.5A2.25 2.25 0 012.25 16.5V9A1.5 1.5 0 013.75 7.5z"
-          />
-        </svg>
-      </button>
-
-      {/* Camera Analysis Widget (Conditional Render) */}
-      {showCameraWidget && (
+    
+      {/* Camera Analysis Widget */}
         <div className="fixed bottom-32 right-6 w-80 max-w-[90vw] rounded-xl bg-black/80 border border-white/10 shadow-2xl z-40 backdrop-blur pointer-events-auto">
-          <CameraToModelWS />
+          <CameraToModelWS 
+            ref={ref}
+          />
         </div>
-      )}
     </div>
   );
-};
+});
 
 export default ToolsPanel;

@@ -2,13 +2,27 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
-import {
-  Heart,
-  MessageCircleQuestion,
-  Activity,
-  Sparkles,
-  Quote,
-  Calendar,
+import { Line } from "react-chartjs-2";
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Title, 
+  Tooltip, 
+  Legend,
+  TimeScale
+} from "chart.js";
+import 'chartjs-adapter-date-fns';
+
+import { 
+  Heart, 
+  MessageCircleQuestion, 
+  Activity, 
+  Sparkles, 
+  Quote, 
+  Calendar, 
   Clock,
   Search,
   Mic,
@@ -16,8 +30,19 @@ import {
   PauseCircle,
   TrendingUp,
   Lightbulb,
+  Smile
 } from "lucide-react";
 
+ChartJS.register(
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Title, 
+  Tooltip, 
+  Legend,
+  TimeScale
+);
 /**
  * ============================================================================
  * HELPER UI COMPONENTS
@@ -524,6 +549,187 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
   );
 }
 
+function ExpressionLineChart({ data }) {
+  const expressionMap = {
+    neutral: 0,
+    happy: 1,
+    angry: 2,
+    sad: 3,
+    surprise: 4,
+    fear: 5,
+    disgust: 6
+  };
+
+  const expressionColors = {
+    neutral: '#94a3b8',
+    happy: '#22c55e',
+    angry: '#ef4444',
+    sad: '#3b82f6',
+    surprise: '#f59e0b',
+    fear: '#8b5cf6',
+    disgust: '#06b6d4'
+  };
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+        <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full mb-3 inline-block">
+          <Smile size={32} className="text-gray-400" />
+        </div>
+        <p className="text-gray-500 font-medium">
+          Tidak ada data ekspresi wajah yang tersedia untuk sesi ini.
+        </p>
+      </div>
+    );
+  }
+
+  const timestamps = data.map(item => new Date(item.timestamp));
+  const expressions = data.map(item => expressionMap[item.expression?.toLowerCase()] ?? 0);
+
+  const chartData = {
+    labels: timestamps,
+    datasets: [
+      {
+        label: "Ekspresi Wajah Pasien",
+        data: expressions,
+        fill: false,
+        borderColor: "rgba(20,184,166,1)",
+        backgroundColor: "rgba(20,184,166,0.1)",
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: data.map(item => 
+          expressionColors[item.expression?.toLowerCase()] || '#94a3b8'
+        ),
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+      },
+    ],
+  };
+
+  const minWidth = Math.max(800, data.length * 50);
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      title: {
+        display: false,
+      },
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: false,
+        callbacks: {
+          title: (tooltipItems) => {
+            const timestamp = tooltipItems[0].parsed.x;
+            const date = new Date(timestamp);
+
+            if (isNaN(date.getTime())) {
+              return 'Waktu tidak tersedia';
+            }
+            
+            return date.toLocaleString('id-ID', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              second: '2-digit' 
+            });
+          },
+          label: (tooltipItem) => {
+            const value = tooltipItem.raw;
+            const expression = Object.keys(expressionMap).find(key => expressionMap[key] === value);
+            const expressionLabels = {
+              neutral: 'Netral',
+              happy: 'Bahagia',
+              angry: 'Marah',
+              sad: 'Sedih',
+              surprise: 'Terkejut',
+              fear: 'Takut',
+              disgust: 'Jijik'
+            };
+            return `Ekspresi: ${expressionLabels[expression] || expression}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        type: 'time',
+        time: {
+          unit: 'second',
+          displayFormats: {
+            second: 'HH:mm:ss'
+          }
+        },
+        title: {
+          display: true,
+          text: 'Waktu',
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          color: '#64748b'
+        },
+        ticks: {
+          color: '#94a3b8',
+          maxRotation: 0,
+          minRotation: 0,   
+          autoSkip: true,     
+          maxTicksLimit: 20   
+        },
+        grid: {
+          color: 'rgba(148, 163, 184, 0.1)'
+        }
+      },
+      y: {
+        beginAtZero: true,
+        max: 6,
+        title: {
+          display: true,
+          text: 'Jenis Ekspresi',
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          color: '#64748b'
+        },
+        ticks: {
+          stepSize: 1,
+          color: '#94a3b8',
+          callback: (value) => {
+            const labels = ['Netral', 'Bahagia', 'Marah', 'Sedih', 'Terkejut', 'Takut', 'Jijik'];
+            return labels[value] || '';
+          },
+        },
+        grid: {
+          color: 'rgba(148, 163, 184, 0.1)'
+        }
+      },
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+  };
+
+  return (
+    <>
+      <div className="overflow-x-auto overflow-y-hidden custom-scrollbar pb-2">
+        <div className="h-[400px]" style={{ minWidth: `${minWidth}px` }}>
+          <Line data={chartData} options={options} />
+        </div>
+      </div>
+    </>
+  );
+}
+
 function ChatBubble({ message, isUser }) {
   const formatTime = (timeStr) => {
     try {
@@ -759,6 +965,7 @@ export default function ReportPage() {
   const [detailedAnalysis, setDetailedAnalysis] = useState(null);
   const [classificationResults, setClassificationResults] = useState([]);
   const [prosodyData, setProsodyData] = useState(null);
+  const [expressionData, setExpressionData] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [loadingTranscripts, setLoadingTranscripts] = useState(false);
   const [loadingEvaluation, setLoadingEvaluation] = useState(false);
@@ -901,11 +1108,12 @@ export default function ReportPage() {
 
       // Handle jika backend return 404 (belum ada evaluasi)
       if (!res.ok) {
-        setEvaluation(null);
-        setDetailedAnalysis(null);
-        setClassificationResults([]);
-        setLoadingEvaluation(false);
-        return;
+         setEvaluation(null);
+         setDetailedAnalysis(null);
+         setClassificationResults([]);
+         setExpressionData([]);
+         setLoadingEvaluation(false);
+         return;
       }
 
       const data = await res.json();
@@ -922,6 +1130,8 @@ export default function ReportPage() {
         setDetailedAnalysis(formattedAnalysis);
         const parsedProsody = safeJsonParse(data.prosody_summary);
         setProsodyData(parsedProsody);
+        const parsedExpression = safeJsonParse(data.expression_data);
+        setExpressionData(Array.isArray(parsedExpression) ? parsedExpression : []);
         const evaluationData = {
           ...data,
           strengths:
@@ -939,9 +1149,11 @@ export default function ReportPage() {
         setDetailedAnalysis(null);
         setClassificationResults([]);
         setProsodyData(null);
+        setExpressionData([]);
       }
     } catch (err) {
-      setEvaluation(null);
+      setEvaluation(null); 
+      setExpressionData([]);
     } finally {
       setLoadingEvaluation(false);
     }
@@ -954,6 +1166,7 @@ export default function ReportPage() {
     setEvaluation(null);
     setDetailedAnalysis(null);
     setClassificationResults([]);
+    setExpressionData([]);
     await Promise.all([
       fetchTranscripts(session.session_id),
       fetchEvaluation(session.session_id),
@@ -998,6 +1211,8 @@ export default function ReportPage() {
         setClassificationResults(data.classification_results || []);
         const parsedProsody = safeJsonParse(data.evaluation.prosody_summary);
         setProsodyData(parsedProsody);
+        const parsedExpression = safeJsonParse(data.evaluation.expression_data);
+        setExpressionData(Array.isArray(parsedExpression) ? parsedExpression : []);
         toast.success("Analisis AI Berhasil Selesai!", { duration: 4000 });
       } else {
         toast.error(
@@ -1294,6 +1509,54 @@ export default function ReportPage() {
                 />
               )}
 
+              {expressionData && expressionData.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader 
+                  title={
+                    <span className="flex items-center gap-2">
+                      <Smile size={24} className="text-teal-500" />
+                      Perubahan Ekspresi Wajah Psikolog Sepanjang Waktu
+                    </span>
+                  }
+                  subtitle="Grafik menunjukkan perubahan emosi psikolog berdasarkan deteksi ekspresi wajah"
+                />
+                <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
+                  {expressionData.length > 15 && (
+                    <div className="mb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
+                      </svg>
+                      <span className="font-medium">Scroll horizontal untuk melihat seluruh data</span>
+                    </div>
+                  )}
+                  <ExpressionLineChart data={expressionData} />
+                </div>
+                
+                {/* Legend Ekspresi */}
+                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                  {[
+                    { name: 'Netral', color: '#94a3b8' },
+                    { name: 'Bahagia', color: '#22c55e' },
+                    { name: 'Marah', color: '#ef4444' },
+                    { name: 'Sedih', color: '#3b82f6' },
+                    { name: 'Terkejut', color: '#f59e0b' },
+                    { name: 'Takut', color: '#8b5cf6' },
+                    { name: 'Jijik', color: '#06b6d4' }
+                  ].map((exp) => (
+                    <div key={exp.name} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/30 px-3 py-2 rounded-lg">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: exp.color }}
+                      />
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        {exp.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
               {/* SECTION 5: HISTORY & CHAT */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">
                 <div className="lg:col-span-4">
@@ -1330,7 +1593,7 @@ export default function ReportPage() {
                           : ""
                       }
                     />
-                    <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar">
+                    <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar max-h-[450px]">
                       {loadingTranscripts ? (
                         <Loading message="Mengambil transkrip..." />
                       ) : transcripts.length === 0 ? (

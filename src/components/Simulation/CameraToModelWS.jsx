@@ -1,9 +1,9 @@
 // ./src/components/CameraToModelWS.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 
 const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
 
-function CameraToModelWS() {
+const CameraToModelWS = forwardRef(({}, ref) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const wsRef = useRef(null);
@@ -11,9 +11,40 @@ function CameraToModelWS() {
   const [streaming, setStreaming] = useState(false);
   const [connected, setConnected] = useState(false);
   const [sending, setSending] = useState(false);
-  const [summary, setSummary] = useState(null);
 
-  // Nyalakan kamera
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+      setStreaming(false);
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    finishSession: async() => {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: "finish" }));
+        setSending(false);
+        
+        return new Promise((resolve, reject) => {
+          ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            if (msg.type === "summary") {
+              stopCamera();
+              resolve(msg.data);
+            } else {
+              reject(new Error("Invalid data received"));
+            }
+          };
+        });
+      } else {
+        stopCamera();
+        return Promise.reject(new Error("WebSocket is not open"));
+      }
+    },
+  }));
+
   useEffect(() => {
     const startCamera = async () => {
       try {
@@ -27,52 +58,56 @@ function CameraToModelWS() {
           setStreaming(true);
         }
       } catch (err) {
-        console.error("Error camera:", err);
+        console.error("Error starting camera:", err);
       }
     };
     startCamera();
 
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
-      }
+      stopCamera();
     };
   }, []);
 
-  // Connect WebSocket
+  // WebSocket connection
   const connectWS = () => {
     const ws = new WebSocket(WS_URL);
     wsRef.current = ws;
 
     ws.onopen = () => {
       setConnected(true);
-      setSummary(null);
-      console.log("Connected to model server");
+      setSending(true);
     };
 
     ws.onclose = () => {
       setConnected(false);
       setSending(false);
-      console.log("WS closed");
+      setTimeout(() => connectWS(), 1000);
     };
-
-    ws.onerror = (err) => console.error("WS error", err);
 
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === "summary") {
-        setSummary(msg.data);
+        // Handle summary if needed
       }
     };
   };
 
-  // Kirim frame berkala
+  useEffect(() => {
+    connectWS();
+
+    return () => {
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!sending || !streaming || !connected) return;
 
     const id = setInterval(() => {
       sendFrame();
-    }, 500); // 2 FPS
+    }, 500);
 
     return () => clearInterval(id);
   }, [sending, streaming, connected]);
@@ -90,26 +125,15 @@ function CameraToModelWS() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     const dataURL = canvas.toDataURL("image/jpeg", 0.7);
+    const timestamp = new Date().toISOString();
 
     ws.send(
       JSON.stringify({
         type: "frame",
         image: dataURL,
+        timestamp: timestamp,
       })
     );
-  };
-
-  const startSession = () => {
-    if (!connected) connectWS();
-    setSending(true);
-  };
-
-  const finishSession = () => {
-    const ws = wsRef.current;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "finish" }));
-    }
-    setSending(false);
   };
 
   return (
@@ -121,45 +145,10 @@ function CameraToModelWS() {
         </span>
       </div>
 
-      <video
-        ref={videoRef}
-        className="w-full rounded-md border border-white/10 bg-black"
-      />
+      <video ref={videoRef} className="w-full rounded-md border border-white/10 bg-black" />
       <canvas ref={canvasRef} className="hidden" />
-
-      <div className="flex gap-2 mt-2">
-        <button
-          onClick={startSession}
-          disabled={!streaming || sending}
-          className="flex-1 px-2 py-1 rounded-md text-xs bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600"
-        >
-          Start
-        </button>
-        <button
-          onClick={finishSession}
-          disabled={!sending}
-          className="flex-1 px-2 py-1 rounded-md text-xs bg-rose-500 hover:bg-rose-600 disabled:bg-gray-600"
-        >
-          Finish
-        </button>
-      </div>
-
-      {summary && (
-        <div className="mt-2 max-h-24 overflow-auto text-[11px]">
-          <p className="font-semibold">
-            Total frames: {summary.total_frames}
-          </p>
-          <ul className="list-disc list-inside">
-            {summary.labels.map((item) => (
-              <li key={item.label}>
-                {item.label}: {item.count}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
-}
+});
 
 export default CameraToModelWS;

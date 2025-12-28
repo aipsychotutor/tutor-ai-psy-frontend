@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import SpeechRecognition, {
   useSpeechRecognition,
 } from "react-speech-recognition";
+import { toast } from "react-hot-toast";
 
 // Hooks
 import { useChat } from "../hooks/useChat";
@@ -30,6 +31,7 @@ export const UI = ({ hidden, session_id, ...props }) => {
   // --- Hooks & State Initialization ---
   const navigate = useNavigate();
   const inputRef = useRef();
+  const cameraToModelWSRef = useRef();
   
   // Custom Hook: Chat Logic (Conversation with AI)
   const { subtitle } = useChat();
@@ -52,7 +54,6 @@ export const UI = ({ hidden, session_id, ...props }) => {
   const [token, setToken] = useState(null);
   const [userData, setUserData] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showCameraWidget, setShowCameraWidget] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // --- Effects ---
@@ -143,30 +144,39 @@ export const UI = ({ hidden, session_id, ...props }) => {
     navigate("/login");
   };
 
-  /**
-   * Completes the session via API and redirects to dashboard.
-   */
   const handleConfirmEndSession = async () => {
-    setShowConfirm(false);
-    if (session_id && token) {
-      try {
-        await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            status: "completed",
-            end_time: new Date().toISOString(),
-          }),
-        });
-      } catch (err) {
-        console.error("Error ending session:", err);
-      }
+    if (!session_id || !token) {
+      return;
     }
-    navigate("/dashboard", { replace: true });
+    const loadingToast = toast.loading("Mengakhiri sesi... Harap tunggu!");
+
+    try {
+      const expressionData = await cameraToModelWSRef.current.finishSession();
+      await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          status: "completed",
+          end_time: new Date().toISOString(),
+          expression_data: expressionData,
+        }),
+      });
+      toast.success("Sesi selesai dengan sukses!", { id: loadingToast });
+
+    } catch (err) {
+      console.error("Error ending session:", err);
+      toast.error("Gagal mengakhiri sesi. Silakan coba lagi.", { id: loadingToast });
+
+    } finally {
+      toast.dismiss();
+      setShowConfirm(false);
+      navigate("/dashboard", { replace: true });
+    }
   };
+
 
   if (hidden) return null;
 
@@ -200,10 +210,9 @@ export const UI = ({ hidden, session_id, ...props }) => {
 
         {/* Right Side Tools (Zoom, Green Screen, etc.) */}
         <ToolsPanel
+          ref={cameraToModelWSRef}
           cameraZoomed={cameraZoomed}
           setCameraZoomed={setCameraZoomed}
-          showCameraWidget={showCameraWidget}
-          setShowCameraWidget={setShowCameraWidget}
         />
 
         {/* Bottom Chat Interface */}

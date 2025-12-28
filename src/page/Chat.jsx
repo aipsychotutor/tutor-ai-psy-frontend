@@ -1,5 +1,6 @@
 import { Loader } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { Toaster } from "react-hot-toast";
 import { Leva } from "leva";
 import { Experience } from "../components/Simulation/Experience";
 import { ChatProvider } from "../hooks/useChat";
@@ -141,6 +142,7 @@ function Chat() {
         {/* Experience: Scene 3D utama (Lighting, Environment, Avatar Model) */}
         <Experience avatarPath={avatarPath} />
       </Canvas>
+      <Toaster position="top-center" reverseOrder={false} />
 
     </ChatProvider>
   );
