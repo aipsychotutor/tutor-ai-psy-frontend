@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import { Line } from "react-chartjs-2";
+import { format } from "date-fns";
+import { toZonedTime  } from "date-fns-tz";
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -1586,14 +1588,19 @@ export default function ReportPage() {
                       title="Transkrip Percakapan"
                       subtitle={
                         selectedSession
-                          ? `Sesi ${new Date(
-                              selectedSession.start_time ||
-                                selectedSession.created_at
-                            ).toLocaleDateString()}`
+                          ? (() => {
+                              const utcDate = new Date(
+                                selectedSession.start_time || selectedSession.created_at
+                              );
+
+                              const wibDate = toZonedTime (utcDate, "Asia/Jakarta");
+
+                              return `Sesi ${format(wibDate, "dd/MM/yyyy")}`;
+                            })()
                           : ""
                       }
                     />
-                    <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar max-h-[450px]">
+                    <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar max-h-[550px]">
                       {loadingTranscripts ? (
                         <Loading message="Mengambil transkrip..." />
                       ) : transcripts.length === 0 ? (
