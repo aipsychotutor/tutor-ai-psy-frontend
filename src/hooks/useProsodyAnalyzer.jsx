@@ -99,12 +99,11 @@ export const useProsodyAnalyzer = () => {
   };
 
   /**
-   * 🛑 DIPERBARUI: Fungsi ini sekarang HANYA menghitung
    * fitur yang benar-benar kita gunakan di backend.
    */
   const calculateProsodyFeatures = (channelData, sampleRate, duration) => {
     
-    // --- Perhitungan Inti (Tetap Dibutuhkan) ---
+    // --- Perhitungan Inti ---
 
     // 1. Energy/RMS
     const frameSize = Math.floor(sampleRate * 0.025); // 25ms frames
@@ -146,7 +145,7 @@ export const useProsodyAnalyzer = () => {
     }
     const zcr = zeroCrossings / channelData.length;
 
-    // --- Data yang Dikembalikan (Hanya yang Penting) ---
+    // --- Data yang Dikembalikan  ---
 
     return {
       // 1. Durasi Total (Digunakan di Agregasi)
@@ -208,7 +207,7 @@ export const useProsodyAnalyzer = () => {
         setError('Gagal membaca file.');
         resolve(null);
       };
-      reader.readAsArrayBuffer(blobToAnalyze); // 👈 Gunakan argumen
+      reader.readAsArrayBuffer(blobToAnalyze); 
     });
   };
 
