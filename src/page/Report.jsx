@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import { Line } from "react-chartjs-2";
 import { format } from "date-fns";
 import { toZonedTime  } from "date-fns-tz";
+import { id as localeID } from "date-fns/locale";
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -45,6 +46,54 @@ ChartJS.register(
   Legend,
   TimeScale
 );
+
+/**
+ * ============================================================================
+ * GLOBAL HELPERS
+ * ============================================================================
+ */
+const formatSmartTime = (dateStr, type = "time") => {
+  if (!dateStr) return "-";
+  try {
+    // Tambahkan 'Z' jika string dari database tidak punya info timezone agar dianggap UTC
+    let sanitizedDateStr = dateStr;
+    if (typeof dateStr === 'string' && !dateStr.includes('Z') && !dateStr.includes('+')) {
+      sanitizedDateStr = `${dateStr}Z`;
+    }
+
+    const date = new Date(sanitizedDateStr);
+    if (isNaN(date.getTime())) return "-";
+
+    // 1. Jika hanya butuh TANGGAL
+    if (type === "date") {
+      return format(date, "d MMMM yyyy", { locale: localeID });
+    }
+
+    // 2. Jika butuh WAKTU (dengan konversi GMT ke WIB/WITA/WIT)
+    const timeStr = format(date, "HH:mm", { locale: localeID });
+    
+    const timezoneOffset = new Intl.DateTimeFormat('id-ID', {
+      timeZoneName: 'short'
+    }).formatToParts(date).find(part => part.type === 'timeZoneName').value;
+
+    // Mapping manual dari GMT ke istilah Indonesia
+    const tzMapping = {
+      'GMT+7': 'WIB',
+      'GMT+8': 'WITA',
+      'GMT+9': 'WIT',
+      'UTC+7': 'WIB',
+      'UTC+8': 'WITA',
+      'UTC+9': 'WIT'
+    };
+
+    const finalTz = tzMapping[timezoneOffset] || timezoneOffset;
+
+    return `${timeStr} ${finalTz}`;
+  } catch (error) {
+    return "-";
+  }
+};
+
 /**
  * ============================================================================
  * HELPER UI COMPONENTS
@@ -733,17 +782,6 @@ function ExpressionLineChart({ data }) {
 }
 
 function ChatBubble({ message, isUser }) {
-  const formatTime = (timeStr) => {
-    try {
-      return new Date(timeStr).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch (e) {
-      return "";
-    }
-  };
-
   const fmt = (val) => {
     const num = Number(val);
     return !isNaN(num) ? num.toFixed(2) : "-";
@@ -860,7 +898,7 @@ function ChatBubble({ message, isUser }) {
         )}
 
         <span className={`text-[10px] mt-2 block text-right opacity-70`}>
-          {formatTime(message.timestamp)}
+          {formatSmartTime(message.timestamp, "time")}
         </span>
       </div>
     </div>
@@ -868,34 +906,7 @@ function ChatBubble({ message, isUser }) {
 }
 
 function SessionCard({ session, onClick, isSelected }) {
-  const formatDate = (dateStr) => {
-    try {
-      if (!dateStr) return "N/A";
-      // PERBAIKAN: FORMAT TANGGAL LENGKAP (25 Desember 2025)
-      return new Date(dateStr).toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    } catch (e) {
-      return "N/A";
-    }
-  };
-
-  const formatTime = (dateStr) => {
-    try {
-      if (!dateStr) return "";
-      return new Date(dateStr).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch (e) {
-      return "";
-    }
-  };
-
-  const dateValue =
-    session.start_time || session.session_date || session.created_at;
+  const dateValue = session.start_time || session.session_date || session.created_at;
 
   return (
     <div
@@ -914,7 +925,7 @@ function SessionCard({ session, onClick, isSelected }) {
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-gray-400" />
           <h4 className="text-gray-900 dark:text-gray-100 font-semibold text-sm">
-            {formatDate(dateValue)}
+            {formatSmartTime(dateValue, "date")}
           </h4>
         </div>
         <span
@@ -929,7 +940,7 @@ function SessionCard({ session, onClick, isSelected }) {
       </div>
       <div className="flex items-center gap-2 pl-2 text-gray-500 dark:text-gray-400 text-xs">
         <Clock size={12} />
-        <span>{formatTime(dateValue)} WIB</span>
+        <span>{formatSmartTime(dateValue, "HH:mm")}</span>
       </div>
     </div>
   );
@@ -1588,16 +1599,8 @@ export default function ReportPage() {
                       title="Transkrip Percakapan"
                       subtitle={
                         selectedSession
-                          ? (() => {
-                              const utcDate = new Date(
-                                selectedSession.start_time || selectedSession.created_at
-                              );
-
-                              const wibDate = toZonedTime (utcDate, "Asia/Jakarta");
-
-                              return `Sesi ${format(wibDate, "dd/MM/yyyy")}`;
-                            })()
-                          : ""
+                        ? `Sesi ${formatSmartTime(selectedSession.start_time || selectedSession.created_at, "date")}`
+                        : ""
                       }
                     />
                     <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-2xl p-4 overflow-y-auto border border-gray-100 dark:border-gray-700/50 custom-scrollbar max-h-[550px]">
