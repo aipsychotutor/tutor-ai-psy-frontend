@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { X, Save, User, Briefcase, Heart, Activity, FileText, Sparkles, Plus, Trash2 } from "lucide-react";
+import { X, Save, User, Briefcase, Heart, Activity, FileText, Edit3, Tag, Plus, Trash2 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 import { API_BASE_URL } from "../../config/api";
 
@@ -247,7 +246,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
-              <Sparkles size={20} />
+              <Edit3 size={20} />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">Edit Skenario</h2>
@@ -390,7 +389,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Sparkles size={16} className="text-yellow-500" /> Traits Kepribadian
+                  <Tag size={16} className="text-purple-500" /> Traits Kepribadian
                 </h3>
                 <button
                   type="button"

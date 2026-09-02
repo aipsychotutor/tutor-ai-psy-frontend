@@ -30,7 +30,7 @@ import {
   HelpCircle,
   Layers,
   Plus,
-  Sparkles,
+  BookOpen,
   Activity,
 } from "lucide-react";
 
@@ -601,10 +601,9 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Sparkles
-                      className="text-yellow-500"
+                    <BookOpen
+                      className="text-indigo-600 dark:text-indigo-400"
                       size={24}
-                      fill="currentColor"
                     />{" "}
                     Pustaka Skenario
                   </h2>

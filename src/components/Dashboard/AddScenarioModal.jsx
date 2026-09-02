@@ -8,7 +8,7 @@ import {
   Heart,
   Activity,
   FileText,
-  Sparkles,
+  Tag,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -426,7 +426,7 @@ export default function AddScenarioModal({ show, onClose, onSave, user }) {
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Sparkles size={16} className="text-yellow-500" /> Traits
+                  <Tag size={16} className="text-purple-500" /> Traits
                   Kepribadian (Opsional)
                 </h3>
                 <button

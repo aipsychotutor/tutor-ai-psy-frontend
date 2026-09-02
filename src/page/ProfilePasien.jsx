@@ -12,7 +12,7 @@ import {
   FileText,
   ArrowLeft,
   Play,
-  Sparkles,
+  Tag,
 } from "lucide-react";
 
 /**
@@ -89,7 +89,7 @@ const InfoItem = ({ label, value, icon: Icon }) => (
 // Trait Chip
 const TraitChip = ({ label }) => (
   <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-500/20 text-purple-200 border border-purple-500/30 text-sm font-medium">
-    <Sparkles size={14} className="text-purple-400" />
+    <Tag size={14} className="text-purple-400" />
     {label}
   </span>
 );

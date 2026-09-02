@@ -31,6 +31,7 @@ const ChatBar = ({
   loading,
   isSending,
   listening,
+  isTranscribing = false,
   handleToggleListening,
   resetTranscript,
   subtitle,
@@ -58,10 +59,10 @@ const ChatBar = ({
         <div className="flex items-center w-full max-w-3xl bg-white bg-opacity-90 backdrop-blur-md rounded-full shadow-2xl border border-gray-200 p-1.5 gap-1 transition-all">
           {/* Send Button */}
           <button
-            disabled={loading || isSending || !message}
+            disabled={loading || isSending || isTranscribing || (!message && !listening)}
             onClick={sendMessage}
             className={`p-3 rounded-full shrink-0 transition-all duration-200 flex items-center justify-center ${
-              loading || isSending || !message
+              loading || isSending || isTranscribing || (!message && !listening)
                 ? "text-gray-400 cursor-not-allowed bg-transparent"
                 : "bg-yellow-500 text-white hover:bg-yellow-600 shadow-md hover:scale-105"
             }`}
@@ -79,8 +80,15 @@ const ChatBar = ({
           {/* Text Input Field */}
           <input
             className="flex-1 min-w-0 bg-transparent text-gray-800 placeholder:text-gray-500 placeholder:italic px-3 py-3 outline-none text-sm md:text-base"
-            placeholder="Ketik pesan atau bicara..."
+            placeholder={
+              isTranscribing
+                ? "Mentranskripsi suara (Groq Whisper)..."
+                : listening
+                ? "Mendengarkan... klik mic lagi untuk selesai"
+                : "Ketik pesan atau bicara..."
+            }
             ref={inputRef}
+            disabled={isTranscribing}
             value={typeof message === "string" ? message : ""}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -93,17 +101,45 @@ const ChatBar = ({
           <div className="flex items-center gap-1 shrink-0">
             {/* Microphone Button */}
             <button
-              disabled={loading}
+              disabled={loading || isTranscribing}
               onClick={handleToggleListening}
+              title={
+                isTranscribing
+                  ? "Mentranskripsi..."
+                  : listening
+                  ? "Klik untuk berhenti merekam"
+                  : "Klik untuk mulai bicara"
+              }
               className={`p-3 rounded-full transition-all duration-200 flex items-center justify-center ${
-                loading
-                  ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                loading || isTranscribing
+                  ? "bg-amber-100 text-amber-600 animate-spin cursor-not-allowed"
                   : listening
                   ? "bg-red-500 text-white hover:bg-red-600 animate-pulse shadow-md"
                   : "bg-blue-500 text-white hover:bg-blue-600 shadow-md hover:scale-105"
               }`}
             >
-              {listening ? (
+              {isTranscribing ? (
+                <svg
+                  className="w-5 h-5 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : listening ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

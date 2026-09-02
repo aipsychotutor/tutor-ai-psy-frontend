@@ -72,7 +72,7 @@ const Navbar = ({ user, onLogout, onEndSession, isSimulation = false, sessionId 
       toast.error("Sesi simulasi sedang berlangsung. Harap akhiri sesi terlebih dahulu jika ingin berpindah halaman.");
       return;
     }
-    navigate("/");
+    navigate("/dashboard");
   };
 
   const handleProfileClick = () => {

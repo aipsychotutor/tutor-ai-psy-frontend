@@ -25,7 +25,8 @@ import {
   Heart, 
   MessageCircleQuestion, 
   Activity, 
-  Sparkles, 
+  Play,
+  BarChart2, 
   Quote, 
   Calendar, 
   Clock,
@@ -1360,12 +1361,12 @@ export default function ReportPage() {
                       >
                         {analyzingSession ? (
                           <span className="flex items-center gap-2">
-                            <Sparkles className="animate-spin" size={16} />{" "}
+                            <Activity className="animate-spin" size={16} />{" "}
                             Menganalisis...
                           </span>
                         ) : (
                           <span className="flex items-center gap-2">
-                            <Sparkles size={16} /> Jalankan Analisis AI
+                            <Play size={16} /> Jalankan Analisis AI
                           </span>
                         )}
                       </Button>
@@ -1486,7 +1487,7 @@ export default function ReportPage() {
                       </div>
                     )}
 
-                    {/* SECTION 3: FEEDBACK GEMINI */}
+                    {/* SECTION 3: FEEDBACK AI */}
                     {evaluation.feedback_text && (
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/50 shadow-inner mt-5">
                         <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-800 dark:text-blue-200">
@@ -1516,7 +1517,7 @@ export default function ReportPage() {
                 ) : (
                   <div className="text-center py-12 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 flex-grow flex flex-col justify-center items-center">
                     <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-full mb-3">
-                      <Sparkles size={32} className="text-gray-400" />
+                      <BarChart2 size={32} className="text-gray-400" />
                     </div>
                     <p className="text-gray-500 font-medium">
                       {selectedSession?.status === "completed"

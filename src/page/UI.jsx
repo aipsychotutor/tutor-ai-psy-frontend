@@ -1,8 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from "react-speech-recognition";
 import { toast } from "react-hot-toast";
 
 // Hooks
@@ -20,7 +17,7 @@ import { API_BASE_URL } from "../config/api";
  * UI Component
  *
  * The main layout container for the simulation interface.
- * It integrates the 3D model interaction (via useChat), voice recognition,
+ * It integrates the 3D model interaction (via useChat), voice recognition (Groq Whisper),
  * prosody analysis, and the UI sub-components (Navbar, Tools, ChatBar).
  *
  * @component
@@ -38,11 +35,9 @@ export const UI = ({ hidden, session_id, ...props }) => {
   const { subtitle } = useChat();
   const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } = useChat();
 
-  // Library Hook: Speech Recognition (Voice to Text)
-  const { transcript, listening, resetTranscript } = useSpeechRecognition();
-
-  // Custom Hook: Prosody Analysis (Audio features extraction)
+  // Custom Hook: Prosody Analysis (Audio features extraction) & MediaRecorder
   const {
+    isRecording,
     audioBlob,
     error: prosodyError,
     startRecording,
@@ -56,6 +51,7 @@ export const UI = ({ hidden, session_id, ...props }) => {
   const [userData, setUserData] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // --- Effects ---
 
@@ -76,13 +72,6 @@ export const UI = ({ hidden, session_id, ...props }) => {
       setUserData({ username: "Guest", is_admin: false });
     }
   }, []);
-
-  // 2. Sync Speech Transcript with Message State
-  useEffect(() => {
-    if (transcript) {
-      setMessage(transcript);
-    }
-  }, [transcript, setMessage]);
 
   useEffect(() => {
     if (!session_id) return;
@@ -125,31 +114,76 @@ export const UI = ({ hidden, session_id, ...props }) => {
   // --- Handlers ---
 
   /**
+   * Mengirim audioBlob ke backend untuk ditranskripsi oleh Groq Whisper.
+   */
+  const transcribeAudioBlob = async (blob) => {
+    if (!blob || blob.size === 0) return "";
+    const formData = new FormData();
+    formData.append("file", blob, "recording.webm");
+
+    const res = await fetch(`${API_BASE_URL}/api/chat/transcribe`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || "Gagal mentranskripsi audio.");
+    }
+
+    const data = await res.json();
+    return data.text || "";
+  };
+
+  /**
    * Sends the current message to the AI.
    * Handles stopping audio recording, analyzing prosody, and calling the chat API.
    */
   const sendMessage = async () => {
-    if (loading || isSending || !message) return;
+    if (loading || isSending || isTranscribing) return;
+
+    let textToSend = message;
+    let blobForAnalysis = audioBlob;
+
+    if (isRecording) {
+      const toastId = toast.loading("Memproses suara dengan Groq Whisper...");
+      setIsTranscribing(true);
+      try {
+        const newBlob = await stopRecording();
+        if (newBlob && newBlob.size > 0) {
+          blobForAnalysis = newBlob;
+          const transcribedText = await transcribeAudioBlob(newBlob);
+          if (transcribedText) {
+            textToSend = transcribedText;
+            setMessage(transcribedText);
+            toast.success("Suara berhasil ditranskrip!", { id: toastId });
+          } else {
+            toast.error("Tidak ada suara yang terdeteksi.", { id: toastId });
+          }
+        }
+      } catch (err) {
+        console.error("Transcribe error:", err);
+        toast.error(`Gagal transkrip: ${err.message}`, { id: toastId });
+      } finally {
+        setIsTranscribing(false);
+      }
+    }
+
+    if (!textToSend || !textToSend.trim()) return;
 
     setIsSending(true);
     let prosody = null;
-    let blobForAnalysis = audioBlob;
 
-    // If currently listening, stop and get the final audio blob
-    if (listening) {
-      SpeechRecognition.stopListening();
-      const newBlob = await stopRecording();
-      if (newBlob) blobForAnalysis = newBlob;
-    }
-
-    // Analyze audio if available
     if (blobForAnalysis) {
-      prosody = await getProsodyData(blobForAnalysis);
+      try {
+        prosody = await getProsodyData(blobForAnalysis);
+      } catch (e) {
+        console.warn("Prosody extraction warning:", e);
+      }
     }
 
     try {
-      await chat(message, prosody);
-      resetTranscript();
+      await chat(textToSend, prosody);
       setMessage("");
       clearAudioData();
     } catch (err) {
@@ -160,18 +194,41 @@ export const UI = ({ hidden, session_id, ...props }) => {
   };
 
   /**
-   * Toggles microphone status (Start/Stop listening & recording).
+   * Toggles microphone status (Start/Stop listening & recording via Groq STT).
    */
-  const handleToggleListening = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
-      stopRecording();
+  const handleToggleListening = async () => {
+    if (isRecording) {
+      const toastId = toast.loading("Mentranskripsi suara (Groq Whisper)...");
+      setIsTranscribing(true);
+      try {
+        const blob = await stopRecording();
+        if (blob && blob.size > 0) {
+          const transcribedText = await transcribeAudioBlob(blob);
+          if (transcribedText) {
+            setMessage(transcribedText);
+            toast.success("Suara berhasil ditranskrip!", { id: toastId });
+          } else {
+            toast.error("Tidak ada suara yang terdeteksi.", { id: toastId });
+          }
+        } else {
+          toast.dismiss(toastId);
+        }
+      } catch (err) {
+        console.error("Transcribe error:", err);
+        toast.error(`Gagal transkrip: ${err.message}`, { id: toastId });
+      } finally {
+        setIsTranscribing(false);
+      }
     } else {
-      resetTranscript();
       clearAudioData();
-      SpeechRecognition.startListening({ continuous: true, language: "id" });
-      startRecording();
+      setMessage("");
+      await startRecording();
     }
+  };
+
+  const handleResetTranscript = () => {
+    setMessage("");
+    clearAudioData();
   };
 
   /**
@@ -268,9 +325,10 @@ export const UI = ({ hidden, session_id, ...props }) => {
           sendMessage={sendMessage}
           loading={loading}
           isSending={isSending}
-          listening={listening}
+          listening={isRecording}
+          isTranscribing={isTranscribing}
           handleToggleListening={handleToggleListening}
-          resetTranscript={resetTranscript}
+          resetTranscript={handleResetTranscript}
           subtitle={subtitle}
           prosodyError={prosodyError}
           inputRef={inputRef}
