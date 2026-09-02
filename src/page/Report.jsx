@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
+import { API_BASE_URL } from "../config/api";
+import { formatSessionDuration } from "../utils/formatters";
 import { Line } from "react-chartjs-2";
 import { format } from "date-fns";
 import { toZonedTime  } from "date-fns-tz";
@@ -907,6 +909,7 @@ function ChatBubble({ message, isUser }) {
 
 function SessionCard({ session, onClick, isSelected }) {
   const dateValue = session.start_time || session.session_date || session.created_at;
+  const isCompleted = session.status === "completed";
 
   return (
     <div
@@ -921,6 +924,7 @@ function SessionCard({ session, onClick, isSelected }) {
         <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
       )}
 
+      {/* Baris 1: Tanggal Sesi & Status Badge */}
       <div className="flex items-center justify-between mb-2 pl-2">
         <div className="flex items-center gap-2">
           <Calendar size={14} className="text-gray-400" />
@@ -930,17 +934,26 @@ function SessionCard({ session, onClick, isSelected }) {
         </div>
         <span
           className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-            session.status === "completed"
+            isCompleted
               ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
               : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300"
           }`}
         >
-          {session.status === "completed" ? "Selesai" : "Aktif"}
+          {isCompleted ? "Selesai" : "Aktif"}
         </span>
       </div>
-      <div className="flex items-center gap-2 pl-2 text-gray-500 dark:text-gray-400 text-xs">
-        <Clock size={12} />
-        <span>{formatSmartTime(dateValue, "HH:mm")}</span>
+
+      {/* Baris 2: Waktu Mulai & Durasi Sesi */}
+      <div className="flex items-center justify-between pl-2 text-gray-500 dark:text-gray-400 text-xs">
+        <div className="flex items-center gap-1.5">
+          <Clock size={12} />
+          <span>{formatSmartTime(dateValue, "HH:mm")}</span>
+        </div>
+        {session.start_time && (
+          <span className="font-mono text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded-md">
+            {formatSessionDuration(session.start_time, session.end_time)}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -1044,7 +1057,7 @@ export default function ReportPage() {
       setLoading(true);
       setError(null);
       const res = await fetch(
-        `http://localhost:3000/api/sessions?patient_id=${patientId}`,
+        `${API_BASE_URL}/api/sessions?patient_id=${patientId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -1082,7 +1095,7 @@ export default function ReportPage() {
     setLoadingTranscripts(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/api/reports/transcripts/${session_id}`,
+        `${API_BASE_URL}/api/reports/transcripts/${session_id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -1113,7 +1126,7 @@ export default function ReportPage() {
     setLoadingEvaluation(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/api/reports/evaluation/${session_id}`,
+        `${API_BASE_URL}/api/reports/evaluation/${session_id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -1194,7 +1207,7 @@ export default function ReportPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/reports/${selectedSession.session_id}/analyze`,
+        `${API_BASE_URL}/api/reports/${selectedSession.session_id}/analyze`,
         {
           method: "POST",
           headers: {

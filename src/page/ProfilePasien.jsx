@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 // Import Navbar
 import Navbar from "../components/Navbar";
+import { API_BASE_URL } from "../config/api";
 // Import Icons
 import {
   User,
@@ -138,7 +139,7 @@ export default function ProfilePage() {
     try {
       // 1. Set Persona
       const personaRes = await fetch(
-        "http://localhost:3000/api/chat/set-persona-from-patient",
+        `${API_BASE_URL}/api/chat/set-persona-from-patient`,
         {
           method: "POST",
           headers: {
@@ -151,7 +152,7 @@ export default function ProfilePage() {
       if (!personaRes.ok) throw new Error("Gagal set persona");
 
       // 2. Create Session
-      const sessionRes = await fetch("http://localhost:3000/api/sessions", {
+      const sessionRes = await fetch(`${API_BASE_URL}/api/sessions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +183,7 @@ export default function ProfilePage() {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:3000/api/patients/${patientId}`,
+          `${API_BASE_URL}/api/patients/${patientId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

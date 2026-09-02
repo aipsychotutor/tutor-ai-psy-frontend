@@ -8,6 +8,7 @@ import { ChatHistory } from "../components/Simulation/ChatHistory";
 import { UI } from "./UI";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 /**
  * ============================================================================
@@ -65,7 +66,7 @@ function Chat() {
       try {
         // 1. Ambil detail sesi untuk mendapatkan patient_id
         const sessionRes = await fetch(
-          `http://localhost:3000/api/sessions/${session_id}`,
+          `${API_BASE_URL}/api/sessions/${session_id}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -84,7 +85,7 @@ function Chat() {
 
         // 2. Ambil data pasien untuk mendapatkan avatar_path
         const avatarRes = await fetch(
-          `http://localhost:3000/api/patients/model/${patientId}`,
+          `${API_BASE_URL}/api/patients/model/${patientId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

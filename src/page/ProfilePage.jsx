@@ -5,6 +5,7 @@ import Button from "../components/Dashboard/ButtonDashboard";
 import { User, Mail, Trash2, ArrowLeft } from "lucide-react"; 
 import { toast, Toaster } from "react-hot-toast";
 import DeleteAccountModal from "../components/ProfilePage/DeleteAccountModal";
+import { API_BASE_URL } from "../config/api";
 
 export default function ProfilePage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -53,7 +54,7 @@ export default function ProfilePage() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/auth/update-password", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/update-password`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

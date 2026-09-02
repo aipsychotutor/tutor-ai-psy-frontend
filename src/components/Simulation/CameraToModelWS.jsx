@@ -1,7 +1,8 @@
 // ./src/components/CameraToModelWS.jsx
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
+import { WS_BASE_URL } from "../../config/api";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws";
+const WS_URL = WS_BASE_URL;
 
 const CameraToModelWS = forwardRef(({}, ref) => {
   const videoRef = useRef(null);

@@ -1,12 +1,13 @@
 import { Toaster, toast } from "react-hot-toast"; 
 import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 
 /**
  * Konfigurasi URL dasar untuk endpoint API Otentikasi.
  * @constant {string}
  */
-const API_BASE_URL = "http://localhost:3000/api/auth";
+const AUTH_API_URL = `${API_BASE_URL}/api/auth`;
 
 /**
  * ============================================================================
@@ -96,7 +97,7 @@ export default function Auth() {
 
     try {
       // 2. API Request
-      const response = await fetch(`${API_BASE_URL}/login`, {
+      const response = await fetch(`${AUTH_API_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ export default function Auth() {
 
     try {
       // 2. API Request
-      const response = await fetch(`${API_BASE_URL}/register`, {
+      const response = await fetch(`${AUTH_API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

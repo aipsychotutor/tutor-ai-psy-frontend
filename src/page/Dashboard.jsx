@@ -21,6 +21,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Toaster, toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../config/api";
 // Import Icons: Menggunakan Lucide React untuk ikon vektor yang ringan dan konsisten.
 import {
   Search,
@@ -288,7 +289,7 @@ export default function Dashboard() {
     if (!token) return setLoadingStats(false);
     setLoadingStats(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/reports/stats`, {
+      const res = await fetch(`${API_BASE_URL}/api/reports/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) return handleAuthError();
@@ -312,7 +313,7 @@ export default function Dashboard() {
     if (!token) return setLoadingSessions(false);
     setLoadingSessions(true);
     try {
-      const res = await fetch(`http://localhost:3000/api/sessions`, {
+      const res = await fetch(`${API_BASE_URL}/api/sessions`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) return handleAuthError();
@@ -330,6 +331,8 @@ export default function Dashboard() {
               name: s.patient_name,
               image: s.patient_image,
               lastSession: s.session_date || s.start_time,
+              start_time: s.start_time,
+              end_time: s.end_time,
               status: s.status,
               symptom_intensity: s.symptom_intensity,
             },
@@ -352,7 +355,7 @@ export default function Dashboard() {
   const fetchPatients = async (currentUser) => {
     setLoadingPatients(true);
     try {
-      const res = await fetch("http://localhost:3000/api/patients", {
+      const res = await fetch(`${API_BASE_URL}/api/patients`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 401) return handleAuthError();
@@ -451,7 +454,7 @@ export default function Dashboard() {
   // CRUD Skenario
   const handleSaveScenario = async (patientData) => {
     try {
-      const response = await fetch("http://localhost:3000/api/patients", {
+      const response = await fetch(`${API_BASE_URL}/api/patients`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -515,7 +518,7 @@ export default function Dashboard() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/patients/${targetId}`,
+        `${API_BASE_URL}/api/patients/${targetId}`,
         {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },

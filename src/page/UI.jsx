@@ -14,6 +14,7 @@ import Navbar from "../components/Navbar";
 import ConfirmModal from "../components/Simulation/ConfirmModal";
 import ToolsPanel from "../components/Simulation/ToolsPanel";
 import ChatBar from "../components/Simulation/ChatBar";
+import { API_BASE_URL } from "../config/api";
 
 /**
  * UI Component
@@ -83,6 +84,45 @@ export const UI = ({ hidden, session_id, ...props }) => {
     }
   }, [transcript, setMessage]);
 
+  // 3. Proteksi Penutupan Tab & Auto-Close Sesi saat Browser Ditutup
+  useEffect(() => {
+    if (!session_id) return;
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+      return "";
+    };
+
+    const handlePageHide = () => {
+      const storedToken = localStorage.getItem("token") || token;
+      if (storedToken && session_id) {
+        try {
+          fetch(`${API_BASE_URL}/api/sessions/${session_id}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${storedToken}`,
+            },
+            body: JSON.stringify({
+              status: "completed",
+              end_time: new Date().toISOString(),
+            }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch (e) {}
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [session_id, token]);
+
   // --- Handlers ---
 
   /**
@@ -151,8 +191,14 @@ export const UI = ({ hidden, session_id, ...props }) => {
     const loadingToast = toast.loading("Mengakhiri sesi... Harap tunggu!");
 
     try {
+      // Bersihkan data timestamp timer sesi
+      try {
+        localStorage.removeItem(`simulation_start_${session_id}`);
+        localStorage.removeItem("simulation_start_current");
+      } catch (e) {}
+
       const expressionData = await cameraToModelWSRef.current.finishSession();
-      await fetch(`http://localhost:3000/api/sessions/${session_id}`, {
+      await fetch(`${API_BASE_URL}/api/sessions/${session_id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -206,6 +252,7 @@ export const UI = ({ hidden, session_id, ...props }) => {
           onLogout={handleLogout}
           onEndSession={() => setShowConfirm(true)}
           isSimulation={true}
+          sessionId={session_id}
         />
 
         {/* Right Side Tools (Zoom, Green Screen, etc.) */}

@@ -3,6 +3,7 @@ import Button from "../Dashboard/ButtonDashboard";
 import { AlertTriangle, X } from "lucide-react";
 import { toast } from "react-hot-toast"; 
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config/api";
 
 /**
  * DeleteAccountModal Component
@@ -19,7 +20,7 @@ export default function DeleteAccountModal({ show, onClose }) {
     
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:3000/api/auth/delete-account", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${token}`,

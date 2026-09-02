@@ -1,8 +1,9 @@
 // ./src/hooks/useChat.jsx
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
-const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const backendUrl = API_BASE_URL;
 
 const ChatContext = createContext();
 

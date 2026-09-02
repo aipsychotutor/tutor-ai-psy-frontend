@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Save, User, Briefcase, Heart, Activity, FileText, Sparkles, Plus, Trash2 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
+import { API_BASE_URL } from "../../config/api";
 
 /**
  * ============================================================================
@@ -204,7 +205,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
       const loadingToast = toast.loading("Sedang memperbarui data AI...");
 
       // initialData.id diambil dari Dashboard mapping
-      const response = await fetch(`http://localhost:3000/api/patients/${initialData.id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/patients/${initialData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
