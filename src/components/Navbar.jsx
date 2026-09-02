@@ -25,7 +25,6 @@ const Navbar = ({ user, onLogout, onEndSession, isSimulation = false, sessionId 
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Timer simulasi: sinkron dengan timestamp mulai, tahan refresh / reload
   useEffect(() => {
     if (!isSimulation) return;
 

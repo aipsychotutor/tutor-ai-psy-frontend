@@ -84,7 +84,6 @@ export const UI = ({ hidden, session_id, ...props }) => {
     }
   }, [transcript, setMessage]);
 
-  // 3. Proteksi Penutupan Tab & Auto-Close Sesi saat Browser Ditutup
   useEffect(() => {
     if (!session_id) return;
 
