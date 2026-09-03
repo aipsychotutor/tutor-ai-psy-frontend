@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { X, Save, User, Briefcase, Heart, Activity, FileText, Edit3, Tag, Plus, Trash2 } from "lucide-react";
 import { Toaster, toast } from "react-hot-toast";
 import { API_BASE_URL } from "../../config/api";

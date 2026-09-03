@@ -252,21 +252,29 @@ export default function Dashboard() {
   // --- EFFECTS: AUTHENTICATION CHECK ---
   // Memeriksa token di localStorage saat komponen dimount.
   useEffect(() => {
-    let verificationTimer = null;
-    const checkAuth = () => {
-      const storedToken = localStorage.getItem("token");
-      const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-      if (!storedToken || !storedUser) {
-        navigate("/", { replace: true });
-      } else {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        verificationTimer = setTimeout(() => setIsVerifying(false), 500); // Simulasi delay verifikasi
-      }
-    };
-    checkAuth();
-    return () => clearTimeout(verificationTimer);
+    if (!storedToken || !storedUser) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    try {
+      const parsedUser = JSON.parse(storedUser);
+      setToken(storedToken);
+      setUser(parsedUser);
+      setIsVerifying(false);
+
+      // Fetch data immediately with validated credentials
+      fetchSessionHistory(storedToken);
+      fetchPatients(parsedUser, storedToken);
+      fetchStats(storedToken);
+    } catch (e) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/", { replace: true });
+    }
   }, [navigate]);
 
   // Handler Logout & Error Auth
@@ -276,7 +284,8 @@ export default function Dashboard() {
     navigate("/", { replace: true });
   };
 
-  const handleAuthError = () => {
+  const handleAuthError = (message = "Sesi telah berakhir. Silakan masuk kembali.") => {
+    toast.error(message);
     handleLogout();
   };
 
@@ -285,20 +294,22 @@ export default function Dashboard() {
   /**
    * Mengambil data statistik performa pengguna.
    */
-  const fetchStats = async () => {
-    if (!token) return setLoadingStats(false);
+  const fetchStats = async (activeToken = token) => {
+    const authToken = activeToken || localStorage.getItem("token");
+    if (!authToken) return setLoadingStats(false);
     setLoadingStats(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/reports/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-      if (res.status === 401) return handleAuthError();
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       const data = await res.json();
-      if (data.data) {
+      if (data && data.data) {
         setAvgEmpathyScore(data.data.avg_empathy_score || 0);
         setAvgQuestionScore(data.data.avg_question_score || 0);
       }
     } catch (err) {
+      console.error("fetchStats error:", err);
       toast.error("Gagal memuat statistik");
     } finally {
       setLoadingStats(false);
@@ -309,16 +320,21 @@ export default function Dashboard() {
    * Mengambil riwayat sesi latihan pengguna.
    * Melakukan pemetaan data unik berdasarkan ID Pasien untuk menghindari duplikasi di tampilan list.
    */
-  const fetchSessionHistory = async () => {
-    if (!token) return setLoadingSessions(false);
+  const fetchSessionHistory = async (activeToken = token) => {
+    const authToken = activeToken || localStorage.getItem("token");
+    if (!authToken) return setLoadingSessions(false);
     setLoadingSessions(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/sessions`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-      if (res.status === 401) return handleAuthError();
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       const data = await res.json();
-      const sessions = data?.data || [];
+      const sessions = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
       setTotalSessions(sessions.length);
 
       // Deduplikasi data sesi berdasarkan Patient ID
@@ -342,6 +358,7 @@ export default function Dashboard() {
 
       setSessionPatients(uniquePatients);
     } catch (err) {
+      console.error("fetchSessionHistory error:", err);
       toast.error("Gagal memuat riwayat sesi");
     } finally {
       setLoadingSessions(false);
@@ -352,14 +369,20 @@ export default function Dashboard() {
    * Mengambil daftar skenario pasien.
    * Menentukan tag (Global/Buatan Sendiri) berdasarkan kepemilikan user.
    */
-  const fetchPatients = async (currentUser) => {
+  const fetchPatients = async (currentUser = user, activeToken = token) => {
+    const authToken = activeToken || localStorage.getItem("token");
+    if (!authToken) return setLoadingPatients(false);
     setLoadingPatients(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/patients`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-      if (res.status === 401) return handleAuthError();
+      if (res.status === 401 || res.status === 403) return handleAuthError();
       const data = await res.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error(data?.message || "Data pasien tidak valid");
+      }
 
       const mappedPatients = data.map((p) => {
         const isGlobal = p.is_global || p.user_id === null;
@@ -416,20 +439,12 @@ export default function Dashboard() {
       });
       setPatients(mappedPatients);
     } catch (err) {
+      console.error("fetchPatients error:", err);
       toast.error("Gagal memuat data skenario");
     } finally {
       setLoadingPatients(false);
     }
   };
-
-  // Memicu fetch data saat token/user tersedia
-  useEffect(() => {
-    if (token) {
-      fetchSessionHistory();
-      fetchPatients(user);
-      fetchStats();
-    }
-  }, [token, user]);
 
   // --- FILTERING LOGIC ---
   // Memoized filter untuk performa pencarian yang lebih baik
@@ -453,19 +468,20 @@ export default function Dashboard() {
 
   // CRUD Skenario
   const handleSaveScenario = async (patientData) => {
+    const authToken = token || localStorage.getItem("token");
     try {
       const response = await fetch(`${API_BASE_URL}/api/patients`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify(patientData),
       });
       if (response.ok) {
         toast.success("Skenario berhasil dibuat!");
         setShowAddModal(false);
-        fetchPatients(user); // Refresh data
+        fetchPatients(user, authToken); // Refresh data
       } else {
         throw new Error("Gagal menyimpan");
       }
@@ -511,6 +527,7 @@ export default function Dashboard() {
 
     if (!deleteTarget) return;
 
+    const authToken = token || localStorage.getItem("token");
     const targetId = deleteTarget.id;
     const loadingToastId = toast.loading(
       `Berhasil menghapus ${deleteTarget.name}...`
@@ -521,7 +538,7 @@ export default function Dashboard() {
         `${API_BASE_URL}/api/patients/${targetId}`,
         {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
