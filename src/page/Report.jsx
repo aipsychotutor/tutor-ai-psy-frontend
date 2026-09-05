@@ -1301,7 +1301,7 @@ export default function ReportPage() {
                 Laporan Sesi
               </h1>
               <span className="text-white/80 text-lg flex items-center justify-center gap-2">
-                Pasien:{" "}
+                Klien:{" "}
                 <span className="font-semibold text-white">
                   {sessions.length > 0 ? sessions[0].patient_name : "..."}
                 </span>
