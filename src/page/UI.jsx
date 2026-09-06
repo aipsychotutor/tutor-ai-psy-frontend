@@ -253,7 +253,15 @@ export const UI = ({ hidden, session_id, ...props }) => {
         localStorage.removeItem("simulation_start_current");
       } catch (e) {}
 
-      const expressionData = await cameraToModelWSRef.current.finishSession();
+      let expressionData = [];
+      try {
+        if (cameraToModelWSRef.current?.finishSession) {
+          expressionData = (await cameraToModelWSRef.current.finishSession()) || [];
+        }
+      } catch (wsErr) {
+        console.warn("Could not retrieve expression data from WS:", wsErr);
+      }
+
       await fetch(`${API_BASE_URL}/api/sessions/${session_id}`, {
         method: "PATCH",
         headers: {

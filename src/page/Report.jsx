@@ -644,7 +644,7 @@ function ExpressionLineChart({ data }) {
     labels: timestamps,
     datasets: [
       {
-        label: "Ekspresi Wajah Pasien",
+        label: "Ekspresi Wajah Psikolog",
         data: expressions,
         fill: false,
         borderColor: "rgba(20,184,166,1)",
@@ -1176,7 +1176,8 @@ export default function ReportPage() {
         setDetailedAnalysis(null);
         setClassificationResults([]);
         setProsodyData(null);
-        setExpressionData([]);
+        const parsedExpression = safeJsonParse(data?.expression_data);
+        setExpressionData(Array.isArray(parsedExpression) ? parsedExpression : []);
       }
     } catch (err) {
       setEvaluation(null); 
@@ -1236,10 +1237,14 @@ export default function ReportPage() {
         setEvaluation(data.evaluation);
         setDetailedAnalysis(data.detailed_analysis);
         setClassificationResults(data.classification_results || []);
-        const parsedProsody = safeJsonParse(data.evaluation.prosody_summary);
+        const parsedProsody = safeJsonParse(data.evaluation?.prosody_summary);
         setProsodyData(parsedProsody);
-        const parsedExpression = safeJsonParse(data.evaluation.expression_data);
-        setExpressionData(Array.isArray(parsedExpression) ? parsedExpression : []);
+        const parsedExpression = safeJsonParse(
+          data.evaluation?.expression_data ?? data.expression_data
+        );
+        if (Array.isArray(parsedExpression)) {
+          setExpressionData(parsedExpression);
+        }
         toast.success("Analisis AI Berhasil Selesai!", { duration: 4000 });
       } else {
         toast.error(

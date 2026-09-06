@@ -22,26 +22,40 @@ const CameraToModelWS = forwardRef(({}, ref) => {
   };
 
   useImperativeHandle(ref, () => ({
-    finishSession: async() => {
+    finishSession: async () => {
       const ws = wsRef.current;
       if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: "finish" }));
+        try {
+          ws.send(JSON.stringify({ type: "finish" }));
+        } catch (e) {}
         setSending(false);
-        
-        return new Promise((resolve, reject) => {
+
+        return new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            stopCamera();
+            resolve([]);
+          }, 3000);
+
           ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            if (msg.type === "summary") {
+            clearTimeout(timeout);
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.type === "summary") {
+                stopCamera();
+                resolve(msg.data || []);
+              } else {
+                stopCamera();
+                resolve([]);
+              }
+            } catch (e) {
               stopCamera();
-              resolve(msg.data);
-            } else {
-              reject(new Error("Invalid data received"));
+              resolve([]);
             }
           };
         });
       } else {
         stopCamera();
-        return Promise.reject(new Error("WebSocket is not open"));
+        return Promise.resolve([]);
       }
     },
   }));
