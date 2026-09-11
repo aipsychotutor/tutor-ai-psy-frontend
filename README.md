@@ -43,10 +43,12 @@ graph TD
 
 ### Prerequisites
 
-- Node.js (version 18.x or higher)
-- npm (Node Package Manager)
+- **Node.js**: version 18.x or higher
+- **npm**: Node Package Manager
+- **Express Backend**: Running on `http://localhost:3000`
+- **FastAPI AI Model Server**: Running on `http://localhost:8000` (WebSocket on `ws://localhost:8000/ws`)
 
-### Installation
+### Installation & Setup
 
 1. Navigate to the frontend directory:
    ```bash
@@ -55,6 +57,11 @@ graph TD
 2. Install package dependencies:
    ```bash
    npm install
+   ```
+3. Configure environment variables (optional for local defaults):
+   Create a `.env` file in the root of the frontend directory:
+   ```bash
+   cp .env.example .env
    ```
 
 ### Running the Client
@@ -65,10 +72,20 @@ npm run dev
 ```
 By default, the client application will be served at `http://localhost:5173` (or the port outputted in the terminal).
 
+To build for production:
+```bash
+npm run build
+npm run preview
+```
+
 ## Environment Variables
 
 Configure a `.env` file in the root of the frontend folder:
 ```ini
+# Express Backend API URL
+VITE_API_URL=http://localhost:3000
+
+# FastAPI Model Server WebSocket URL
 VITE_WS_URL=ws://localhost:8000/ws
 ```
 
@@ -85,11 +102,6 @@ tutor-ai-psy-frontend/
 │   ├── page/           # Page controllers (Auth, Dashboard, Session, Reports)
 │   └── utils/          # Formatting tools and API drivers
 ```
-
-## Future Improvements
-- Complete unit and integration testing across frontend modules.
-- Refined avatar lip-sync capabilities based on audio speech output.
-- Responsive mobile layout enhancements.
 
 ## Author
 Developed and maintained by the CommuLab Team.

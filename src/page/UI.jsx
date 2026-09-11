@@ -1,5 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SpeechRecognition, {
+  useSpeechRecognition,
+} from "react-speech-recognition";
 import { toast } from "react-hot-toast";
 
 // Hooks
@@ -17,7 +20,7 @@ import { API_BASE_URL } from "../config/api";
  * UI Component
  *
  * The main layout container for the simulation interface.
- * It integrates the 3D model interaction (via useChat), voice recognition (Groq Whisper),
+ * It integrates the 3D model interaction (via useChat), voice recognition,
  * prosody analysis, and the UI sub-components (Navbar, Tools, ChatBar).
  *
  * @component
@@ -33,11 +36,13 @@ export const UI = ({ hidden, session_id, ...props }) => {
   
   // Custom Hook: Chat Logic (Conversation with AI)
   const { subtitle } = useChat();
-  const { chat, loading, cameraZoomed, setCameraZoomed, message, setMessage } = useChat();
+  const { chat, loading, cameraZoomed, setCameraZoomed } = useChat();
 
-  // Custom Hook: Prosody Analysis (Audio features extraction) & MediaRecorder
+  // Library Hook: Speech Recognition (Voice to Text)
+  const { transcript, listening, resetTranscript } = useSpeechRecognition();
+
+  // Custom Hook: Prosody Analysis (Audio features extraction)
   const {
-    isRecording,
     audioBlob,
     error: prosodyError,
     startRecording,
@@ -47,11 +52,11 @@ export const UI = ({ hidden, session_id, ...props }) => {
   } = useProsodyAnalyzer();
 
   // Local State
+  const [inputText, setInputText] = useState("");
   const [token, setToken] = useState(null);
   const [userData, setUserData] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
 
   // --- Effects ---
 
@@ -73,6 +78,14 @@ export const UI = ({ hidden, session_id, ...props }) => {
     }
   }, []);
 
+  // 2. Sync Speech Transcript with Message State
+  useEffect(() => {
+    if (transcript) {
+      setInputText(transcript);
+    }
+  }, [transcript]);
+
+  // 3. Proteksi Penutupan Tab & Auto-Close Sesi saat Browser Ditutup
   useEffect(() => {
     if (!session_id) return;
 
@@ -114,66 +127,24 @@ export const UI = ({ hidden, session_id, ...props }) => {
   // --- Handlers ---
 
   /**
-   * Mengirim audioBlob ke backend untuk ditranskripsi oleh Groq Whisper.
-   */
-  const transcribeAudioBlob = async (blob) => {
-    if (!blob || blob.size === 0) return "";
-    const formData = new FormData();
-    formData.append("file", blob, "recording.webm");
-
-    const res = await fetch(`${API_BASE_URL}/api/chat/transcribe`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || "Gagal mentranskripsi audio.");
-    }
-
-    const data = await res.json();
-    return data.text || "";
-  };
-
-  /**
    * Sends the current message to the AI.
    * Handles stopping audio recording, analyzing prosody, and calling the chat API.
    */
   const sendMessage = async () => {
-    if (loading || isSending || isTranscribing) return;
-
-    let textToSend = message;
-    let blobForAnalysis = audioBlob;
-
-    if (isRecording) {
-      const toastId = toast.loading("Memproses suara dengan Groq Whisper...");
-      setIsTranscribing(true);
-      try {
-        const newBlob = await stopRecording();
-        if (newBlob && newBlob.size > 0) {
-          blobForAnalysis = newBlob;
-          const transcribedText = await transcribeAudioBlob(newBlob);
-          if (transcribedText) {
-            textToSend = transcribedText;
-            setMessage(transcribedText);
-            toast.success("Suara berhasil ditranskrip!", { id: toastId });
-          } else {
-            toast.error("Tidak ada suara yang terdeteksi.", { id: toastId });
-          }
-        }
-      } catch (err) {
-        console.error("Transcribe error:", err);
-        toast.error(`Gagal transkrip: ${err.message}`, { id: toastId });
-      } finally {
-        setIsTranscribing(false);
-      }
-    }
-
-    if (!textToSend || !textToSend.trim()) return;
+    if (loading || isSending || !inputText.trim()) return;
 
     setIsSending(true);
     let prosody = null;
+    let blobForAnalysis = audioBlob;
 
+    // If currently listening, stop and get the final audio blob
+    if (listening) {
+      SpeechRecognition.stopListening();
+      const newBlob = await stopRecording();
+      if (newBlob) blobForAnalysis = newBlob;
+    }
+
+    // Analyze audio if available
     if (blobForAnalysis) {
       try {
         prosody = await getProsodyData(blobForAnalysis);
@@ -182,53 +153,35 @@ export const UI = ({ hidden, session_id, ...props }) => {
       }
     }
 
+    const messageToSend = inputText.trim();
+    setInputText("");
+    resetTranscript();
+
     try {
-      await chat(textToSend, prosody);
-      setMessage("");
+      await chat(messageToSend, prosody);
       clearAudioData();
     } catch (err) {
       console.error("Failed to send message:", err);
+      // Rollback text into input if sending fails
+      setInputText(messageToSend);
     } finally {
       setIsSending(false);
     }
   };
 
   /**
-   * Toggles microphone status (Start/Stop listening & recording via Groq STT).
+   * Toggles microphone status (Start/Stop listening & recording).
    */
-  const handleToggleListening = async () => {
-    if (isRecording) {
-      const toastId = toast.loading("Mentranskripsi suara (Groq Whisper)...");
-      setIsTranscribing(true);
-      try {
-        const blob = await stopRecording();
-        if (blob && blob.size > 0) {
-          const transcribedText = await transcribeAudioBlob(blob);
-          if (transcribedText) {
-            setMessage(transcribedText);
-            toast.success("Suara berhasil ditranskrip!", { id: toastId });
-          } else {
-            toast.error("Tidak ada suara yang terdeteksi.", { id: toastId });
-          }
-        } else {
-          toast.dismiss(toastId);
-        }
-      } catch (err) {
-        console.error("Transcribe error:", err);
-        toast.error(`Gagal transkrip: ${err.message}`, { id: toastId });
-      } finally {
-        setIsTranscribing(false);
-      }
+  const handleToggleListening = () => {
+    if (listening) {
+      SpeechRecognition.stopListening();
+      stopRecording();
     } else {
+      resetTranscript();
       clearAudioData();
-      setMessage("");
-      await startRecording();
+      SpeechRecognition.startListening({ continuous: true, language: "id" });
+      startRecording();
     }
-  };
-
-  const handleResetTranscript = () => {
-    setMessage("");
-    clearAudioData();
   };
 
   /**
@@ -328,15 +281,17 @@ export const UI = ({ hidden, session_id, ...props }) => {
 
         {/* Bottom Chat Interface */}
         <ChatBar
-          message={message}
-          setMessage={setMessage}
+          message={inputText}
+          setMessage={setInputText}
           sendMessage={sendMessage}
           loading={loading}
           isSending={isSending}
-          listening={isRecording}
-          isTranscribing={isTranscribing}
+          listening={listening}
           handleToggleListening={handleToggleListening}
-          resetTranscript={handleResetTranscript}
+          resetTranscript={() => {
+            resetTranscript();
+            setInputText("");
+          }}
           subtitle={subtitle}
           prosodyError={prosodyError}
           inputRef={inputRef}

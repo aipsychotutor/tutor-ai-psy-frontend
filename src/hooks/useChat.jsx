@@ -74,6 +74,8 @@ export const ChatProvider = ({ children, session_id }) => {
 
     setLoading(true);
     setError(null);
+    const clientStartTime = performance.now();
+    console.log(`\n🚀 [Simulation Chat] Mengirim pesan: "${message}"`);
 
     try {
       const response = await fetch(`${backendUrl}/api/chat`, {
@@ -99,19 +101,11 @@ export const ChatProvider = ({ children, session_id }) => {
       }
 
       const resp = data.messages;
+      const clientTotalTime = Math.round(performance.now() - clientStartTime);
+      console.log(`⚡ [Simulation Chat] Respons diterima dalam ${clientTotalTime} ms (${(clientTotalTime / 1000).toFixed(2)} detik) -> Avatar mulai bicara!`);
 
       setMessages((messages) => [...messages, ...resp]);
       setHistory((prev) => [...prev, { user: message, ai: resp }]);
-
-      // Play responses sequentially
-      for (const aiMsg of resp) {
-        try {
-          await playAIResponse(aiMsg);
-        } catch (audioErr) {
-          console.error("❌ Skipping audio for message:", audioErr);
-          // Continue to next message even if audio fails
-        }
-      }
 
     } catch (err) {
       console.error("❌ Chat error:", err);
@@ -136,8 +130,10 @@ export const ChatProvider = ({ children, session_id }) => {
   useEffect(() => {
     if (messages.length > 0) {
       setMessage(messages[0]);
+      setSubtitle(messages[0].text || "");
     } else {
       setMessage(null);
+      setSubtitle("");
     }
   }, [messages]);
 

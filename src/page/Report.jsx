@@ -604,24 +604,25 @@ function ModelAnalysisStats({ detailedAnalysis, classificationResults }) {
 }
 
 function ExpressionLineChart({ data }) {
+  // Urutan skala emosi pada sumbu Y (Valence: Positif di atas, Netral di tengah, Negatif di bawah)
   const expressionMap = {
-    neutral: 0,
-    happy: 1,
-    angry: 2,
-    sad: 3,
-    surprise: 4,
-    fear: 5,
-    disgust: 6
+    happy: 6,      // 6: Bahagia (Positif)
+    surprise: 5,   // 5: Terkejut (Ekspresif / Spontan)
+    neutral: 4,    // 4: Netral (Baseline Psikolog - Di Tengah)
+    sad: 3,        // 3: Sedih
+    fear: 2,       // 2: Takut
+    angry: 1,      // 1: Marah
+    disgust: 0,    // 0: Jijik
   };
 
   const expressionColors = {
-    neutral: '#94a3b8',
-    happy: '#22c55e',
-    angry: '#ef4444',
-    sad: '#3b82f6',
-    surprise: '#f59e0b',
-    fear: '#8b5cf6',
-    disgust: '#06b6d4'
+    happy: "#22c55e",
+    surprise: "#f59e0b",
+    neutral: "#94a3b8",
+    sad: "#3b82f6",
+    fear: "#8b5cf6",
+    angry: "#ef4444",
+    disgust: "#06b6d4",
   };
 
   if (!data || data.length === 0) {
@@ -637,11 +638,24 @@ function ExpressionLineChart({ data }) {
     );
   }
 
-  const timestamps = data.map(item => new Date(item.timestamp));
-  const expressions = data.map(item => expressionMap[item.expression?.toLowerCase()] ?? 0);
+  // Format time labels safely
+  const timeLabels = data.map((item, idx) => {
+    if (!item.timestamp) return `#${idx + 1}`;
+    try {
+      const d = new Date(item.timestamp);
+      if (isNaN(d.getTime())) return `#${idx + 1}`;
+      return format(d, "HH:mm:ss");
+    } catch (e) {
+      return `#${idx + 1}`;
+    }
+  });
+
+  const expressions = data.map(
+    (item) => expressionMap[item.expression?.toLowerCase()] ?? 4
+  );
 
   const chartData = {
-    labels: timestamps,
+    labels: timeLabels,
     datasets: [
       {
         label: "Ekspresi Wajah Psikolog",
@@ -653,16 +667,17 @@ function ExpressionLineChart({ data }) {
         borderWidth: 3,
         pointRadius: 5,
         pointHoverRadius: 7,
-        pointBackgroundColor: data.map(item => 
-          expressionColors[item.expression?.toLowerCase()] || '#94a3b8'
+        pointBackgroundColor: data.map(
+          (item) =>
+            expressionColors[item.expression?.toLowerCase()] || "#94a3b8"
         ),
-        pointBorderColor: '#fff',
+        pointBorderColor: "#fff",
         pointBorderWidth: 2,
       },
     ],
   };
 
-  const minWidth = Math.max(800, data.length * 50);
+  const minWidth = Math.max(800, data.length * 30);
 
   const options = {
     responsive: true,
@@ -675,101 +690,94 @@ function ExpressionLineChart({ data }) {
         display: false,
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#fff",
+        bodyColor: "#fff",
         padding: 12,
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
           title: (tooltipItems) => {
-            const timestamp = tooltipItems[0].parsed.x;
-            const date = new Date(timestamp);
-
-            if (isNaN(date.getTime())) {
-              return 'Waktu tidak tersedia';
-            }
-            
-            return date.toLocaleString('id-ID', { 
-              hour: '2-digit', 
-              minute: '2-digit', 
-              second: '2-digit' 
-            });
+            const label = tooltipItems[0]?.label;
+            return label ? `Waktu: ${label}` : "Waktu tidak tersedia";
           },
           label: (tooltipItem) => {
             const value = tooltipItem.raw;
-            const expression = Object.keys(expressionMap).find(key => expressionMap[key] === value);
+            const expressionKey = Object.keys(expressionMap).find(
+              (key) => expressionMap[key] === value
+            );
             const expressionLabels = {
-              neutral: 'Netral',
-              happy: 'Bahagia',
-              angry: 'Marah',
-              sad: 'Sedih',
-              surprise: 'Terkejut',
-              fear: 'Takut',
-              disgust: 'Jijik'
+              happy: "Bahagia",
+              surprise: "Terkejut",
+              neutral: "Netral",
+              sad: "Sedih",
+              fear: "Takut",
+              angry: "Marah",
+              disgust: "Jijik",
             };
-            return `Ekspresi: ${expressionLabels[expression] || expression}`;
+            return `Ekspresi: ${expressionLabels[expressionKey] || expressionKey || "Netral"}`;
           },
         },
       },
     },
     scales: {
       x: {
-        type: 'time',
-        time: {
-          unit: 'second',
-          displayFormats: {
-            second: 'HH:mm:ss'
-          }
-        },
         title: {
           display: true,
-          text: 'Waktu',
+          text: "Waktu (HH:mm:ss)",
           font: {
             size: 12,
-            weight: 'bold'
+            weight: "bold",
           },
-          color: '#64748b'
+          color: "#64748b",
         },
         ticks: {
-          color: '#94a3b8',
-          maxRotation: 0,
-          minRotation: 0,   
-          autoSkip: true,     
-          maxTicksLimit: 20   
+          color: "#94a3b8",
+          maxRotation: 45,
+          minRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 25,
         },
         grid: {
-          color: 'rgba(148, 163, 184, 0.1)'
-        }
+          color: "rgba(148, 163, 184, 0.1)",
+        },
       },
       y: {
         beginAtZero: true,
         max: 6,
         title: {
           display: true,
-          text: 'Jenis Ekspresi',
+          text: "Jenis Ekspresi",
           font: {
             size: 12,
-            weight: 'bold'
+            weight: "bold",
           },
-          color: '#64748b'
+          color: "#64748b",
         },
         ticks: {
           stepSize: 1,
-          color: '#94a3b8',
+          color: "#94a3b8",
           callback: (value) => {
-            const labels = ['Netral', 'Bahagia', 'Marah', 'Sedih', 'Terkejut', 'Takut', 'Jijik'];
-            return labels[value] || '';
+            const labels = {
+              6: "Bahagia",
+              5: "Terkejut",
+              4: "Netral",
+              3: "Sedih",
+              2: "Takut",
+              1: "Marah",
+              0: "Jijik",
+            };
+            return labels[value] || "";
           },
         },
         grid: {
-          color: 'rgba(148, 163, 184, 0.1)'
-        }
+          color: "rgba(148, 163, 184, 0.1)",
+        },
       },
     },
     interaction: {
       intersect: false,
-      mode: 'index',
+      mode: "index",
     },
   };
 
@@ -1541,7 +1549,7 @@ export default function ReportPage() {
                 />
               )}
 
-              {expressionData && expressionData.length > 0 && (
+              {/* SECTION: PERUBAHAN EKSPRESI PSIKOLOG */}
               <Card className="mb-6">
                 <CardHeader 
                   title={
@@ -1550,10 +1558,10 @@ export default function ReportPage() {
                       Perubahan Ekspresi Wajah Psikolog Sepanjang Waktu
                     </span>
                   }
-                  subtitle="Grafik menunjukkan perubahan emosi psikolog berdasarkan deteksi ekspresi wajah"
+                  subtitle="Grafik menunjukkan perubahan emosi psikolog berdasarkan deteksi ekspresi wajah dari kamera"
                 />
                 <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-6 border border-gray-100 dark:border-gray-700">
-                  {expressionData.length > 15 && (
+                  {expressionData && expressionData.length > 15 && (
                     <div className="mb-3 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-lg border border-blue-100 dark:border-blue-800">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18" />
@@ -1565,29 +1573,30 @@ export default function ReportPage() {
                 </div>
                 
                 {/* Legend Ekspresi */}
-                <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                  {[
-                    { name: 'Netral', color: '#94a3b8' },
-                    { name: 'Bahagia', color: '#22c55e' },
-                    { name: 'Marah', color: '#ef4444' },
-                    { name: 'Sedih', color: '#3b82f6' },
-                    { name: 'Terkejut', color: '#f59e0b' },
-                    { name: 'Takut', color: '#8b5cf6' },
-                    { name: 'Jijik', color: '#06b6d4' }
-                  ].map((exp) => (
-                    <div key={exp.name} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/30 px-3 py-2 rounded-lg">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: exp.color }}
-                      />
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {exp.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {expressionData && expressionData.length > 0 && (
+                  <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                    {[
+                      { name: 'Bahagia', color: '#22c55e' },
+                      { name: 'Terkejut', color: '#f59e0b' },
+                      { name: 'Netral', color: '#94a3b8' },
+                      { name: 'Sedih', color: '#3b82f6' },
+                      { name: 'Takut', color: '#8b5cf6' },
+                      { name: 'Marah', color: '#ef4444' },
+                      { name: 'Jijik', color: '#06b6d4' }
+                    ].map((exp) => (
+                      <div key={exp.name} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/30 px-3 py-2 rounded-lg">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: exp.color }}
+                        />
+                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                          {exp.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </Card>
-            )}
 
               {/* SECTION 5: HISTORY & CHAT */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-10">

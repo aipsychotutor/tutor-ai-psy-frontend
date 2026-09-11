@@ -390,7 +390,7 @@ export default function EditScenarioModal({ show, onClose, onSave, initialData }
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Tag size={16} className="text-purple-500" /> Traits Kepribadian
+                  <Tag size={16} className="text-purple-500" /> Sifat Kepribadian
                 </h3>
                 <button
                   type="button"
